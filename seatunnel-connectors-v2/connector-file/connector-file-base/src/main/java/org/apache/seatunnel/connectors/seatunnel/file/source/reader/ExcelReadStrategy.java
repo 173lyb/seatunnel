@@ -183,6 +183,8 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                 return cell.getNumericCellValue();
             case ERROR:
                 break;
+            case BLANK:
+                return null;
             default:
                 throw new FileConnectorException(
                         CommonErrorCodeDeprecated.UNSUPPORTED_DATA_TYPE,
@@ -193,8 +195,8 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
 
     @SneakyThrows
     private Object convert(Object field, SeaTunnelDataType<?> fieldType) {
-        if (field == null) {
-            return "";
+        if (field == null || field == "") {
+            return null;
         }
         SqlType sqlType = fieldType.getSqlType();
         switch (sqlType) {
