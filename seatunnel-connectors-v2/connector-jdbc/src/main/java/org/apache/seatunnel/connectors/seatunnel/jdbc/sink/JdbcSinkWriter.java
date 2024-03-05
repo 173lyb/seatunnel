@@ -22,6 +22,7 @@ import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkWriter;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
+import org.apache.seatunnel.common.exception.CommonErrorCode;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcSinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorErrorCode;
@@ -153,8 +154,8 @@ public class JdbcSinkWriter
     @Override
     public void close() throws IOException {
         tryOpen();
-        outputFormat.flush();
         try {
+            outputFormat.flush();
             if (!connectionProvider.getConnection().getAutoCommit()) {
                 connectionProvider.getConnection().commit();
             }
@@ -163,7 +164,11 @@ public class JdbcSinkWriter
                     CommonErrorCodeDeprecated.WRITER_OPERATION_FAILED,
                     "unable to close JDBC sink write",
                     e);
+        } catch (Exception e) {
+            throw new JdbcConnectorException(
+                    CommonErrorCodeDeprecated.WRITER_OPERATION_FAILED, "unable to close JDBC sink write", e);
+        } finally {
+            outputFormat.close();
         }
-        outputFormat.close();
     }
 }
