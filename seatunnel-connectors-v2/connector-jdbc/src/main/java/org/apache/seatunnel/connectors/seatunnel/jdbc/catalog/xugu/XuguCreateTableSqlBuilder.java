@@ -35,14 +35,14 @@ public class XuguCreateTableSqlBuilder {
 
     private List<Column> columns;
     private PrimaryKey primaryKey;
-    private XuguDataTypeConvertor oracleDataTypeConvertor;
+    private XuguDataTypeConvertor xuguDataTypeConvertor;
     private String sourceCatalogName;
     private String fieldIde;
 
     public XuguCreateTableSqlBuilder(CatalogTable catalogTable) {
         this.columns = catalogTable.getTableSchema().getColumns();
         this.primaryKey = catalogTable.getTableSchema().getPrimaryKey();
-        this.oracleDataTypeConvertor = new XuguDataTypeConvertor();
+        this.xuguDataTypeConvertor = new XuguDataTypeConvertor();
         this.sourceCatalogName = catalogTable.getCatalogName();
         this.fieldIde = catalogTable.getOptions().get("fieldIde");
     }
@@ -91,7 +91,7 @@ public class XuguCreateTableSqlBuilder {
         columnSql.append("\"").append(column.getName()).append("\" ");
 
         String columnType =
-                StringUtils.equalsIgnoreCase(DatabaseIdentifier.ORACLE, sourceCatalogName)
+                StringUtils.equalsIgnoreCase(DatabaseIdentifier.XUGU, sourceCatalogName)
                         ? column.getSourceType()
                         : buildColumnType(column);
         columnSql.append(columnType);
@@ -122,7 +122,7 @@ public class XuguCreateTableSqlBuilder {
                 }
             default:
                 String type =
-                        oracleDataTypeConvertor.toConnectorType(
+                        xuguDataTypeConvertor.toConnectorType(
                                 column.getName(), column.getDataType(), null);
                 if (type.equals("NUMBER")) {
                     if (column.getDataType() instanceof DecimalType) {
@@ -147,7 +147,7 @@ public class XuguCreateTableSqlBuilder {
                         .map(columnName -> "\"" + columnName + "\"")
                         .collect(Collectors.joining(", "));
 
-        // In Oracle database, the maximum length for an identifier is 30 characters.
+        // In xugu database, the maximum length for an identifier is 30 characters.
         String primaryKeyStr = primaryKey.getPrimaryKey();
         if (primaryKeyStr.length() > 25) {
             primaryKeyStr = primaryKeyStr.substring(0, 25);
