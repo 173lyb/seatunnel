@@ -1,0 +1,31 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "http://10.28.12.31:8099/testapi/getSession"
+    method = "GET"
+    params = {
+          password = 123
+    }
+    --skip_ssl_verification = true
+    cookies_add = true
+    format = "json"
+    json_field = {
+          cookies_value = "$.cookies_value"
+    }
+    schema = {
+      fields {
+          cookies_value = string
+      }
+    }
+  }
+}
+sink {
+Console {
+        source_table_name = "http"
+}
+}

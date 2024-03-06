@@ -1,0 +1,42 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+source {
+  Http {
+result_table_name = "http1"
+url = "https://api.cdmbc.cn:4433/gateway/api/2/bdjt/hqzdyjydxq"
+method = "GET"
+headers = {
+    AppKey = "963394368528449536"
+    requestTime = "2024-01-17 15:34:01.225"
+}
+params = {
+      nodeId = "7709"
+      eventId = "131-首都机场辅路-201905280708-15260461540"
+      date = "2023-01-17 15:34:01"
+}
+params_convert = [date]
+#skip_ssl_verification = true
+headers_encrypt = {
+		encrypt_type = "SHA256"
+	    accountKey = "9c4e883c8cc841edbaa0268b9e9cdd13"
+		secretKey = "ba04c8c1874e4d3c99133fff9ea69528"
+}
+format = "json"
+json_field = {
+code= "$.code"
+}
+schema = {
+fields {
+code = string
+      }
+    }
+  }
+}
+
+sink {
+Console {
+        source_table_name = "http1"
+}
+}

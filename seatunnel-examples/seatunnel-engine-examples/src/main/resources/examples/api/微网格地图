@@ -1,0 +1,53 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http1"
+    url = "https://xzdz.yinhaiyun.com/dld-30/b/uat/api/api/outwardinterfaces/event/outwardController/getMapJsonData.do"
+    method = "POST"
+    params = {
+      username = "jktest"
+      password = "Ab@12345678"
+      costomno = "510112115207"
+    }
+       params_add = true
+   params_path = "$"
+    format = "json"
+          json_field = {
+  MAP_OBJ= "$.results"
+COSTOM_NO= "$.params_costomno"
+    }
+    schema = {
+      fields {
+COSTOM_NO = string
+  MAP_OBJ = string
+      }
+    }
+  }
+}
+    transform {
+  Sql {
+  source_table_name = "http1"
+   query = "select  CONCAT('geo_CN',COSTOM_NO) as COSTOM_NO, MAP_OBJ from http1"
+   result_table_name = "http2"
+}
+  }
+sink {
+    MappingJdbc {
+   source_table_name = "http2"
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        password = "SYSDBA"
+        password_decrypt = false
+        generate_sink_sql = true
+        database = SYSDBA
+        table = SYSDBA.API_MAP_JSON_DATA
+    	enable_upsert = true
+        primary_keys = []
+    		batch_size = 100
+	}
+}

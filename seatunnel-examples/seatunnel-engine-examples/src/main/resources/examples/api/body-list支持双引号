@@ -1,0 +1,60 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http"
+     method = "POST"
+    url = "https://112.19.160.31:1443/artemis/api/drawater/v1/monitorData/queryRealtimeMonitorData"
+      headers = {
+    Content-Type = "application/json"
+    access_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6WyJzY29wZSJdLCJleHAiOjE3MDQ5ODM5NTQsImp0aSI6Il80S2oyaXc3Zk5SMldWdmxNUy1GWEdlZXZUayIsImNsaWVudF9pZCI6IjIwMjg4Mjk0In0.jvm_nTKxHXjxGZlpYzKUVspkpOYO2Pxy3CzuDd-xV-s"
+    }
+    skip_ssl_verification = true
+    #body = "{\"deviceIds\":[\"f98711e6d6b64ba685ee2d22d25a3db7\",\"8bd95d5894c3499082416037060c09e8\"]}"
+    body = "{\"deviceIds\":[#+f98711e6d6b64ba685ee2d22d25a3db7#+,#+8bd95d5894c3499082416037060c09e8#+],\"deviceIds2\":{\"devicdIds3\":[1,2]}}"
+    #body = "{\"jsonData\": {\"drainCode\": \"FC-510104-0084-YH-00\",\"startTime\": \"2023-12-08 00:00:00\",\"endTime\": \"2023-12-08 00:00:00\"}}"
+    body_convert = [startTime,endTime]
+    body_parsing_arrays = ["$.deviceIds","$.deviceIds2.devicdIds3"]
+    format = "json"
+          json_field = {
+ADQID = "$.data[*].adqid"
+ADQDATATIME = "$.data[*].adqdatatime"
+ADQBATCHNUM = "$.data[*].adqbatchnum"
+ADQPARENTID = "$.data[*].adqparentid"
+MONITORTIME = "$.data[*].monitortime"
+UNIT = "$.data[*].unit"
+SNCODE = "$.data[*].snCode"
+DATAID = "$.data[*].dataId"
+DATATYPENAME = "$.data[*].dataTypeName"
+DATATYPE = "$.data[*].dataType"
+DATAVALUE = "$.data[*].dataValue"
+DEVICEID = "$.data[*].deviceId"
+    }
+
+    schema = {
+      fields {
+ADQID = string
+ADQDATATIME = string
+ADQBATCHNUM = string
+ADQPARENTID = string
+MONITORTIME = string
+UNIT = string
+SNCODE = string
+DATAID = string
+DATATYPENAME = string
+DATATYPE = string
+DATAVALUE = string
+DEVICEID = string
+      }
+    }
+  }
+}
+
+sink {
+Console {
+
+}
+}

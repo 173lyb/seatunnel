@@ -1,0 +1,36 @@
+env {
+  #execution.parallelism = 3
+  job.mode = "BATCH"
+  #checkpoint.interval = 100000
+}
+
+source {
+	Jdbc {
+		url = "jdbc:xugu://10.28.23.110:5138/SYSTEM?batch_mode=true&resultkeepsize=20&char_set=utf8&recv_mode=2"
+		driver = "com.xugu.cloudjdbc.Driver"
+		connection_check_timeout_sec = 100
+		user = "SYSDBA"
+		password = "SYSDBA"
+		#table_paeh是走sql语句拿列信息的
+		table_path = "SYSDBA.AAA_TEST6"
+		#query = "select * from SYSDBA.AAA_TEST6"
+		fetch_size = 10000
+		result_table_name = "test1"
+	}
+}
+sink {
+    jdbc {
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        password = "SYSDBA"
+        generate_sink_sql = true
+        primary_keys = ["ID"]
+        enable_upsert = true
+        data_save_mode = "DROP_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        database = SYSTEM
+        table = SYSDBA.AAA_TEST_1
+        batch_size = 10000
+        }
+}

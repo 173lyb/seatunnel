@@ -1,0 +1,37 @@
+
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "http://10.28.12.31:8099/testapi/arraypage"
+    method = "POST"
+    skip_ssl_verification = true
+    format = "json"
+    body = "{\"pageNo\":1,\"pageSize\":110,\"params\":[1,2,3]} "
+    body_add = true
+    body_parsing_arrays=["$.params"]
+    pageing = {
+    batch_size= 10
+    page_field = pageNo
+    page_path = body
+  }
+	json_field = {
+message = "$.data.result[*].message"
+    }
+    schema = {
+      fields {
+message = string
+      }
+    }
+  }
+}
+
+sink {
+Console {
+        source_table_name = "http1"
+}
+}

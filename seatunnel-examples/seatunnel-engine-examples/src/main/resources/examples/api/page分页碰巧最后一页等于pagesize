@@ -1,0 +1,80 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+  checkpoint.interval = 5000000
+}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "https://112.19.160.31:1443/artemis/api/drawater/v1/monitorAlarm/list"
+    method = "POST"
+    headers = {
+        access_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6WyJzY29wZSJdLCJleHAiOjE3MDQ1ODA0MDcsImp0aSI6IktjRFhMNjhxY3ZNdmVKU042U0t2SFdqZjhXSSIsImNsaWVudF9pZCI6IjIwMjg4Mjk0In0.mfHa7oy8CwBlcZc06yBmZYTViadwRuSfF4OUR57xt64"
+    }
+    body = "{ \"pageNo\": 1, \"pageSize\": 920 }"
+    skip_ssl_verification = true
+    format = "json"
+    json_field = {
+                ALARM_ID= "$.data.list[*].alarmId"
+                DEVICE_ID= "$.data.list[*].deviceId"
+                SN_CODE= "$.data.list[*].snCode"
+                ALARM_TYPE= "$.data.list[*].alarmType"
+                ALARM_SOURCE= "$.data.list[*].alarmSource"
+                ALARM_VALUE= "$.data.list[*].alarmValue"
+                SEVERITY_LEVEL= "$.data.list[*].severityLevel"
+                ALARM_THRESHOLD= "$.data.list[*].alarmThreshold"
+                UNIT= "$.data.list[*].unit"
+                ALARM_STATUS= "$.data.list[*].alarmStatus"
+                ALARM_TIME= "$.data.list[*].alarmTime"
+                REFRESH_TIME= "$.data.list[*].refreshTime"
+                RECOVER_TIME= "$.data.list[*].recoverTime"
+                CREATE_TIME= "$.data.list[*].createTime"
+    }
+    pageing = {
+    -- total_page_size = 2
+     batch_size= 920
+    page_field = pageNo
+    page_path = body
+    }
+    schema = {
+      fields {
+          ALARM_ID = string
+          DEVICE_ID = string
+          SN_CODE = string
+          ALARM_TYPE = string
+          ALARM_SOURCE = string
+          ALARM_VALUE = string
+          SEVERITY_LEVEL = string
+          ALARM_THRESHOLD = string
+          UNIT = string
+          ALARM_STATUS = string
+          ALARM_TIME = string
+          REFRESH_TIME = string
+          RECOVER_TIME = string
+          CREATE_TIME = string
+      }
+    }
+  }
+}
+   transform {
+  Sql {
+query = "SELECT ALARM_ID, DEVICE_ID, SN_CODE, ALARM_TYPE, ALARM_SOURCE, ALARM_VALUE, SEVERITY_LEVEL, ALARM_THRESHOLD, UNIT, ALARM_STATUS, ISO_FORMAT(ALARM_TIME,'yyyy-MM-dd HH:mm:ss') as ALARM_TIME,  ISO_FORMAT(REFRESH_TIME,'yyyy-MM-dd HH:mm:ss') as REFRESH_TIME, ISO_FORMAT(RECOVER_TIME,'yyyy-MM-dd HH:mm:ss') as RECOVER_TIME,  ISO_FORMAT(CREATE_TIME,'yyyy-MM-dd HH:mm:ss') as  CREATE_TIME FROM http"
+}
+  }
+sink {
+    Mappingjdbc {
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        password = "SYSDBA"
+        password_decrypt = false
+        generate_sink_sql = true
+        database = SYSDBA
+        table = SYSDBA.API_DRAWATER_ALARM
+    		enable_upsert = true
+        primary_keys = ["ALARM_ID"]
+    		batch_size = 400
+
+        }
+}

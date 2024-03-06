@@ -1,0 +1,38 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "https://xzdz.yinhaiyun.com/dld-30/b/uat/api/api/outwardinterfaces/event/outwardController/getMicroGridList.do"
+    method = "POST"
+    params = {
+      username = "jktest"
+      password = "Ab@12345678"
+      costomno = "[510112001001018,510112001001019,510112001001020]"
+    }
+    skip_ssl_verification = true
+    format = "json"
+          json_field = {
+                 a = "$.results.list[*].grid_type"
+                 b = "$.results.list[*].sswg"
+                 #c = "$.results.list[*].personList[*].name"
+                 pageNum = "$.results.pageTotal"
+    }
+    params_parsing_arrays = ["costomno"]
+    schema = {
+      fields {
+                 a = string
+                 b = string
+                 #c = string
+                 pageNum = string
+      }
+    }
+  }
+}
+sink {
+Console{
+}
+}

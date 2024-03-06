@@ -1,0 +1,24 @@
+env {
+  # You can set flink configuration here
+  parallelism = 1
+  job.name="test_hive_source_to_hive"
+}
+
+source {
+  Hive {
+    table_name = "test.lyb_one_partition"
+    metastore_uri = "thrift://10.28.23.152:9083"
+    read_partitions = ["year=2023"]
+	result_table_name = "hive1"
+  }
+}
+
+sink {
+  # choose stdout output plugin to output data to console
+
+  Hive {
+   source_table_name = "hive1"
+    table_name = "test.lyb_one_partition_copy"
+    metastore_uri = "thrift://10.28.23.152:9083"
+  }
+}

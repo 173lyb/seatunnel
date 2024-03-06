@@ -1,0 +1,54 @@
+env {
+	  execution.parallelism = 1
+	  job.mode = "BATCH"
+	}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "https://xzdz.yinhaiyun.com/dld-30/b/uat/api/api/outwardinterfaces/event/outwardController/queryEventDetail.do"
+    method = "POST"
+    params = {
+      username = "jktest"
+      password = "Ab@12345678"
+      eventid = "f02da0dfcfb54871b7a1a96db41bc7f9"
+      #eventid = [f02da0dfcfb54871b7a1a96db41bc7f9,1df51b61ac444e5a9bc589d51a389b83,340f6581b5e44c35aaf9aef725c9ddd3]
+    }
+    format = "json"
+          json_field = {
+                    a = "$.results.informsource"
+                    b = "$.results.eventid"
+                    c = "$.results.event_jd"
+                    d = "$.results.processInfo[*].clsj"
+                    f = "$.results.processInfo[*].dxszdep"
+    }
+    schema = {
+      fields {
+                a = string
+                b = string
+                c = string
+                d = string
+                f = string
+      }
+    }
+  }
+}
+
+sink {
+    MappingJdbc {
+        source_table_name = http
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM?batch_mode=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        password = "SYSDBA"
+        password_decrypt = false
+        #query = "insert into API_TEST6 values(?,?,?)"
+        table = SYSDBA.API_TEST6
+        database = SYSDBA
+        enable_upsert = true
+        generate_sink_sql = true
+        batch_size = 10000
+        skip_errors=true
+		#parallelism = 3
+        }
+}

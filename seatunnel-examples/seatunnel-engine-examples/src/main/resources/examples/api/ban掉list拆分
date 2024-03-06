@@ -1,0 +1,88 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "https://api.cdmbc.cn:4433/gateway/api/1/qxgj/mgqdbz"
+    method = "GET"
+    headers = {
+	       AppKey = "963394368528449536"
+    }
+  params = {
+  dataFormat = "json"
+  interfaceId = "getSurfEleByTimeRangeAndStaID"
+  dataCode = "SURF_CHN_MUL_HOR"
+  elements = "Station_Name,City,Cnty,Datetime,Station_Id_C,Admin_Code_CHN,PRE_1h,PRS,RHU,TEM,WIN_D_INST_Max,WIN_S_Inst_Max,DUANXIN_STATION_NAME,GONGFU_STATION_NAME,HUITU_STATION_NAME,VIS"
+  limitCnt = "30"
+  userId = "lqyq_xzspj"
+  pwd = "a94124c952d3da33470b74f3c2d8080a0227e2f78261e624643875d6eefa396e"
+  staIds = "56181,56187,56188,56189,56272,56276,56281,56284,56285,56286,56288,56290"
+  timeRange = "[20240105075429,20240105085429]"
+    }
+  body = "{\"jsondata\": {\"drainCode\": \"FC-510104-084-1H-00\",\"startTime\": \"2023-12-26 00:00:00\"}}"
+  body_convert = [startTime]
+params_ban_loop = [timeRange]
+skip_ssl_verification = true
+format = "json"
+json_field = {
+WIN_S_INST_MAX= "$.DS[*].WIN_S_INST_MAX"
+ADMIN_CODE_CHN= "$.DS[*].ADMIN_CODE_CHN"
+VIS= "$.DS[*].VIS"
+WIN_D_INST_MAX= "$.DS[*].WIN_D_INST_MAX"
+DUANXIN_STATION_NAME= "$.DS[*].DUANXIN_STATION_NAME"
+STATION_NAME= "$.DS[*].STATION_NAME"
+CNTY= "$.DS[*].CNTY"
+PRS= "$.DS[*].PRS"
+GONGFU_STATION_NAME= "$.DS[*].GONGFU_STATION_NAME"
+CITY= "$.DS[*].CITY"
+DATETIME= "$.DS[*].DATETIME"
+HUITU_STATION_NAME= "$.DS[*].HUITU_STATION_NAME"
+PRE_1H= "$.DS[*].PRE_1H"
+STATION_ID_C= "$.DS[*].STATION_ID_C"
+TEM= "$.DS[*].TEM"
+RHU= "$.DS[*].RHU"
+ }
+ schema = {
+ fields {
+WIN_S_INST_MAX = string
+ADMIN_CODE_CHN = string
+VIS = string
+WIN_D_INST_MAX = string
+DUANXIN_STATION_NAME = string
+STATION_NAME = string
+CNTY = string
+PRS = string
+GONGFU_STATION_NAME = string
+CITY = string
+DATETIME = string
+HUITU_STATION_NAME = string
+PRE_1H = string
+STATION_ID_C = string
+TEM = string
+RHU = string
+      }
+    }
+  }
+}
+    transform {
+  Sql {
+  query ="select WIN_S_INST_MAX,ADMIN_CODE_CHN,VIS,WIN_D_INST_MAX,DUANXIN_STATION_NAME,STATION_NAME,CNTY,PRS,GONGFU_STATION_NAME,CITY,DATETIME,HUITU_STATION_NAME,PRE_1H,STATION_ID_C,TEM,RHU,now() as CREATE_TIME from http"
+}
+  }
+sink {
+    Mappingjdbc {
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        password = "SYSDBA"
+        password_decrypt = false
+        generate_sink_sql = true
+        database = adp_newapidb
+        table = SYSDBA.API_SURF_CHN_MUL_HOR_DS
+    		enable_upsert = true
+    		batch_size = 400
+	}
+}

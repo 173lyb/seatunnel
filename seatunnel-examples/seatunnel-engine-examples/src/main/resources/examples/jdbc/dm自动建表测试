@@ -1,0 +1,39 @@
+
+env {
+	job.mode = "BATCH"
+	execution.parallelism = "1"
+	job.name = "d7ccb7f37d8a4e5d852688e3671142fe"
+}
+
+source {
+	Jdbc {
+		result_table_name = "TEST_KEYWORD3"
+		query = "select * from U_MIGRATE.TEST_KEYWORD3"
+		fetch_size = 3000
+		driver = "dm.jdbc.driver.DmDriver"
+		url = "jdbc:dm://10.28.23.127:5236"
+		user = "U_MIGRATE"
+		password= "123456"
+		#password = "cv/iIb/fGQBuSVj+jPWySEtfknGXGi/8C5SEvyhxoqFviYYgXkihCKS1ymLPOq0jqlgpnrQk3mF24m40bUlEj0Skl9wQOgrlLg1lOmXBcxvSST34VAva87wYb7aYwxW/dgUZxVtLake3nhCR5HqEXwLGomOsZnrBAjqYbAu2mbk="
+	}
+}
+
+transform {
+}
+
+sink {
+	Jdbc {
+		database = "DAMENG"
+		table = "U_MIGRATE.TEST_KEYWORD2"
+		batch_size = 3000
+		generate_sink_sql = true
+        #primary_keys = ["ID"]
+        #enable_upsert = true
+		source_table_name = "TEST_KEYWORD3"
+		driver = "dm.jdbc.driver.DmDriver"
+		url = "jdbc:dm://10.28.23.127:5236"
+		user = "U_MIGRATE"
+		password= "123456"
+		#password = "cv/iIb/fGQBuSVj+jPWySEtfknGXGi/8C5SEvyhxoqFviYYgXkihCKS1ymLPOq0jqlgpnrQk3mF24m40bUlEj0Skl9wQOgrlLg1lOmXBcxvSST34VAva87wYb7aYwxW/dgUZxVtLake3nhCR5HqEXwLGomOsZnrBAjqYbAu2mbk="
+	}
+}

@@ -17,12 +17,20 @@
 
 package org.apache.seatunnel.connectors.seatunnel.http.client;
 
+
+import org.apache.commons.collections4.MapUtils;
+import org.apache.http.*;
+import org.apache.http.client.CookieStore;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.http.config.HttpParameter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -50,8 +58,14 @@ import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,14 +79,42 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HttpClientProvider implements AutoCloseable {
     private static final String ENCODING = "UTF-8";
-    private static final String APPLICATION_JSON = "application/json";
+    public static final String APPLICATION_JSON = "application/json";
     private static final int INITIAL_CAPACITY = 16;
     private RequestConfig requestConfig;
     private final CloseableHttpClient httpClient;
     private final Retryer<CloseableHttpResponse> retryer;
+    private CookieStore cookieStore;
+
+
+
 
     public HttpClientProvider(HttpParameter httpParameter) {
-        this.httpClient = HttpClients.createDefault();
+        try {
+            SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, new TrustStrategy() {
+                @Override
+                public boolean isTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                    return true;
+                }
+            }).build();
+            HttpClientBuilder httpClientBuilder = HttpClients.custom().setSSLContext(sslContext).
+                    setSSLHostnameVerifier(new NoopHostnameVerifier());
+            HttpClientBuilder  defaultHttpClientBuilder = HttpClientBuilder.create();
+            CloseableHttpClient client = httpClientBuilder.build();
+            CloseableHttpClient defaultClient = defaultHttpClientBuilder.build();
+
+            if(httpParameter.isSkipSslVerification()) {
+                this.httpClient = client;
+            } else {
+                this.httpClient = defaultClient;
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new SeaTunnelException(e);
+        } catch (KeyManagementException e) {
+            throw new SeaTunnelException(e);
+        } catch (KeyStoreException e) {
+            throw new SeaTunnelException(e);
+        }
         this.retryer = buildRetryer(httpParameter);
         this.requestConfig =
                 RequestConfig.custom()
@@ -114,10 +156,12 @@ public class HttpClientProvider implements AutoCloseable {
             String method,
             Map<String, String> headers,
             Map<String, String> params,
-            String body)
+            String body,
+            CookieStore cookieStore)
             throws Exception {
         // convert method option to uppercase
         method = method.toUpperCase(Locale.ROOT);
+        this.cookieStore = cookieStore;
         if (HttpPost.METHOD_NAME.equals(method)) {
             return doPost(url, headers, params, body);
         }
@@ -276,14 +320,28 @@ public class HttpClientProvider implements AutoCloseable {
     public HttpResponse doPost(
             String url, Map<String, String> headers, Map<String, String> params, String body)
             throws Exception {
-        // create a new http get
-        HttpPost httpPost = new HttpPost(url);
+        HttpPost httpPost;
+        String contentType="";
+        if (MapUtils.isNotEmpty(headers)){
+            contentType = headers.get("Content-Type");
+        }
+        if (APPLICATION_JSON.equals(contentType)) {
+            // Create access address
+            URIBuilder uriBuilder = new URIBuilder(url);
+            // add parameter to uri
+            addParameters(uriBuilder, params);
+            // create a new http get
+            httpPost = new HttpPost(uriBuilder.build());
+        }else {
+            // create a new http get
+            httpPost = new HttpPost(url);
+            // set request params
+            addParameters(httpPost, params);
+        }
         // set default request config
         httpPost.setConfig(requestConfig);
         // set request header
         addHeaders(httpPost, headers);
-        // set request params
-        addParameters(httpPost, params);
         // add body in request
         addBody(httpPost, body);
         // return http response
@@ -362,7 +420,17 @@ public class HttpClientProvider implements AutoCloseable {
                 if (httpResponse.getEntity() != null) {
                     content = EntityUtils.toString(httpResponse.getEntity(), ENCODING);
                 }
-                return new HttpResponse(httpResponse.getStatusLine().getStatusCode(), content);
+                HeaderElementIterator it = new BasicHeaderElementIterator(httpResponse.headerIterator("Set-Cookie"));
+                String cookies = "";
+                while (it.hasNext()) {
+                    HeaderElement elem = it.nextElement();
+                    String name = elem.getName();
+                    String value = elem.getValue();
+                    if ("JSESSIONID".equals(name) && value != null) {
+                        cookies = name + "=" + value;
+                    }
+                }
+                return new HttpResponse(httpResponse.getStatusLine().getStatusCode(), content,cookies);
             }
         }
         return new HttpResponse(HttpStatus.SC_INTERNAL_SERVER_ERROR);
