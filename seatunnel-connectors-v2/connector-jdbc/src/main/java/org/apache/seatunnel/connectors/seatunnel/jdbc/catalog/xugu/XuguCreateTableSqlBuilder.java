@@ -109,14 +109,10 @@ public class XuguCreateTableSqlBuilder {
         Long bitLen = column.getBitLen();
         switch (sqlType) {
             case BYTES:
-                if (bitLen < 0 || bitLen > 2000) {
-                    return "BLOB";
-                } else {
-                    return "RAW(" + bitLen + ")";
-                }
+                return "BLOB";
             case STRING:
                 if (columnLength > 0 && columnLength < 4000) {
-                    return "VARCHAR2(" + columnLength + " CHAR)";
+                    return "VARCHAR(" + columnLength + ")";
                 } else {
                     return "CLOB";
                 }
@@ -124,16 +120,16 @@ public class XuguCreateTableSqlBuilder {
                 String type =
                         xuguDataTypeConvertor.toConnectorType(
                                 column.getName(), column.getDataType(), null);
-                if (type.equals("NUMBER")) {
+                if (type.equals("NUMERIC")) {
                     if (column.getDataType() instanceof DecimalType) {
                         DecimalType decimalType = (DecimalType) column.getDataType();
-                        return "NUMBER("
+                        return "NUMERIC("
                                 + decimalType.getPrecision()
                                 + ","
                                 + decimalType.getScale()
                                 + ")";
                     } else {
-                        return "NUMBER";
+                        return "NUMERIC";
                     }
                 }
                 return type;

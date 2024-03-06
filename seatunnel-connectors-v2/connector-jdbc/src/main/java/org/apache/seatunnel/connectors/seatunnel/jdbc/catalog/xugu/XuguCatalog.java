@@ -54,6 +54,7 @@ import static org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.xugu.XuguDa
 import static org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.xugu.XuguDataTypeConvertor.XUGU_NVARCHAR2;
 import static org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.xugu.XuguDataTypeConvertor.XUGU_RAW;
 import static org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.xugu.XuguDataTypeConvertor.XUGU_ROWID;
+import static org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.xugu.XuguDataTypeConvertor.XUGU_VARCHAR;
 import static org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.xugu.XuguDataTypeConvertor.XUGU_VARCHAR2;
 
 @Slf4j
@@ -64,57 +65,66 @@ public class XuguCatalog extends AbstractJdbcCatalog {
 
     protected static List<String> EXCLUDED_SCHEMAS =
             Collections.unmodifiableList(
-                    Arrays.asList(
-                            "APPQOSSYS",
-                            "AUDSYS",
-                            "CTXSYS",
-                            "DVSYS",
-                            "DBSFWUSER",
-                            "DBSNMP",
-                            "GSMADMIN_INTERNAL",
-                            "LBACSYS",
-                            "MDSYS",
-                            "OJVMSYS",
-                            "OLAPSYS",
-                            "ORDDATA",
-                            "ORDSYS",
-                            "OUTLN",
-                            "SYS",
-                            "SYSTEM",
-                            "WMSYS",
-                            "XDB",
-                            "EXFSYS",
-                            "SYSMAN"));
+                    Arrays.asList("GUEST", "SYSAUDITOR", "SYSSSO"));
 
     private static final String SELECT_COLUMNS_SQL_TEMPLATE =
-            "SELECT\n"
-                    + "    cols.COLUMN_NAME,\n"
-                    + "    CASE \n"
-                    + "        WHEN cols.data_type LIKE 'INTERVAL%%' THEN 'INTERVAL'\n"
-                    + "        ELSE REGEXP_SUBSTR(cols.data_type, '^[^(]+')\n"
-                    + "    END as TYPE_NAME,\n"
-                    + "    cols.data_type || \n"
-                    + "        CASE \n"
-                    + "            WHEN cols.data_type IN ('VARCHAR2', 'CHAR') THEN '(' || cols.data_length || ')'\n"
-                    + "            WHEN cols.data_type IN ('NUMBER') AND cols.data_precision IS NOT NULL AND cols.data_scale IS NOT NULL THEN '(' || cols.data_precision || ', ' || cols.data_scale || ')'\n"
-                    + "            WHEN cols.data_type IN ('NUMBER') AND cols.data_precision IS NOT NULL AND cols.data_scale IS NULL THEN '(' || cols.data_precision || ')'\n"
-                    + "            WHEN cols.data_type IN ('RAW') THEN '(' || cols.data_length || ')'\n"
-                    + "        END AS FULL_TYPE_NAME,\n"
-                    + "    cols.data_length AS COLUMN_LENGTH,\n"
-                    + "    cols.data_precision AS COLUMN_PRECISION,\n"
-                    + "    cols.data_scale AS COLUMN_SCALE,\n"
-                    + "    com.comments AS COLUMN_COMMENT,\n"
-                    + "    cols.data_default AS DEFAULT_VALUE,\n"
-                    + "    CASE cols.nullable WHEN 'N' THEN 'NO' ELSE 'YES' END AS IS_NULLABLE\n"
-                    + "FROM\n"
-                    + "    all_tab_columns cols\n"
-                    + "LEFT JOIN \n"
-                    + "    all_col_comments com ON cols.table_name = com.table_name AND cols.column_name = com.column_name AND cols.owner = com.owner\n"
-                    + "WHERE \n"
-                    + "    cols.owner = '%s'\n"
-                    + "    AND cols.table_name = '%s'\n"
-                    + "ORDER BY \n"
-                    + "    cols.column_id \n";
+            " SELECT \n" +
+                    " \tdc.COLUMN_NAME\n" +
+                    "\t, CASE WHEN dc.TYPE_NAME LIKE 'INTERVAL%%' THEN 'INTERVAL'\n" +
+                    "\t ELSE REGEXP_SUBSTR(dc.TYPE_NAME, '^[^(]+')\n" +
+                    "\t END as TYPE_NAME\n" +
+                    " \t,dc.TYPE_NAME || \n" +
+                    " CASE \n" +
+                    " WHEN dc.TYPE_NAME IN ('VARCHAR2', 'CHAR') THEN '(' || dc.COLUMN_LENGTH || ')'\n" +
+                    " WHEN dc.TYPE_NAME IN ('NUMERIC') AND dc.COLUMN_PRECISION IS NOT NULL AND dc.COLUMN_SCALE IS NOT NULL THEN '(' || dc.COLUMN_PRECISION || ', ' || dc.COLUMN_SCALE || ')'\n" +
+                    " WHEN dc.TYPE_NAME IN ('NUMERIC') AND dc.COLUMN_PRECISION IS NOT NULL AND dc.COLUMN_SCALE IS NULL THEN '(' || dc.COLUMN_PRECISION || ')'\n" +
+                    " WHEN dc.TYPE_NAME IN ('RAW') THEN '(' || dc.COLUMN_LENGTH || ')'\n" +
+                    " WHEN dc.TYPE_NAME IN ('DATETIME') THEN '(' || dc.COLUMN_SCALE || ')'\n" +
+                    " END AS FULL_TYPE_NAME\n" +
+                    " \t,dc.COLUMN_LENGTH\n" +
+                    " \t,dc.COLUMN_PRECISION\n" +
+                    " \t,dc.COLUMN_SCALE\n" +
+                    " \t,dc.COLUMN_COMMENT\n" +
+                    " \t,dc.DEFAULT_VALUE\n" +
+                    "\t,CASE dc.IS_NULLABLE WHEN TRUE THEN 'NO'  ELSE 'YES' END AS IS_NULLABLE\n" +
+                    " FROM \n" +
+                    " (select\n" +
+                    "\t c.col_name AS COLUMN_NAME\n" +
+                    "\t,c.type_name AS  TYPE_NAME\n" +
+                    "\t,DECODE(c.type_name,\n" +
+                    "\t\t'TINYINT',1,'SMALLINT',2,\n" +
+                    "\t\t'INTEGER',4,'BIGINT',8,\n" +
+                    "\t\t'FLOAT',4,'DOUBLE',8,\n" +
+                    "\t\t'NUMERIC',17,\n" +
+                    "\t\t'CHAR',DECODE(c.scale,-1,60000,c.scale),\n" +
+                    "\t\t'DATE',4,'DATETIME',8,\n" +
+                    "\t\t'TIMESTAMP',8,'DATETIME WITH TIME ZONE',8,\n" +
+                    "\t\t'TIME',4,'TIME WITH TIME ZONE',4,\n" +
+                    "\t\t'INTERVAL YEAR',4,'INTERVAL MONTH',4,\n" +
+                    "\t\t'INTERVAL DAY',4,'INTERVAL HOUR',4,\n" +
+                    "\t\t'INTERVAL MINUTE',4,'INTERVAL SECOND',8,\n" +
+                    "\t\t'INTERVAL YEAR TO MONTH',4,\n" +
+                    "\t\t'INTERVAL DAY TO HOUR',4,\n" +
+                    "\t\t'INTERVAL DAY TO MINUTE',4,\n" +
+                    "\t\t'INTERVAL DAY TO SECOND',8,\n" +
+                    "\t\t'INTERVAL HOUR TO MINUTE',4,\n" +
+                    "\t\t'INTERVAL HOUR TO SECOND',8,\n" +
+                    "\t\t'INTERVAL MINUTE TO SECOND',8,\n" +
+                    "\t\t'BLOB',2000,'CLOB',2147483648,\n" +
+                    "\t\t'BLOB',2147483648,'BINARY',2147483648,\n" +
+                    "\t\t'GUID',2,'BOOLEAN',1,\n" +
+                    "\t\t'ROWVERSION',8,'ROWID',10,NULL) AS COLUMN_LENGTH\n" +
+                    "   \t,DECODE(TRUNC(c.scale/65536),0,NULL,TRUNC(c.scale/65536)::INTEGER) AS COLUMN_PRECISION\n" +
+                    "\t,DECODE(DECODE(c.type_name,'CHAR',-1,c.scale),-1,NULL,MOD(c.scale,65536)) AS COLUMN_SCALE\n" +
+                    "\t,c.comments AS COLUMN_COMMENT\n" +
+                    "\t,c.DEF_VAL AS DEFAULT_VALUE\n" +
+                    "\t,c.NOT_NULl AS IS_NULLABLE\n" +
+                    "from dba_columns c \n" +
+                    "LEFT JOIN dba_tables tab ON c.db_id = tab.db_id AND c.table_id = tab.table_id\n" +
+                    "LEFT JOIN dba_schemas sc ON tab.schema_id = sc.schema_id AND tab.db_id = sc.db_id\n" +
+                    "WHERE sc.schema_name = '%s'\n" +
+                    "AND tab.table_name ='%s'\n" +
+                    ") AS dc \n";
 
     public XuguCatalog(
             String catalogName,
@@ -127,7 +137,7 @@ public class XuguCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getListDatabaseSql() {
-        return "SELECT name FROM v$database";
+        return "SELECT DB_NAME FROM dba_databases";
     }
 
     @Override
@@ -142,11 +152,8 @@ public class XuguCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getListTableSql(String databaseName) {
-        return "SELECT OWNER, TABLE_NAME FROM ALL_TABLES"
-                + "  WHERE TABLE_NAME NOT LIKE 'MDRT_%'"
-                + "  AND TABLE_NAME NOT LIKE 'MDRS_%'"
-                + "  AND TABLE_NAME NOT LIKE 'MDXT_%'"
-                + "  AND (TABLE_NAME NOT LIKE 'SYS_IOT_OVER_%' AND IOT_NAME IS NULL)";
+        return "SELECT user_name ,table_name FROM all_users au \n" +
+                "INNER JOIN all_tables at ON au.user_id=at.user_id AND au.db_id=at.db_id";
     }
 
     @Override
@@ -193,10 +200,6 @@ public class XuguCatalog extends AbstractJdbcCatalog {
             case XUGU_BFILE:
                 bitLen = -1;
                 break;
-            case XUGU_CHAR:
-            case XUGU_NCHAR:
-            case XUGU_NVARCHAR2:
-            case XUGU_VARCHAR2:
             default:
                 break;
         }

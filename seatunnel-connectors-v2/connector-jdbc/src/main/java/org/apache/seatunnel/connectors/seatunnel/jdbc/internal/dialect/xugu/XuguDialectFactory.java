@@ -39,6 +39,6 @@ public class XuguDialectFactory implements JdbcDialectFactory {
     }
     @Override
     public JdbcDialect create(@Nonnull String compatibleMode, String fieldIde) {
-        return new OracleDialect(fieldIde);
+        return new XuguDialect(fieldIde);
     }
 }

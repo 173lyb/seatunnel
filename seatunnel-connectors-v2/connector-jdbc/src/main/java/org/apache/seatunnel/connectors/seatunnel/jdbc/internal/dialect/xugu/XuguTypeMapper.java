@@ -103,9 +103,8 @@ public class XuguTypeMapper implements JdbcDialectTypeMapper {
                 return BasicType.SHORT_TYPE;
 
             case XUGU_BIGINT:
-            case XUGU_NUMBER:
                 return BasicType.LONG_TYPE;
-
+            case XUGU_NUMBER:
             case XUGU_NUMERIC:
                 if (precision > 0) {
                     return new DecimalType(precision, metadata.getScale(colIndex));

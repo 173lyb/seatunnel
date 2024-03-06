@@ -51,7 +51,7 @@ public class DamengCatalog extends AbstractJdbcCatalog {
             new DamengDataTypeConvertor();
     private static final List<String> EXCLUDED_SCHEMAS =
             Collections.unmodifiableList(
-                    Arrays.asList("SYS", "SYSDBA", "SYSSSO", "SYSAUDITOR", "CTISYS"));
+                    Arrays.asList("SYS", "SYSSSO", "SYSAUDITOR", "CTISYS"));
 
     private static final String SELECT_COLUMNS_SQL =
             "SELECT COLUMNS.COLUMN_NAME, COLUMNS.DATA_TYPE, COLUMNS.DATA_LENGTH, COLUMNS.DATA_PRECISION, COLUMNS.DATA_SCALE "
