@@ -12,9 +12,9 @@ source {
 		user = "SYSDBA"
 		password = "SYSDBA"
 		#table_path是走catalog的sql语句拿列信息的
-		table_path = "SYSDBA.AAA_TEST6"
+		table_path = "SYSDBA.TEST_KEY_CON1"
 		#query是走jdbc拿列信息的
-		#query = "select * from SYSDBA.AAA_TEST6"
+		#query = "select * from SYSDBA.TEST_KEY_CON1"
 		fetch_size = 10000
 		result_table_name = "test1"
 	}
@@ -24,7 +24,7 @@ sink {
         url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
         driver = "com.xugu.cloudjdbc.Driver"
         user = "SYSDBA"
-        field_mapper = {"ID":"ID","A":"B","B":"A","C":"C","D":"D","E":"E","F":"F","G":"G","A1":"A1","B1":"B1","C1":"C1","D1":"D1","E1":"E1","G1":"G1"}
+        #field_mapper = {"ID":"ID","A":"B","B":"A","C":"C","D":"D","E":"E","F":"F","G":"G","A1":"A1","B1":"B1","C1":"C1","D1":"D1","E1":"E1","G1":"G1"}
         password = "SYSDBA"
         generate_sink_sql = true
         #primary_keys = ["ID"]
@@ -32,7 +32,7 @@ sink {
         data_save_mode = "APPEND_DATA"
         schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
         database = SYSTEM
-        table = SYSDBA.AAA_TEST_1
+        table = SYSDBA.TEST_KEY_CON1_AUTO
         batch_size = 10000
         }
 }

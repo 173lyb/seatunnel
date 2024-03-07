@@ -54,7 +54,11 @@ public interface JdbcOptions {
 
     Option<String> PASSWORD =
             Options.key("password").stringType().noDefaultValue().withDescription("password");
-
+    Option<Boolean> PASSWORD_DECRYPT =
+            Options.key("password_decrypt")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("Password decryption, default to false");
     Option<String> QUERY =
             Options.key("query").stringType().noDefaultValue().withDescription("query");
 
