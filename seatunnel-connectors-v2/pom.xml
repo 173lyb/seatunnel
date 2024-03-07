@@ -73,6 +73,7 @@
         <module>connector-rocketmq</module>
         <module>connector-amazonsqs</module>
         <module>connector-paimon</module>
+        <module>connector-mapping-jdbc</module>
     </modules>
 
     <dependencyManagement>
