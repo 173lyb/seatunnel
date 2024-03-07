@@ -1,0 +1,32 @@
+env {
+  #execution.parallelism = 3
+  job.mode = "BATCH"
+  #checkpoint.interval = 100000
+}
+
+source {
+
+  Clickhouse {
+    host = "10.28.23.109:8123"
+    database = "default"
+    sql = "select * from example_table"
+    username = "xugu"
+    password = "123456"
+  }
+}
+sink {
+    jdbc {
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        password = "SYSDBA"
+        generate_sink_sql = true
+        #primary_keys = ["ID"]
+        #enable_upsert = true
+        data_save_mode = "DROP_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        database = SYSTEM
+        table = SYSDBA.TEST_CLICKHOUSE
+        batch_size = 10000
+        }
+}

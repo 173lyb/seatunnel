@@ -28,6 +28,7 @@
 
     <properties>
         <hadoop3.version>3.1.4</hadoop3.version>
+        <clickhouse.version>0.3.2-patch11</clickhouse.version>
     </properties>
 
     <dependencies>
@@ -67,6 +68,26 @@
             <version>${project.version}</version>
         </dependency>
         <!-- 其他测试依赖-->
+        <!-- drivers -->
+        <dependency>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+            <version>${clickhouse.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>connector-elasticsearch</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- connector -->
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>connector-clickhouse</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
     <!-- hadoop-->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
