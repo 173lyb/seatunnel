@@ -78,7 +78,7 @@ import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.
 public class JdbcSinkFactory implements TableSinkFactory {
     @Override
     public String factoryIdentifier() {
-        return "Jdbc";
+        return "MappingJdbc";
     }
 
     private ReadonlyConfig getCatalogOptions(TableSinkFactoryContext context) {

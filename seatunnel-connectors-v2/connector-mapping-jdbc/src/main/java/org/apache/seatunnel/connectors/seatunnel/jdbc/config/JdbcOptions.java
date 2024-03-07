@@ -212,4 +212,10 @@ public interface JdbcOptions {
                     .mapType()
                     .noDefaultValue()
                     .withDescription("additional connection configuration parameters");
+    Option<Map<String, String>> FIELD_MAPPER =
+            Options.key("field_mapper")
+                    .mapType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "Specify the field mapping relationship between input and output");
 }

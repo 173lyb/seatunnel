@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.sink;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.seatunnel.api.common.JobContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DefaultSerializer;
@@ -32,12 +34,19 @@ import org.apache.seatunnel.api.sink.SupportMultiTableSink;
 import org.apache.seatunnel.api.sink.SupportSaveMode;
 import org.apache.seatunnel.api.table.catalog.Catalog;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
+import org.apache.seatunnel.api.table.catalog.Column;
+import org.apache.seatunnel.api.table.catalog.ConstraintKey;
+import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
+import org.apache.seatunnel.api.table.catalog.PrimaryKey;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
+import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
+import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcSinkConfig;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.dialectenum.FieldIdeEnum;
@@ -51,7 +60,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.apache.seatunnel.api.common.SeaTunnelAPIErrorCode.HANDLE_SAVE_MODE_FAILED;
 
@@ -59,6 +70,7 @@ public class JdbcSink
         implements SeaTunnelSink<SeaTunnelRow, JdbcSinkState, XidInfo, JdbcAggregatedCommitInfo>,
                 SupportSaveMode,
                 SupportMultiTableSink {
+    private final SeaTunnelRowType seaTunnelRowType;
 
     private final TableSchema tableSchema;
 
@@ -76,6 +88,8 @@ public class JdbcSink
 
     private final CatalogTable catalogTable;
 
+    private List<Integer> needReaderColIndex;
+
     public JdbcSink(
             ReadonlyConfig config,
             JdbcSinkConfig jdbcSinkConfig,
@@ -88,8 +102,20 @@ public class JdbcSink
         this.dialect = dialect;
         this.schemaSaveMode = schemaSaveMode;
         this.dataSaveMode = dataSaveMode;
+//        if (MapUtils.isNotEmpty(jdbcSinkConfig.getFieldMapper())){
+//            this.catalogTable = transformCatalogTable(catalogTable);
+//            this.seaTunnelRowType = catalogTable.getTableSchema().toPhysicalRowDataType();
+//        } else {
+//            this.catalogTable = catalogTable;
+//        }
+        this.seaTunnelRowType = catalogTable.getTableSchema().toPhysicalRowDataType();
         this.catalogTable = catalogTable;
-        this.tableSchema = catalogTable.getTableSchema();
+        if (MapUtils.isNotEmpty(jdbcSinkConfig.getFieldMapper())){
+            this.tableSchema = transformTableSchema();
+        }else {this.tableSchema = catalogTable.getTableSchema();}
+
+
+
     }
 
     @Override
@@ -115,10 +141,10 @@ public class JdbcSink
                 String keyName = tableSchema.getPrimaryKey().getColumnNames().get(0);
                 int index = tableSchema.toPhysicalRowDataType().indexOf(keyName);
                 if (index > -1) {
-                    return new JdbcSinkWriter(dialect, jdbcSinkConfig, tableSchema, index);
+                    return new JdbcSinkWriter(dialect, jdbcSinkConfig, tableSchema, index,seaTunnelRowType);
                 }
             }
-            sinkWriter = new JdbcSinkWriter(dialect, jdbcSinkConfig, tableSchema, null);
+            sinkWriter = new JdbcSinkWriter(dialect, jdbcSinkConfig, tableSchema, null,seaTunnelRowType);
         }
         return sinkWriter;
     }
@@ -209,4 +235,67 @@ public class JdbcSink
         }
         return Optional.empty();
     }
+    // tableSchema转换
+    protected TableSchema transformTableSchema() {
+        JdbcSinkConfig jdbcSinkConfig = JdbcSinkConfig.of(config);
+        Map<String, String> fieldMapper = jdbcSinkConfig.getFieldMapper();
+
+        List<Column> inputColumns = catalogTable.getTableSchema().getColumns();
+        SeaTunnelRowType seaTunnelRowType =
+                catalogTable.getTableSchema().toPhysicalRowDataType();
+        List<Column> outputColumns = new ArrayList<>(fieldMapper.size());
+        needReaderColIndex = new ArrayList<>(fieldMapper.size());
+        ArrayList<String> inputFieldNames = Lists.newArrayList(seaTunnelRowType.getFieldNames());
+        ArrayList<String> outputFieldNames = new ArrayList<>();
+        fieldMapper.forEach(
+                (key, value) -> {
+                    int fieldIndex = inputFieldNames.indexOf(key);
+                    if (fieldIndex < 0) {
+                        throw new JdbcConnectorException(
+                                JdbcConnectorErrorCode.INPUT_FIELD_NOT_FOUND,
+                                "Can not found field " + key + " from inputRowType");
+                    }
+                    Column oldColumn = inputColumns.get(fieldIndex);
+                    PhysicalColumn outputColumn =
+                            PhysicalColumn.of(
+                                    value,
+                                    oldColumn.getDataType(),
+                                    oldColumn.getColumnLength(),
+                                    oldColumn.isNullable(),
+                                    oldColumn.getDefaultValue(),
+                                    oldColumn.getComment());
+                    outputColumns.add(outputColumn);
+                    outputFieldNames.add(outputColumn.getName());
+                    needReaderColIndex.add(fieldIndex);
+                });
+
+        List<ConstraintKey> outputConstraintKeys =
+                catalogTable.getTableSchema().getConstraintKeys().stream()
+                        .filter(
+                                key -> {
+                                    List<String> constraintColumnNames =
+                                            key.getColumnNames().stream()
+                                                    .map(
+                                                            ConstraintKey.ConstraintKeyColumn
+                                                                    ::getColumnName)
+                                                    .collect(Collectors.toList());
+                                    return outputFieldNames.containsAll(constraintColumnNames);
+                                })
+                        .map(ConstraintKey::copy)
+                        .collect(Collectors.toList());
+
+        PrimaryKey copiedPrimaryKey = null;
+        if (catalogTable.getTableSchema().getPrimaryKey() != null
+                && outputFieldNames.containsAll(
+                catalogTable.getTableSchema().getPrimaryKey().getColumnNames())) {
+            copiedPrimaryKey = catalogTable.getTableSchema().getPrimaryKey().copy();
+        }
+
+        return TableSchema.builder()
+                .primaryKey(copiedPrimaryKey)
+                .columns(outputColumns)
+                .constraintKey(outputConstraintKeys)
+                .build();
+    }
+
 }

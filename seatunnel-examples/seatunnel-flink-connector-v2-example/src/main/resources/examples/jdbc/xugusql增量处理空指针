@@ -1,0 +1,31 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+MappingJdbc {
+    result_table_name = "http"
+    url = "jdbc:xugu://172.54.149.69:5138/adp_newapidb"
+    driver = "com.xugu.cloudjdbc.Driver"
+    user = "adp_newapidb"
+    password = "test@123"
+    password_decrypt = false
+    connection_check_timeout_sec = 100
+    query = "SELECT distinct(EVENTID) as EVENTID ,UPDATE_TIME FROM DCF_GLDM.S_SWLLZB_CONGESTION_LIST_LQYQ_API_5MIN_HISTORY WHERE UPDATE_TIME >= CURRENT_DATE - INTERVAL '1' DAY "
+}
+}
+
+ #transform {
+  #Sql {
+  #source_table_name = "http"
+#query = "select EVENTID from http where UPDATE_TIME >= to_date('2023-02-24 10:56:00','yyyy-MM-dd HH:mm:ss') "
+#result_table_name = "http1"
+#}
+#}
+
+sink {
+Console {
+        source_table_name = "http"
+}
+}

@@ -32,7 +32,7 @@ sink {
         data_save_mode = "APPEND_DATA"
         schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
         database = SYSTEM
-        table = SYSDBA.AAA_TEST_1
+        table = SYSDBA.AAA_TEST_2
         batch_size = 10000
         }
 }

@@ -1,0 +1,36 @@
+
+env {
+	job.mode = "BATCH"
+	execution.parallelism = "1"
+	job.name = "50966b9cd41c4e33b3d127c7812805fd"
+}
+
+source {
+	Jdbc {
+		query = "select * from U_MIGRATE.TEST_KEYWORD1"
+		fetch_size = 3000
+		driver = "oracle.jdbc.driver.OracleDriver"
+		url = "jdbc:oracle:thin:@//10.28.23.225:1521/orcl"
+		user = "flinkcdc"
+		password = "flinkcdc"
+		#password = "DJ7f+VvmUfs7Bg8+XiJNvQAegXQrffv6cKrjm5Z3hFMDSS+lwvp/OLPLMIYmlwOd3tMKupW84X/wRLEHYSQM5u1Bx5xozs19HC/mqtGkJVD9cWaUGHTudJmlCaTIhzb8BHg+iXpddJweYHsS1ZW+/0xZ6UHKrBalR6F/kqlBk00="
+	}
+}
+
+transform {
+}
+
+sink {
+	Jdbc {
+		table = "U_MIGRATE.TEST_KEYWORD3"
+		database = "ORCL"
+		data_save_mode = "DROP_DATA"
+		schema_save_mode = "ERROR_WHEN_SCHEMA_NOT_EXIST"
+		batch_size = 3000
+		generate_sink_sql = true
+		driver = "oracle.jdbc.driver.OracleDriver"
+		url = "jdbc:oracle:thin:@//10.28.23.225:1521/orcl"
+		user = "flinkcdc"
+		password = "flinkcdc"
+	}
+}

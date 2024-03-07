@@ -56,6 +56,7 @@ public class JdbcConnectionConfig implements Serializable {
     public String krb5Path = JdbcOptions.KRB5_PATH.defaultValue();
 
     private Map<String, String> properties;
+    public Map<String,String> fieldMapper = JdbcOptions.FIELD_MAPPER.defaultValue();
 
     public static JdbcConnectionConfig of(ReadonlyConfig config) {
         JdbcConnectionConfig.Builder builder = JdbcConnectionConfig.builder();
