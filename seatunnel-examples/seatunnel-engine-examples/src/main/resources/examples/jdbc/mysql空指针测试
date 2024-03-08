@@ -1,0 +1,42 @@
+env {
+	job.mode = "BATCH"
+	parallelism = 1
+	job.name = "d7ccb7f37d8a4e5d852688e3671142fe"
+}
+source {
+	MappingJdbc {
+		result_table_name = "T"
+		query = "select * from test.T"
+		parallelism = 1
+		fetch_size = 3000
+		split_size = 8096
+		password_decrypt = true
+		table_path = "test.T"
+		driver = "com.mysql.cj.jdbc.Driver"
+		url = "jdbc:mysql://10.28.23.202:3306/test?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+		user = "root"
+		password = "bW5dwO75kbLU6IM6qeOjnv4Ekwy74MNpPkKWaPaP688TsF+Q8Uuez8NnqOiFrZ/8RiRvQtsNxzdLZTqARcrPt6SHgIE0RchakoP7KxoqhjazNNjTgN+rOaYHQYxGm1415g+8UNzTLsUDBq3a9pg2eCQQdj3KzGvi3nhqqVQuKVM="
+	}
+}
+
+transform {
+}
+
+sink {
+	MappingJdbc {
+		database = "test"
+		table = "TT_AUTO"
+		batch_size = 3000
+		generate_sink_sql = true
+		parallelism = "1"
+		field_mapper = {"id":"ID","name":"AA"}
+		source_table_name = "T"
+		password_decrypt = true
+		driver = "com.mysql.cj.jdbc.Driver"
+        data_save_mode = "APPEND_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+		url = "jdbc:mysql://10.28.23.202:3306/test?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+		user = "root"
+		password = "bW5dwO75kbLU6IM6qeOjnv4Ekwy74MNpPkKWaPaP688TsF+Q8Uuez8NnqOiFrZ/8RiRvQtsNxzdLZTqARcrPt6SHgIE0RchakoP7KxoqhjazNNjTgN+rOaYHQYxGm1415g+8UNzTLsUDBq3a9pg2eCQQdj3KzGvi3nhqqVQuKVM="
+	}
+}

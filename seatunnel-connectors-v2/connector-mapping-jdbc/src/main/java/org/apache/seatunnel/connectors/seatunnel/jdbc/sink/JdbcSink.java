@@ -104,18 +104,15 @@ public class JdbcSink
         this.dataSaveMode = dataSaveMode;
 //        if (MapUtils.isNotEmpty(jdbcSinkConfig.getFieldMapper())){
 //            this.catalogTable = transformCatalogTable(catalogTable);
-//            this.seaTunnelRowType = catalogTable.getTableSchema().toPhysicalRowDataType();
 //        } else {
 //            this.catalogTable = catalogTable;
 //        }
         this.seaTunnelRowType = catalogTable.getTableSchema().toPhysicalRowDataType();
+//        if (MapUtils.isNotEmpty(jdbcSinkConfig.getFieldMapper())){
+//            this.tableSchema = transformTableSchema();
+//        }else {this.tableSchema = catalogTable.getTableSchema();}
         this.catalogTable = catalogTable;
-        if (MapUtils.isNotEmpty(jdbcSinkConfig.getFieldMapper())){
-            this.tableSchema = transformTableSchema();
-        }else {this.tableSchema = catalogTable.getTableSchema();}
-
-
-
+        this.tableSchema = this.catalogTable.getTableSchema();
     }
 
     @Override
@@ -236,7 +233,7 @@ public class JdbcSink
         return Optional.empty();
     }
     // tableSchema转换
-    protected TableSchema transformTableSchema() {
+    private TableSchema transformTableSchema() {
         JdbcSinkConfig jdbcSinkConfig = JdbcSinkConfig.of(config);
         Map<String, String> fieldMapper = jdbcSinkConfig.getFieldMapper();
 
@@ -268,7 +265,6 @@ public class JdbcSink
                     outputFieldNames.add(outputColumn.getName());
                     needReaderColIndex.add(fieldIndex);
                 });
-
         List<ConstraintKey> outputConstraintKeys =
                 catalogTable.getTableSchema().getConstraintKeys().stream()
                         .filter(
@@ -296,6 +292,75 @@ public class JdbcSink
                 .columns(outputColumns)
                 .constraintKey(outputConstraintKeys)
                 .build();
+    }
+    public CatalogTable transformCatalogTable(CatalogTable catalogTable) {
+        JdbcSinkConfig jdbcSinkConfig = JdbcSinkConfig.of(config);
+        Map<String, String> fieldMapper = jdbcSinkConfig.getFieldMapper();
+
+        List<Column> inputColumns = catalogTable.getTableSchema().getColumns();
+        SeaTunnelRowType seaTunnelRowType =
+                catalogTable.getTableSchema().toPhysicalRowDataType();
+        List<Column> outputColumns = new ArrayList<>(fieldMapper.size());
+        needReaderColIndex = new ArrayList<>(fieldMapper.size());
+        ArrayList<String> inputFieldNames = Lists.newArrayList(seaTunnelRowType.getFieldNames());
+        ArrayList<String> outputFieldNames = new ArrayList<>();
+        fieldMapper.forEach(
+                (key, value) -> {
+                    int fieldIndex = inputFieldNames.indexOf(key);
+                    if (fieldIndex < 0) {
+                        throw new JdbcConnectorException(
+                                JdbcConnectorErrorCode.INPUT_FIELD_NOT_FOUND,
+                                "Can not found field " + key + " from inputRowType");
+                    }
+                    Column oldColumn = inputColumns.get(fieldIndex);
+                    PhysicalColumn outputColumn =
+                            PhysicalColumn.of(
+                                    value,
+                                    oldColumn.getDataType(),
+                                    oldColumn.getColumnLength(),
+                                    oldColumn.isNullable(),
+                                    oldColumn.getDefaultValue(),
+                                    oldColumn.getComment());
+                    outputColumns.add(outputColumn);
+                    outputFieldNames.add(outputColumn.getName());
+                    needReaderColIndex.add(fieldIndex);
+                });
+        List<ConstraintKey> outputConstraintKeys =
+                catalogTable.getTableSchema().getConstraintKeys().stream()
+                        .filter(
+                                key -> {
+                                    List<String> constraintColumnNames =
+                                            key.getColumnNames().stream()
+                                                    .map(
+                                                            ConstraintKey.ConstraintKeyColumn
+                                                                    ::getColumnName)
+                                                    .collect(Collectors.toList());
+                                    return outputFieldNames.containsAll(constraintColumnNames);
+                                })
+                        .map(ConstraintKey::copy)
+                        .collect(Collectors.toList());
+
+        PrimaryKey copiedPrimaryKey = null;
+        if (catalogTable.getTableSchema().getPrimaryKey() != null
+                && outputFieldNames.containsAll(
+                catalogTable.getTableSchema().getPrimaryKey().getColumnNames())) {
+            copiedPrimaryKey = catalogTable.getTableSchema().getPrimaryKey().copy();
+        }
+
+        TableSchema tableSchema = TableSchema.builder()
+                .primaryKey(copiedPrimaryKey)
+                .columns(outputColumns)
+                .constraintKey(outputConstraintKeys)
+                .build();
+
+        return CatalogTable.of(
+                catalogTable.getTableId(),
+                tableSchema,
+                catalogTable.getOptions(),
+                catalogTable.getPartitionKeys(),
+                catalogTable.getComment(),
+                catalogTable.getCatalogName()
+        );
     }
 
 }

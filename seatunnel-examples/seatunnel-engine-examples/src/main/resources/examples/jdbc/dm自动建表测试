@@ -6,7 +6,7 @@ env {
 }
 
 source {
-	Jdbc {
+	MappingJdbc {
 		result_table_name = "TEST_KEYWORD3"
 		query = "select * from U_MIGRATE.TEST_KEYWORD3"
 		fetch_size = 3000
@@ -22,7 +22,7 @@ transform {
 }
 
 sink {
-	Jdbc {
+	MappingJdbc {
 		database = "DAMENG"
 		table = "U_MIGRATE.TEST_KEYWORD2"
 		batch_size = 3000
@@ -30,6 +30,7 @@ sink {
         #primary_keys = ["ID"]
         #enable_upsert = true
 		source_table_name = "TEST_KEYWORD3"
+		schema_save_mode = "ERROR_WHEN_SCHEMA_NOT_EXIST"
 		driver = "dm.jdbc.driver.DmDriver"
 		url = "jdbc:dm://10.28.23.127:5236"
 		user = "U_MIGRATE"
