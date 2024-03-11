@@ -204,6 +204,7 @@ public class JdbcSinkFactory implements TableSinkFactory {
         JdbcSinkConfig jdbcSinkConfig = JdbcSinkConfig.of(config);
         Map<String, String> fieldMapper = jdbcSinkConfig.getFieldMapper();
         CatalogTable catalogTable = context.getCatalogTable();
+        SeaTunnelRowType seaTunnelRowTypeFull = catalogTable.getSeaTunnelRowType();
         if (MapUtils.isNotEmpty(fieldMapper)){
             catalogTable = transformCatalogTable(context.getCatalogTable(),config);
         }
@@ -340,7 +341,8 @@ public class JdbcSinkFactory implements TableSinkFactory {
                         dialect,
                         schemaSaveMode,
                         dataSaveMode,
-                        finalCatalogTable);
+                        finalCatalogTable,
+                        seaTunnelRowTypeFull);
     }
 
     @Override

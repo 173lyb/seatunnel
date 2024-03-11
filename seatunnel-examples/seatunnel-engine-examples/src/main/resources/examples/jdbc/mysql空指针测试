@@ -25,11 +25,11 @@ transform {
 sink {
 	MappingJdbc {
 		database = "test"
-		table = "TT_AUTO"
+		table = "TT_2"
 		batch_size = 3000
 		generate_sink_sql = true
 		parallelism = "1"
-		field_mapper = {"id":"ID","name":"AA"}
+		field_mapper = {"name":"AA"}
 		source_table_name = "T"
 		password_decrypt = true
 		driver = "com.mysql.cj.jdbc.Driver"

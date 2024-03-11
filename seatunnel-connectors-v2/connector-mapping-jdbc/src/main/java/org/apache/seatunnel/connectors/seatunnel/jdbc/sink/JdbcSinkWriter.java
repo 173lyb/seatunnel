@@ -139,10 +139,10 @@ public class JdbcSinkWriter
     }
     private SeaTunnelRow transformRow(SeaTunnelRow inputRow) {
         //判空处理
-        if (jdbcSinkConfig == null || MapUtils.isEmpty(jdbcSinkConfig.getJdbcConnectionConfig().fieldMapper)) {
+        if (jdbcSinkConfig == null || MapUtils.isEmpty(jdbcSinkConfig.getFieldMapper())) {
             return inputRow;
         }
-        Map<String, String> fieldMapper = jdbcSinkConfig.getJdbcConnectionConfig().fieldMapper;
+        Map<String, String> fieldMapper = jdbcSinkConfig.getFieldMapper();
         Object[] outputDataArray = new Object[fieldMapper.size()];
         List<Integer> needReaderColIndex = new ArrayList<>();
         String[] fieldNames = rowTypeFull.getFieldNames();

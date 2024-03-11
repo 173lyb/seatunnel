@@ -96,7 +96,8 @@ public class JdbcSink
             JdbcDialect dialect,
             SchemaSaveMode schemaSaveMode,
             DataSaveMode dataSaveMode,
-            CatalogTable catalogTable) {
+            CatalogTable catalogTable,
+            SeaTunnelRowType seaTunnelRowTypeFull) {
         this.config = config;
         this.jdbcSinkConfig = jdbcSinkConfig;
         this.dialect = dialect;
@@ -107,7 +108,7 @@ public class JdbcSink
 //        } else {
 //            this.catalogTable = catalogTable;
 //        }
-        this.seaTunnelRowType = catalogTable.getTableSchema().toPhysicalRowDataType();
+        this.seaTunnelRowType = seaTunnelRowTypeFull;
 //        if (MapUtils.isNotEmpty(jdbcSinkConfig.getFieldMapper())){
 //            this.tableSchema = transformTableSchema();
 //        }else {this.tableSchema = catalogTable.getTableSchema();}
