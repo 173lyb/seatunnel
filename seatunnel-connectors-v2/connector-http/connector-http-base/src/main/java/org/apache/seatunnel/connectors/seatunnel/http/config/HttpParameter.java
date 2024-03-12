@@ -62,8 +62,7 @@ public class HttpParameter implements Serializable {
     protected Map<String, String> bodyEncrypt;
     protected Map<String, String> paramsEncrypt;
     protected Map<String, String> HikvisionApi;
-    protected int connectTimeoutMs = HttpConfig.DEFAULT_CONNECT_TIMEOUT_MS;
-    protected int socketTimeoutMs = HttpConfig.DEFAULT_SOCKET_TIMEOUT_MS;
+    protected Map<String, String> sangForApi;
 
 
 
@@ -138,6 +137,16 @@ public class HttpParameter implements Serializable {
                                             entry -> String.valueOf(entry.getValue().unwrapped()),
                                             (v1, v2) -> v2)));
         }
+        //sangForApi
+        if (pluginConfig.hasPath(HttpConfig.SANGFOR_API.key())) {
+            this.setSangForApi(
+                    pluginConfig.getConfig(HttpConfig.SANGFOR_API.key()).entrySet().stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            Map.Entry::getKey,
+                                            entry -> String.valueOf(entry.getValue().unwrapped()),
+                                            (v1, v2) -> v2)));
+        }
         // set body
         if (pluginConfig.hasPath(HttpConfig.BODY.key())) {
             this.setBody(pluginConfig.getString(HttpConfig.BODY.key()));
@@ -151,12 +160,6 @@ public class HttpParameter implements Serializable {
             this.setEnableMultilines(pluginConfig.getBoolean(HttpConfig.ENABLE_MULTI_LINES.key()));
         } else {
             this.setEnableMultilines(HttpConfig.ENABLE_MULTI_LINES.defaultValue());
-        }
-        if (pluginConfig.hasPath(HttpConfig.CONNECT_TIMEOUT_MS.key())) {
-            this.setConnectTimeoutMs(pluginConfig.getInt(HttpConfig.CONNECT_TIMEOUT_MS.key()));
-        }
-        if (pluginConfig.hasPath(HttpConfig.SOCKET_TIMEOUT_MS.key())) {
-            this.setSocketTimeoutMs(pluginConfig.getInt(HttpConfig.SOCKET_TIMEOUT_MS.key()));
         }
         // set skipSslVerification
         if (pluginConfig.hasPath(HttpConfig.SKIP_SSL_VERIFICATION.key())) {

@@ -19,16 +19,16 @@ package org.apache.seatunnel.connectors.seatunnel.http.source;
 
 
 
-import com.hikvision.artemis.sdk.ArtemisHttpUtil;
-import com.hikvision.artemis.sdk.config.ArtemisConfig;
 import com.jayway.jsonpath.*;
+import com.sangfor.ngsoc.common.aksk.service.impl.SigSignerJavaImpl;
 import net.minidev.json.JSONArray;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.CookieStore;
-import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
+import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptHandler;
+import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.DefaultEncryptStrategyFactory;
+import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.EncryptStrategyFactory;
 import org.apache.seatunnel.connectors.seatunnel.http.util.EncryptUtil;
 import org.apache.seatunnel.connectors.seatunnel.http.util.TimeUtils;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
@@ -54,8 +54,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -64,7 +62,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.apache.seatunnel.connectors.seatunnel.http.client.HttpClientProvider.APPLICATION_JSON;
-import static org.apache.seatunnel.connectors.seatunnel.http.source.encryptRequest.*;
+import static org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptRequest.*;
 
 @Slf4j
 @Setter
@@ -74,7 +72,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
     protected HttpClientProvider httpClient;
     private final DeserializationCollector deserializationCollector;
     private static final Option[] DEFAULT_OPTIONS = {
-            Option.SUPPRESS_EXCEPTIONS, Option.ALWAYS_RETURN_LIST, Option.DEFAULT_PATH_LEAF_TO_NULL
+        Option.SUPPRESS_EXCEPTIONS, Option.ALWAYS_RETURN_LIST, Option.DEFAULT_PATH_LEAF_TO_NULL
     };
     private JsonPath[] jsonPaths;
     private final JsonField jsonField;
@@ -83,10 +81,13 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
             Configuration.defaultConfiguration().addOptions(DEFAULT_OPTIONS);
     private boolean noMoreElementFlag = true;
     private Optional<PageInfo> pageInfoOptional = Optional.empty();
-    private boolean hasListParam = false;
     private boolean hasListUrl= false;
-    private boolean hasListBody = false;
     private Long pageIndex = 1L;
+    public static final String SANGFOR = "sangfor";
+    //sdk
+    public static final String SDK = "sdk";
+    //authCode
+    public static final String AUTHCODE = "authCode";
 
 
     public HttpSourceReader(
@@ -130,6 +131,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
     }
 
     public void pollAndCollectData(Collector<SeaTunnelRow> output) throws Exception {
+
         String url = this.httpParameter.getUrl();
         Map<String, String> params = this.httpParameter.getParams();
         String body = replaceBody(this.httpParameter.getBody());
@@ -497,12 +499,26 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
      * @throws Exception
      */
     private void executeRequest(Collector<SeaTunnelRow> output,Map<String, String> params,String url,String body,Map<String, String> headers) throws Exception {
-        CookieStore cookieStore = new BasicCookieStore();
-        Map<String, String> encryptParams = encryptRequestParam2(params, this.httpParameter.getParamsEncrypt());
-        String encryptBody = encryptRequestBody(body, this.httpParameter.getBodyEncrypt(),params);
-        Map<String, String> encryptHeaders = encryptRequestHeader(headers, this.httpParameter.getHeadersEncrypt(), encryptBody);
+        //加密拦截
+        EncryptStrategyFactory factory = new DefaultEncryptStrategyFactory();
+        EncryptHandler handler = new EncryptHandler(factory);
+        Map<String, String> encryptParams = handler.handleParams(params, this.httpParameter.getParamsEncrypt());
+        String encryptBody = handler.handleBody(body, this.httpParameter.getBodyEncrypt(),params);
+        Map<String, String> encryptHeaders = handler.handleHeader(headers, this.httpParameter.getHeadersEncrypt(), encryptBody);
+
         HttpResponse response;
+        //其他sdk处理
+        Map<String, String> otherSdk = new HashMap<>();
         Map<String, String> hikvisionApi = this.httpParameter.getHikvisionApi();
+        Map<String, String> sangForApi = this.httpParameter.getSangForApi();
+        if (MapUtils.isNotEmpty(sangForApi)){
+            String authCode = sangForApi.get(AUTHCODE);
+            if (StringUtils.isNotBlank(authCode)){
+                otherSdk.put(SDK, SANGFOR);
+                otherSdk.put(AUTHCODE,authCode);
+            }
+        }
+        //实际执行
         if (MapUtils.isNotEmpty(hikvisionApi)){
             response = handleHikvisionApi(url,
                     encryptBody,
@@ -518,9 +534,10 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     encryptHeaders,
                     encryptParams,
                     encryptBody,
-                    cookieStore);
+                    otherSdk);
         }
 
+        //状态拦截
         if (HttpResponse.STATUS_OK == response.getCode() || HttpResponse.STATUS_CREATED == response.getCode()) {
             String content = "";
             boolean paramsAdd = this.httpParameter.isParamsAdd();
@@ -545,7 +562,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                             encryptParams,
                             encryptBody,
                             response.getCode(),
-                            response.getContent());
+                            responseString);
                     throw new SeaTunnelException("未正确获取到RSA加密数据");
                 }
             }
@@ -583,10 +600,10 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     collect(output, content);
                 }
             }
-            if (content.length() > 200) {
+            if (content.length() > 500) {
                 StringBuilder sb = new StringBuilder(content);
-                if (sb.length() > 200) {
-                    sb.setLength(200);
+                if (sb.length() > 500) {
+                    sb.setLength(500);
                     sb.append("......");
                 }
                 content = sb.toString();
@@ -605,7 +622,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     encryptParams,
                     encryptBody,
                     response.getCode(),
-                    response.getContent());
+                    content);
         } else {
             noMoreElementFlag = true;
             log.error("http client execute exception, request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
@@ -618,47 +635,14 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         }
     }
 
+
     /**
-     * 拦截海康sdk
+     * 拦截深信服sdk
      */
-    private HttpResponse handleHikvisionApi(String uri, String body, Map<String, String> querys, String accept, String contentType, Map<String, String> header, Map<String, String> hikvisionApi)  {
-        //提取出host和path
-        URL url = null;
-        Map<String, String> path;
-        try {
-            url = new URL(uri);
-            String hostStr = url.getHost();
-            int port = url.getPort();
-            String host = port == -1 ? hostStr : hostStr + ":" + port;
-            String pathStr = url.getPath();
-            String protocol = url.getProtocol();
-            log.info("HikvisionApi的host:{},path:{},protocol:{}",host,pathStr,protocol);
-            path = new HashMap<String, String>(2) {
-                {
-                    put(protocol+"://", pathStr);
-                }
-            };
-            ArtemisConfig.host = host;
-            ArtemisConfig.appKey = hikvisionApi.get("app_key");
-            ArtemisConfig.appSecret = hikvisionApi.get("app_secret");
-            log.info("HikvisionApi的appKey:{},appSecret:{}",ArtemisConfig.appKey,ArtemisConfig.appSecret);
-        } catch (MalformedURLException e) {
-            throw new SeaTunnelException("url格式错误",e);
-        } catch (Exception e) {
-            throw new SeaTunnelException("提取url的host、path、protocol失败",e);
-        }
-        String result = ArtemisHttpUtil.doPostStringArtemis(path, body, querys, null, contentType, header);
-        //将result封装成httpResponse
-        JsonNode resultNode = JsonUtils.parseObject(result);
-        HttpResponse httpResponse = new HttpResponse();
-        JsonNode msg = resultNode.get("msg");
-        if (msg != null) {
-            if ("success".equals(msg.asText())) {
-                httpResponse.setCode(200);
-            }
-        }
-        httpResponse.setContent(result);
-        return httpResponse;
+    private HttpResponse processSangfor(String content, DocumentContext context, boolean isAdd, JsonNode dataJsonNode, String dataPath, String prefix
+    ) throws Exception {
+        SigSignerJavaImpl sigSignerJava = new SigSignerJavaImpl("35623565623538362D643234302D346339372D393532342D3335333266643761666435397C7C7C73616E67666F727C76317C3132372E302E302E317C7C7C7C33323239424638333141414146384542423930384542343344383141343033454344393643323132443530324145353231443643304637314137413030423642303545413934303242463838314246454636383346304641323135444234434138303737423834324439454642383230313833454532434445394337363730367C36363834384345354234363033423243424239323434394534443742313341303233323330434342413543433232313146323135333333464545313545393641433534383242383542353030333339314435373037413144433946343645364639313032423444364637444443434146434534453045443636424431303837327C7C307C");
+        return null;
     }
 
     /**
@@ -680,23 +664,23 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         return content;
     }
     void handleJsonNode(String parentPath, DocumentContext context, String prefix, JsonNode jsonNode) {
-        Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
-        while (fields.hasNext()) {
-            Map.Entry<String, JsonNode> entry = fields.next();
-            String modifiedKey = prefix + "_" + entry.getKey();
-            String newPath = parentPath;  // 连接父路径和当前键名
-            JsonNode value = entry.getValue();
+            Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                String modifiedKey = prefix + "_" + entry.getKey();
+                String newPath = parentPath;  // 连接父路径和当前键名
+                JsonNode value = entry.getValue();
 
-            if (value.isObject()) {
-                context.put(newPath,modifiedKey, new HashMap<>());
-                newPath =  newPath + "." + modifiedKey;
-                handleJsonNode(newPath, context, prefix, value);
-            } else if (value.isArray()){
-                context.put(newPath,modifiedKey, value.toString());
-            }else {
-                context.put(newPath,modifiedKey, value.asText());
+                if (value.isObject()) {
+                    context.put(newPath,modifiedKey, new HashMap<>());
+                    newPath =  newPath + "." + modifiedKey;
+                    handleJsonNode(newPath, context, prefix, value);
+                } else if (value.isArray()){
+                    context.put(newPath,modifiedKey, value.toString());
+                }else {
+                    context.put(newPath,modifiedKey, value.asText());
+                }
             }
-        }
     }
 
     /**

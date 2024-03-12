@@ -25,9 +25,6 @@ import java.util.Map;
 
 public class HttpConfig {
     public static final String BASIC = "Basic";
-    public static final String CONNECTOR_IDENTITY = "Http";
-    public static final int DEFAULT_CONNECT_TIMEOUT_MS = 6000 * 2;
-    public static final int DEFAULT_SOCKET_TIMEOUT_MS = 6000 * 10;
     public static final int DEFAULT_RETRY_BACKOFF_MULTIPLIER_MS = 100;
     public static final int DEFAULT_RETRY_BACKOFF_MAX_MS = 10000;
     public static final boolean DEFAULT_ENABLE_MULTI_LINES = false;
@@ -179,12 +176,12 @@ public class HttpConfig {
 
     public static final Option<List<String>> PARAMS_CONVERT =
             Options.key("params_convert")
-                    .listType()
-                    .noDefaultValue()
-                    .withDescription("特定需求，将时间参数转换成时间戳");
+                   .listType()
+                   .noDefaultValue()
+                   .withDescription("特定需求，将时间参数转换成时间戳");
     public static final Option<List<String>> BODY_CONVERT =
             Options.key("body_convert")
-                    .listType()
+                   .listType()
                     .noDefaultValue()
                     .withDescription("特定需求，将时间参数转换成时间戳");
     public static final Option<List<String>> HEADERS_CONVERT =
@@ -229,25 +226,20 @@ public class HttpConfig {
                     .mapType()
                     .noDefaultValue()
                     .withDescription("海康特殊sdk处理");
-    public static final Option<Integer> CONNECT_TIMEOUT_MS =
-            Options.key("connect_timeout_ms")
-                    .intType()
-                    .defaultValue(DEFAULT_CONNECT_TIMEOUT_MS)
-                    .withDescription("Connection timeout setting, default 12s.");
+    //sangForApi
+    public static final Option<Map<String, String>> SANGFOR_API =
+            Options.key("sangfor_api")
+            .mapType()
+            .noDefaultValue()
+            .withDescription("深信服特殊sdk处理");
 
-    public static final Option<Integer> SOCKET_TIMEOUT_MS =
-            Options.key("socket_timeout_ms")
-                    .intType()
-                    .defaultValue(DEFAULT_SOCKET_TIMEOUT_MS)
-                    .withDescription("Socket timeout setting, default 60s.");
 
 
 
 
 
     public enum ResponseFormat {
-        JSON("json"),
-        TEXT("text");
+        JSON("json");
 
         private String format;
 

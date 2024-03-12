@@ -1,17 +1,23 @@
-package org.apache.seatunnel.connectors.seatunnel.http.source;
+package org.apache.seatunnel.connectors.seatunnel.http.source.encrypt;
 
+import com.hikvision.artemis.sdk.ArtemisHttpUtil;
+import com.hikvision.artemis.sdk.config.ArtemisConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
+import org.apache.seatunnel.connectors.seatunnel.http.client.HttpResponse;
 import org.apache.seatunnel.connectors.seatunnel.http.util.EncryptUtil;
 import org.apache.seatunnel.connectors.seatunnel.http.util.Md5Util;
 import org.apache.seatunnel.connectors.seatunnel.http.util.TimeUtils;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.util.DigestUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Base64;
@@ -21,22 +27,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.*;
+import static org.apache.seatunnel.connectors.seatunnel.http.util.SingUtil.sign;
+
 @Slf4j
-public class encryptRequest {
+public class EncryptRequest {
 
-    public static final String SEMICOLON = ";";
 
-    public static final String ACCOUNT = "account";
-    public static final String SIGN = "sign";
-    public static final String CID = "cid";
-    public static final String TS = "ts";
-    public static final String CODE = "code";
-    public static final String DAY = "day";
-    public static final String MONTH = "month";
-    public static final String YEAR = "year";
-    public static final String WEEK = "week";
-
-    public static final String HOLIDAY = "holiday";
 
     /**
      * 拦截http请求参数，做MD5加密处理
@@ -205,28 +202,62 @@ public class encryptRequest {
             //秒级时间戳
             base64Map.put("timestamp", System.currentTimeMillis()/1000);
             return JsonUtils.toJsonString(base64Map);
+        } else if ("Digital-Twin-MD5".equals(encryptType)) {
+            String appKey = bodyMap.get("appKey").toString();
+            String appSecret= bodyMap.get("appSecret").toString();
+            long timeMillis = System.currentTimeMillis();
+            long ts = (timeMillis / 1000) - 70;
+            String signature = Md5Util.md5Lower("appKey=" + appKey + "&appSecret=" + appSecret + "&timestamp=" + ts);
+            bodyMap.put("signature", signature);
+            bodyMap.put("timestamp", ts);
         }
         return JsonUtils.toJsonString(bodyMap);
     }
 
 
 
-    private static String sign(Map<String, Object> params, String secretKey) {
-        String signStr = params.keySet().stream()
-                .filter(key -> !SIGN.equals(key))
-                .sorted()
-                .map(params::get)
-                .filter(Objects::nonNull)
-                .map(value -> {
-                    if (value instanceof String) {
-                        return (String) value;
-                    } else {
-                        return JsonUtils.toJsonString(value);
-                    }
-                })
-                .collect(Collectors.joining(SEMICOLON)) + SEMICOLON + secretKey;
-        String sign = Md5Util.md5Upper(signStr);
-        log.info("sign加密串: {}", sign);
-        return sign;
+
+
+    /**
+     * 拦截海康sdk
+     */
+    public static HttpResponse handleHikvisionApi(String uri, String body, Map<String, String> querys, String accept, String contentType, Map<String, String> header, Map<String, String> hikvisionApi)  {
+        //提取出host和path
+        URL url = null;
+        Map<String, String> path;
+        try {
+            url = new URL(uri);
+            String hostStr = url.getHost();
+            int port = url.getPort();
+            String host = port == -1 ? hostStr : hostStr + ":" + port;
+            String pathStr = url.getPath();
+            String protocol = url.getProtocol();
+            log.info("HikvisionApi的host:{},path:{},protocol:{}",host,pathStr,protocol);
+            path = new HashMap<String, String>(2) {
+                {
+                    put(protocol+"://", pathStr);
+                }
+            };
+            ArtemisConfig.host = host;
+            ArtemisConfig.appKey = hikvisionApi.get("app_key");
+            ArtemisConfig.appSecret = hikvisionApi.get("app_secret");
+            log.info("HikvisionApi的appKey:{},appSecret:{}",ArtemisConfig.appKey,ArtemisConfig.appSecret);
+        } catch (MalformedURLException e) {
+            throw new SeaTunnelException("url格式错误",e);
+        } catch (Exception e) {
+            throw new SeaTunnelException("提取url的host、path、protocol失败",e);
+        }
+        String result = ArtemisHttpUtil.doPostStringArtemis(path, body, querys, null, contentType, header);
+        //将result封装成httpResponse
+        JsonNode resultNode = JsonUtils.parseObject(result);
+        HttpResponse httpResponse = new HttpResponse();
+        JsonNode msg = resultNode.get("msg");
+        if (msg != null) {
+            if ("success".equals(msg.asText())) {
+                httpResponse.setCode(200);
+            }
+        }
+        httpResponse.setContent(result);
+        return httpResponse;
     }
 }
