@@ -638,7 +638,8 @@ public class FieldNamedPreparedStatement implements PreparedStatement {
             // currently, the statements must contain all the field parameters
             checkArgument(parameterMap.size() == fieldNames.length);
             for (int i = 0; i < fieldNames.length; i++) {
-                String fieldName = fieldNames[i];
+                String fieldName = fieldNames[i].replace("'", "");
+                //String fieldName = fieldNames[i];
                 checkArgument(
                         parameterMap.containsKey(fieldName),
                         fieldName + " doesn't exist in the parameters of SQL statement: " + sql);
@@ -652,6 +653,7 @@ public class FieldNamedPreparedStatement implements PreparedStatement {
 
     private static String parseNamedStatement(String sql, Map<String, List<Integer>> paramMap) {
         StringBuilder parsedSql = new StringBuilder();
+        sql = sql.replace("'", "");
         int fieldIndex = 1; // SQL statement parameter index starts from 1
         int length = sql.length();
         for (int i = 0; i < length; i++) {
