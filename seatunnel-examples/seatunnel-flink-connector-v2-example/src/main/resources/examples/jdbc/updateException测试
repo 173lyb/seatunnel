@@ -1,0 +1,45 @@
+env {
+	job.mode = "BATCH"
+	parallelism = "1"
+	job.name = "mysql2mysql-bug8372"
+}
+
+source {
+	MappingJdbc {
+		result_table_name = "mysql_dataSource6"
+		query = "select * from yyj_mysql.mysql_dataSource6"
+		parallelism = 1
+		fetch_size = 10000
+		split_size = 8096
+		password_decrypt = true
+		table_path = "yyj_mysql.mysql_dataSource6"
+		driver = "com.mysql.cj.jdbc.Driver"
+		url = "jdbc:mysql://10.28.23.234:3306/yyj_mysql?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+		user = "yyjMySQLUser"
+		password = "BkavaQDuDzKQhyP1MpVRjvPuBIJ1VFSPTiASki7WOYbKq4w2eX+joTwxlkgreGIpMjt0ShFfdS6nkbRPsY350LpXm1TVSi8qJtU2mCRZ1DUX+DZcEyHUXZmcTgD1FbxHxYx0dROuWG09UlnJ53E6oDA/Cci9uKVjVsg1K8Ci9as="
+	}
+}
+
+transform {
+}
+
+sink {
+	MappingJdbc {
+		database = "yyj_mysql"
+		table = "mysql_dataSource4"
+		batch_size = 10000
+		generate_sink_sql = true
+		parallelism = 1
+		field_mapper = {"id":"id","floatData":"floatData","doubleData":"doubleData","decimalData":"decimalData","datetimeData":"datetimeData","timestampData":"timestampData","charData":"charData","varcharData":"varcharData","textData":"textData"}
+		source_table_name = "mysql_dataSource6"
+		password_decrypt = true
+		data_save_mode = "APPEND_DATA"
+		schema_save_mode = "ERROR_WHEN_SCHEMA_NOT_EXIST"
+		custom_sql = "select * from mysql_dataSource4"
+		enable_upsert = true
+		driver = "com.mysql.cj.jdbc.Driver"
+		url = "jdbc:mysql://10.28.23.234:3306/yyj_mysql?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+		user = "yyjMySQLUser"
+		password = "BkavaQDuDzKQhyP1MpVRjvPuBIJ1VFSPTiASki7WOYbKq4w2eX+joTwxlkgreGIpMjt0ShFfdS6nkbRPsY350LpXm1TVSi8qJtU2mCRZ1DUX+DZcEyHUXZmcTgD1FbxHxYx0dROuWG09UlnJ53E6oDA/Cci9uKVjVsg1K8Ci9as="
+	}
+}

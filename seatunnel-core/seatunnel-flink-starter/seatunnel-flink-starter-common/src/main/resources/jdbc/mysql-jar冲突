@@ -1,0 +1,39 @@
+env {
+  parallelism = 3
+  job.mode = "BATCH"
+  job.name = "test1"
+  #checkpoint.interval = 100000
+}
+
+source {
+	MappingJdbc {
+		query = "select * from test.sales_data1QW limit 10"
+		table_path = "test.sales_data1QW"
+		result_table_name = "test"
+		driver = "com.mysql.cj.jdbc.Driver"
+		url ="jdbc:mysql://10.28.23.202:3306/test?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&allowMultiQueries=true&rewriteBatchedStatements=true"
+		user = "root"
+		password = "123456"
+		#parallelism = 6
+		fetch_size = 10000
+		#split.size = 100000
+	}
+}
+
+
+sink {
+    MappingJdbc {
+		source_table_name = "test"
+        url = "jdbc:mysql://10.28.23.202:3306/test?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&allowMultiQueries=true&rewriteBatchedStatements=true"
+		driver = "com.mysql.cj.jdbc.Driver"
+		user = "root"
+		password = "123456"
+		#query = "insert into testdb.seatunnel_table_sink values(?)"
+        generate_sink_sql = true
+        database = test
+        table = sales_data555
+        batch_size = 10000
+		#batch_interval = 6
+		#parallelism = 8
+        }
+}

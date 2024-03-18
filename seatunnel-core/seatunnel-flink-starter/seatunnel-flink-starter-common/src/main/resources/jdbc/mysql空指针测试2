@@ -1,0 +1,40 @@
+env {
+	job.mode = "BATCH"
+	parallelism = 1
+	job.name = "d7ccb7f37d8a4e5d852688e3671142fe"
+}
+source {
+	Jdbc {
+		result_table_name = "T"
+		query = "select * from test.T"
+		parallelism = 1
+		fetch_size = 3000
+		split_size = 8096
+		table_path = "test.T"
+		driver = "com.mysql.cj.jdbc.Driver"
+		url = "jdbc:mysql://10.28.23.202:3306/test?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+		user = "root"
+		password = "123456"
+	}
+}
+
+transform {
+}
+
+sink {
+	Jdbc {
+		database = "test"
+		table = "TT"
+		batch_size = 3000
+		generate_sink_sql = true
+		parallelism = "1"
+		source_table_name = "T"
+		password_decrypt = true
+		driver = "com.mysql.cj.jdbc.Driver"
+        data_save_mode = "APPEND_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+		url = "jdbc:mysql://10.28.23.202:3306/test?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+		user = "root"
+		password = "123456"
+	}
+}

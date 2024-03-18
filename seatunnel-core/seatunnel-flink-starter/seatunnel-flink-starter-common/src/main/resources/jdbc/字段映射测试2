@@ -1,0 +1,34 @@
+
+env {
+	job.mode = "BATCH"
+	execution.parallelism = "1"
+	job.name = "50966b9cd41c4e33b3d127c7812805fd"
+}
+
+source {
+	MappingJdbc {
+		result_table_name = "TEST_KEYWORD1"
+		query = "select * from U_MIGRATE.TEST_KEYWORD6_P"
+		fetch_size = 3000
+		driver = "oracle.jdbc.driver.OracleDriver"
+		url = "jdbc:oracle:thin:@//10.28.23.225:1521/orcl"
+		user = "flinkcdc"
+		password = "DJ7f+VvmUfs7Bg8+XiJNvQAegXQrffv6cKrjm5Z3hFMDSS+lwvp/OLPLMIYmlwOd3tMKupW84X/wRLEHYSQM5u1Bx5xozs19HC/mqtGkJVD9cWaUGHTudJmlCaTIhzb8BHg+iXpddJweYHsS1ZW+/0xZ6UHKrBalR6F/kqlBk00="
+	}
+}
+
+transform {
+}
+
+sink {
+	MappingJdbc {
+		batch_size = 3000
+		field_mapper = {"ID":"ID","AGE":"NAME","LESS":"LESS"}
+		source_table_name = "TEST_KEYWORD1"
+		query = "insert into U_MIGRATE.TEST_KEYWORD5(\"ID\",\"NAME\",\"LESS\") values(?,?,?)"
+		driver = "oracle.jdbc.driver.OracleDriver"
+		url = "jdbc:oracle:thin:@//10.28.23.225:1521/orcl"
+		user = "flinkcdc"
+		password = "DJ7f+VvmUfs7Bg8+XiJNvQAegXQrffv6cKrjm5Z3hFMDSS+lwvp/OLPLMIYmlwOd3tMKupW84X/wRLEHYSQM5u1Bx5xozs19HC/mqtGkJVD9cWaUGHTudJmlCaTIhzb8BHg+iXpddJweYHsS1ZW+/0xZ6UHKrBalR6F/kqlBk00="
+	}
+}

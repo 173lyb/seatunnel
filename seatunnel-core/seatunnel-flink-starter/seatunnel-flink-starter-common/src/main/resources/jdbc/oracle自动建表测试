@@ -1,0 +1,33 @@
+env {
+  #execution.parallelism = 3
+  job.mode = "BATCH"
+  #checkpoint.interval = 100000
+}
+
+source {
+	MappingJdbc {
+		result_table_name = "jdbc"
+		table_path = "U_MIGRATE.TEST_KEY_CON1"
+		fetch_size = 3000
+		driver = "oracle.jdbc.driver.OracleDriver"
+		url = "jdbc:oracle:thin:@//10.28.23.225:1521/orcl"
+		user = "flinkcdc"
+		password = "flinkcdc"
+	}
+}
+sink {
+	MappingJdbc {
+		table = "U_MIGRATE.TEST_KEY_CON1_AUTO"
+		database = "ORCL"
+		batch_size = 3000
+		password_decrypt = false
+		generate_sink_sql = true
+		source_table_name = "jdbc"
+		driver = "oracle.jdbc.driver.OracleDriver"
+		url = "jdbc:oracle:thin:@//10.28.23.225:1521/orcl"
+		data_save_mode = "APPEND_DATA"
+        #schema_save_mode = "RECREATE_SCHEMA"
+		user = "flinkcdc"
+		password = "flinkcdc"
+	}
+}

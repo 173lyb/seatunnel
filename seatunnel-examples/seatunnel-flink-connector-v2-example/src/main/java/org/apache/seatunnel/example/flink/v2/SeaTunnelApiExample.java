@@ -18,6 +18,7 @@
 package org.apache.seatunnel.example.flink.v2;
 
 import org.apache.seatunnel.core.starter.SeaTunnel;
+import org.apache.seatunnel.core.starter.enums.MasterType;
 import org.apache.seatunnel.core.starter.exception.CommandException;
 import org.apache.seatunnel.core.starter.flink.args.FlinkCommandArgs;
 
@@ -25,14 +26,21 @@ import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SeaTunnelApiExample {
 
     public static void main(String[] args)
             throws FileNotFoundException, URISyntaxException, CommandException {
-        String configurePath = args.length > 0 ? args[0] : "/examples/jdbc/xugu自动建表测试";
+        String configurePath = args.length > 0 ? args[0] : "/examples/jdbc/updateException测试";
         String configFile = getTestConfigFile(configurePath);
         FlinkCommandArgs flinkCommandArgs = new FlinkCommandArgs();
+        List<String> remote = new ArrayList<>();
+        remote.add("-Drest.address: master");
+        remote.add("-Drest.port: 8081");
+        flinkCommandArgs.setOriginalParameters(remote);
+        flinkCommandArgs.setMasterType(MasterType.REMOTE);
         flinkCommandArgs.setConfigFile(configFile);
         flinkCommandArgs.setCheckConfig(false);
         flinkCommandArgs.setVariables(null);
