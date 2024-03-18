@@ -141,6 +141,12 @@ public class HttpConfig {
                     .defaultValue(false)
                     .withDescription(
                             "是否追加cookies到所读取json的指定路径下，需要与cookies_path配合使用，默认追加到根路径");
+    public static final Option<String> COOKIES_KEY =
+            Options.key("cookies_key")
+                    .stringType()
+                    .defaultValue("JSESSIONID")
+                    .withDescription(
+                            "header返回的cookie的key值，默认是JSESSIONID");
     public static final Option<String> COOKIES_PATH =
             Options.key("cookies_path")
                     .stringType()

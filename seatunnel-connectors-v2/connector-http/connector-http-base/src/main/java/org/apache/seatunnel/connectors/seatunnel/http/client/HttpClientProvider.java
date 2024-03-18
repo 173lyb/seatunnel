@@ -87,11 +87,13 @@ public class HttpClientProvider implements AutoCloseable {
     private RequestConfig requestConfig;
     private final CloseableHttpClient httpClient;
     private final Retryer<CloseableHttpResponse> retryer;
+    protected HttpParameter httpParameter;
 
 
 
 
     public HttpClientProvider(HttpParameter httpParameter) {
+        this.httpParameter = httpParameter;
         try {
             SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, new TrustStrategy() {
                 @Override
@@ -432,11 +434,12 @@ public class HttpClientProvider implements AutoCloseable {
                 }
                 HeaderElementIterator it = new BasicHeaderElementIterator(httpResponse.headerIterator("Set-Cookie"));
                 String cookies = "";
+                String cookiesKey = this.httpParameter.getCookiesKey();
                 while (it.hasNext()) {
                     HeaderElement elem = it.nextElement();
                     String name = elem.getName();
                     String value = elem.getValue();
-                    if ("JSESSIONID".equals(name) && value != null) {
+                    if (cookiesKey.equals(name) && value != null ) {
                         cookies = name + "=" + value;
                     }
                 }

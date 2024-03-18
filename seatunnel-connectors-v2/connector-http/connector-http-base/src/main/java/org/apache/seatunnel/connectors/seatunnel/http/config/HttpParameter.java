@@ -47,6 +47,7 @@ public class HttpParameter implements Serializable {
     protected boolean paramsAdd;
     protected String paramsPath;
     protected boolean cookiesAdd;
+    protected String cookiesKey;
     protected String cookiesPath;
     protected boolean bodyAdd;
     protected String bodyPath;
@@ -184,6 +185,12 @@ public class HttpParameter implements Serializable {
             this.setCookiesAdd(pluginConfig.getBoolean(HttpConfig.COOKIES_ADD.key()));
         } else {
             this.setCookiesAdd(HttpConfig.COOKIES_ADD.defaultValue());
+        }
+        // set cookies_key
+        if (pluginConfig.hasPath(HttpConfig.COOKIES_KEY.key())) {
+            this.setCookiesKey(pluginConfig.getString(HttpConfig.COOKIES_KEY.key()));
+        } else {
+            this.setCookiesKey(HttpConfig.COOKIES_KEY.defaultValue());
         }
         // set cookies_path
         if (pluginConfig.hasPath(HttpConfig.COOKIES_PATH.key())) {

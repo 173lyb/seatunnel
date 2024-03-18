@@ -25,7 +25,10 @@ import net.minidev.json.JSONArray;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.seatunnel.common.exception.SeaTunnelErrorCode;
+import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
+import org.apache.seatunnel.connectors.seatunnel.http.exception.HttpConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptHandler;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.DefaultEncryptStrategyFactory;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.EncryptStrategyFactory;
@@ -518,6 +521,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                 otherSdk.put(AUTHCODE,authCode);
             }
         }
+        //
         //实际执行
         if (MapUtils.isNotEmpty(hikvisionApi)){
             response = handleHikvisionApi(url,
@@ -625,25 +629,25 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     content);
         } else {
             noMoreElementFlag = true;
-            log.error("http client execute exception, request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
+            String error = String.format("http client execute exception, request url:%s, request headers:%s, request param:%s, request body:%s,http response status code:%s, content:%s",
                     url,
                     encryptHeaders,
                     encryptParams,
                     encryptBody,
                     response.getCode(),
                     response.getContent());
+            throw  new SeaTunnelException(error);
+//            log.error("http client execute exception, request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
+//                    url,
+//                    encryptHeaders,
+//                    encryptParams,
+//                    encryptBody,
+//                    response.getCode(),
+//                    response.getContent());
         }
     }
 
 
-    /**
-     * 拦截深信服sdk
-     */
-    private HttpResponse processSangfor(String content, DocumentContext context, boolean isAdd, JsonNode dataJsonNode, String dataPath, String prefix
-    ) throws Exception {
-        SigSignerJavaImpl sigSignerJava = new SigSignerJavaImpl("35623565623538362D643234302D346339372D393532342D3335333266643761666435397C7C7C73616E67666F727C76317C3132372E302E302E317C7C7C7C33323239424638333141414146384542423930384542343344383141343033454344393643323132443530324145353231443643304637314137413030423642303545413934303242463838314246454636383346304641323135444234434138303737423834324439454642383230313833454532434445394337363730367C36363834384345354234363033423243424239323434394534443742313341303233323330434342413543433232313146323135333333464545313545393641433534383242383542353030333339314435373037413144433946343645364639313032423444364637444443434146434534453045443636424431303837327C7C307C");
-        return null;
-    }
 
     /**
      * 将参数追加到响应体
