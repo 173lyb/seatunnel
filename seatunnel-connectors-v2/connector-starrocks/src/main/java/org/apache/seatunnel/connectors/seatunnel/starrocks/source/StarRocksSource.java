@@ -36,7 +36,6 @@ import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.config.SourceConfig;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.exception.StarRocksConnectorException;
 
-import com.google.auto.service.AutoService;
 
 import static org.apache.seatunnel.connectors.seatunnel.starrocks.config.CommonConfig.DATABASE;
 import static org.apache.seatunnel.connectors.seatunnel.starrocks.config.CommonConfig.NODE_URLS;
@@ -44,7 +43,6 @@ import static org.apache.seatunnel.connectors.seatunnel.starrocks.config.CommonC
 import static org.apache.seatunnel.connectors.seatunnel.starrocks.config.CommonConfig.TABLE;
 import static org.apache.seatunnel.connectors.seatunnel.starrocks.config.CommonConfig.USERNAME;
 
-@AutoService(SeaTunnelSource.class)
 public class StarRocksSource
         implements SeaTunnelSource<SeaTunnelRow, StarRocksSourceSplit, StarRocksSourceState> {
 

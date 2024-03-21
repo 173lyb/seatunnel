@@ -1,0 +1,34 @@
+env {
+	job.mode = "BATCH"
+	parallelism = "1"
+}
+
+source {
+	S3File {
+		fs.s3a.endpoint = "http://10.28.23.110:9010"
+		fs.s3a.aws.credentials.provider = "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider"
+		access_key = "1OkI53dJYgOJODLfUoQg"
+		secret_key = "V4ROTtoJTaLb0UI9VfgA6ZJM2FaNZBsIaBJyrtNW"
+		bucket = "s3a://xugurtp"
+		path = "/xugurtp/2024/03/19/00b6533b9dc847c0ae113e951a861f31.csv"
+		delimiter = ","
+		file_format_type = "csv"
+		skip_header_row_number = "1"
+		result_table_name = "aaa"
+		schema = {"fields":{"id":"int","floatData":"float","doubleData":"double","decimalData":"decimal(12,10)","datetimeData":"timestamp","timestampData":"timestamp","charData":"string","varcharData":"string","textData":"string"}}
+	}
+}
+
+transform {
+}
+
+sink {
+console {
+		source_table_name = "aaa"
+}
+	hive {
+		source_table_name = "aaa"
+		table_name = "test_yyj.hive_datasource_1"
+		metastore_uri = "thrift://10.28.23.152:9083"
+	}
+}

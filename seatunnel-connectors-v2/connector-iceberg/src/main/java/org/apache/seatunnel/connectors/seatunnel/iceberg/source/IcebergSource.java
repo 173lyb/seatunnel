@@ -48,7 +48,6 @@ import org.apache.seatunnel.connectors.seatunnel.iceberg.source.split.IcebergFil
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.types.Types;
 
-import com.google.auto.service.AutoService;
 import lombok.SneakyThrows;
 
 import java.util.ArrayList;
@@ -56,7 +55,6 @@ import java.util.List;
 
 import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkArgument;
 
-@AutoService(SeaTunnelSource.class)
 public class IcebergSource
         implements SeaTunnelSource<
                         SeaTunnelRow, IcebergFileScanTaskSplit, IcebergSplitEnumeratorState>,
