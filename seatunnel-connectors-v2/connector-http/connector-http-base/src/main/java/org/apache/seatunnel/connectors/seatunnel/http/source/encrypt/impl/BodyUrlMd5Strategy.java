@@ -1,5 +1,6 @@
 package org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
@@ -10,6 +11,7 @@ import java.util.Map;
 
 import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.*;
 
+@Slf4j
 public class BodyUrlMd5Strategy implements EncryptStrategy {
     @Override
     public void encryptBody(String body, Map<String, Object> bodyMap, Map<String, String> bodyEncrypt,Map<String,String> params) throws SeaTunnelException {
@@ -17,6 +19,7 @@ public class BodyUrlMd5Strategy implements EncryptStrategy {
         String encryptKey = bodyEncrypt.get(ENCRYPT_KEY);
         if (StringUtils.isNotBlank(encryptKey)) {
             String sign = Md5Util.md5Upper(bodyStr + encryptKey);
+            log.info("body-url-md5加密获取的sign:{}", sign);
             params.put(SIGN, sign);
         } else {
             throw new SeaTunnelException("无法找到encrypt_key");

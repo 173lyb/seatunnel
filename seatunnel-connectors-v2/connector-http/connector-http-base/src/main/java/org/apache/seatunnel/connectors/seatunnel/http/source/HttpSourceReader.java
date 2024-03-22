@@ -506,7 +506,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         EncryptStrategyFactory factory = new DefaultEncryptStrategyFactory();
         EncryptHandler handler = new EncryptHandler(factory);
         Map<String, String> encryptParams = handler.handleParams(params, this.httpParameter.getParamsEncrypt());
-        String encryptBody = handler.handleBody(body, this.httpParameter.getBodyEncrypt(),params);
+        String encryptBody = handler.handleBody(body, this.httpParameter.getBodyEncrypt(),encryptParams);
         Map<String, String> encryptHeaders = handler.handleHeader(headers, this.httpParameter.getHeadersEncrypt(), encryptBody);
 
         HttpResponse response;
