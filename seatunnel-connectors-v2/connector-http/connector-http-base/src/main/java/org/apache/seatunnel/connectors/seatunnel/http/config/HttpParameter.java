@@ -64,7 +64,8 @@ public class HttpParameter implements Serializable {
     protected Map<String, String> paramsEncrypt;
     protected Map<String, String> HikvisionApi;
     protected Map<String, String> sangForApi;
-
+    protected int connectTimeoutMs = HttpConfig.DEFAULT_CONNECT_TIMEOUT_MS;
+    protected int socketTimeoutMs = HttpConfig.DEFAULT_SOCKET_TIMEOUT_MS;
 
 
 

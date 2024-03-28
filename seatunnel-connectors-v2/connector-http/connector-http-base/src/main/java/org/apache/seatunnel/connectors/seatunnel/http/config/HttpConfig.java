@@ -25,6 +25,9 @@ import java.util.Map;
 
 public class HttpConfig {
     public static final String BASIC = "Basic";
+    public static final String CONNECTOR_IDENTITY = "http";
+    public static final int DEFAULT_CONNECT_TIMEOUT_MS = 6000 * 2;
+    public static final int DEFAULT_SOCKET_TIMEOUT_MS = 6000 * 10;
     public static final int DEFAULT_RETRY_BACKOFF_MULTIPLIER_MS = 100;
     public static final int DEFAULT_RETRY_BACKOFF_MAX_MS = 10000;
     public static final boolean DEFAULT_ENABLE_MULTI_LINES = false;
@@ -238,7 +241,17 @@ public class HttpConfig {
             .mapType()
             .noDefaultValue()
             .withDescription("深信服特殊sdk处理");
+    public static final Option<Integer> CONNECT_TIMEOUT_MS =
+            Options.key("connect_timeout_ms")
+                    .intType()
+                    .defaultValue(DEFAULT_CONNECT_TIMEOUT_MS)
+                    .withDescription("Connection timeout setting, default 12s.");
 
+    public static final Option<Integer> SOCKET_TIMEOUT_MS =
+            Options.key("socket_timeout_ms")
+                    .intType()
+                    .defaultValue(DEFAULT_SOCKET_TIMEOUT_MS)
+                    .withDescription("Socket timeout setting, default 60s.");
 
 
 
