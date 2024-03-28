@@ -9,6 +9,8 @@ public class encryptConstant {
     public static final String URL_MD5 = "URL-MD5";
     public static final String BASE64 = "BASE64";
     public static final String DT_SIGNATURE_MD5 = "DT-SIGNATURE-MD5";
+    //body-sign-base64
+    public static final String BODY_SIGN_BASE64 = "BODY-SIGN-BASE64";
 
     //其他
     public static final String SEMICOLON = ";";
@@ -39,6 +41,12 @@ public class encryptConstant {
     public static final String DIGITAL_TWIN_MD5 = "Digital-Twin-MD5";
     public static final String APP_KEY = "appKey";
     public static final String APP_SECRET = "appSecret";
+    public static final String API_KEY = "apiKey";
+    public static final String NONCE = "nonce";
+    public static final String REGION_CODE = "regioncode";
+    public static final String LOGIN_ID = "loginid";
+    public static final String PASSWORD = "password";
+    public static final String TOKEN = "token";
 
 
 
