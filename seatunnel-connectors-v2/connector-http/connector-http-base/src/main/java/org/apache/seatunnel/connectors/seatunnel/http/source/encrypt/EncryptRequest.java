@@ -249,6 +249,9 @@ public class EncryptRequest {
         }
         String result = ArtemisHttpUtil.doPostStringArtemis(path, body, querys, null, contentType, header);
         //将result封装成httpResponse
+        if (StringUtils.isBlank(result)) {
+            throw new SeaTunnelException("请求海康接口失败");
+        }
         JsonNode resultNode = JsonUtils.parseObject(result);
         HttpResponse httpResponse = new HttpResponse();
         JsonNode msg = resultNode.get("msg");
