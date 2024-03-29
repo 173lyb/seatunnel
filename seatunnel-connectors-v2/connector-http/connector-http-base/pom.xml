@@ -83,5 +83,11 @@
             <artifactId>sangfor-ak-sk-core-java8</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.7</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
