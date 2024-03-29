@@ -11,6 +11,8 @@ public class encryptConstant {
     public static final String DT_SIGNATURE_MD5 = "DT-SIGNATURE-MD5";
     //body-sign-base64
     public static final String BODY_SIGN_BASE64 = "BODY-SIGN-BASE64";
+    //HeaderWWGSHA256Strategy
+    public static final String HEADER_WWG_SHA256 = "HEADER-WWG-SHA256";
 
     //其他
     public static final String SEMICOLON = ";";
@@ -30,7 +32,9 @@ public class encryptConstant {
     public static final String SECRET_KEY = "secretKey";
     public static final String BODY = "body";
     public static final String REQUEST_TIME = "requestTime";
+    public static final String XZ_TIMESTAMP = "xz-timestamp";
     public static final String SIGNATURE = "signature";
+    public static final String XZ_SIGNATURE = "xz-signature";
     public static final String PARAMS = "params";
     public static final String TIMESTAMP = "timestamp";
     public static final String SIGN_KEY = "sign";
