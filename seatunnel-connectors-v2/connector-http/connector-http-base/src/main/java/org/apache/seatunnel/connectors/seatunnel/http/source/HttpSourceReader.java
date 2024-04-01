@@ -336,6 +336,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                         pageParams = updateParamPage(info, params);
                     }
                     try {
+                        log.info("分页：开始第{}次调用接口", pageIndex);
                         executeRequest(output, pageParams, url, pageBody,headers);
                     }catch (Exception e){
                         noMoreElementFlag = true;
@@ -502,6 +503,11 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
      * @throws Exception
      */
     private void executeRequest(Collector<SeaTunnelRow> output,Map<String, String> params,String url,String body,Map<String, String> headers) throws Exception {
+        //循环调用拦截：
+        if (this.httpParameter.getCycleIntervalMillis() > 0) {
+            log.info("防止频繁调用接口导致异常，sleep {} ms后开始调用", this.httpParameter.getCycleIntervalMillis());
+            Thread.sleep(this.httpParameter.getCycleIntervalMillis());
+        }
         //加密拦截
         EncryptStrategyFactory factory = new DefaultEncryptStrategyFactory();
         EncryptHandler handler = new EncryptHandler(factory);

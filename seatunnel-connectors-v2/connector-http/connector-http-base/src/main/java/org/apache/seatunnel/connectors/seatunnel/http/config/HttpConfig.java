@@ -252,7 +252,12 @@ public class HttpConfig {
                     .intType()
                     .defaultValue(DEFAULT_SOCKET_TIMEOUT_MS)
                     .withDescription("Socket timeout setting, default 60s.");
-
+    //cycle_interval_ms
+    public static final Option<Integer> CYCLE_INTERVAL_MS =
+            Options.key("cycle_interval_ms")
+                    .intType()
+                    .defaultValue(0)
+                    .withDescription("循环调用接口时的时间间隔");
 
 
 

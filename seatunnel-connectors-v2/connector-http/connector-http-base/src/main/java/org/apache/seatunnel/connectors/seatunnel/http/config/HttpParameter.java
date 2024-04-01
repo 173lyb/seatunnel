@@ -66,6 +66,7 @@ public class HttpParameter implements Serializable {
     protected Map<String, String> sangForApi;
     protected int connectTimeoutMs = HttpConfig.DEFAULT_CONNECT_TIMEOUT_MS;
     protected int socketTimeoutMs = HttpConfig.DEFAULT_SOCKET_TIMEOUT_MS;
+    protected int cycleIntervalMillis;
 
 
 
@@ -256,6 +257,10 @@ public class HttpParameter implements Serializable {
         if (pluginConfig.hasPath(HttpConfig.PARAMS_PARSING_ARRAYS.key())) {
             this.setParamsParsingArrays(
                     pluginConfig.getStringList(HttpConfig.PARAMS_PARSING_ARRAYS.key()));
+        }
+        //cycle_interval_ms
+        if (pluginConfig.hasPath(HttpConfig.CYCLE_INTERVAL_MS.key())) {
+            this.setCycleIntervalMillis(pluginConfig.getInt(HttpConfig.CYCLE_INTERVAL_MS.key()));
         }
     }
 
