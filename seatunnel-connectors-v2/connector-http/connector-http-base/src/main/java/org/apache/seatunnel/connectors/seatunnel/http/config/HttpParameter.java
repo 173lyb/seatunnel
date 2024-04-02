@@ -157,6 +157,12 @@ public class HttpParameter implements Serializable {
             this.setPollIntervalMillis(pluginConfig.getInt(HttpConfig.POLL_INTERVAL_MILLS.key()));
         }
         this.setRetryParameters(pluginConfig);
+        if (pluginConfig.hasPath(HttpConfig.CONNECT_TIMEOUT_MS.key())) {
+            this.setConnectTimeoutMs(pluginConfig.getInt(HttpConfig.CONNECT_TIMEOUT_MS.key()));
+        }
+        if (pluginConfig.hasPath(HttpConfig.SOCKET_TIMEOUT_MS.key())) {
+            this.setSocketTimeoutMs(pluginConfig.getInt(HttpConfig.SOCKET_TIMEOUT_MS.key()));
+        }
         // set enableMultilines
         if (pluginConfig.hasPath(HttpConfig.ENABLE_MULTI_LINES.key())) {
             this.setEnableMultilines(pluginConfig.getBoolean(HttpConfig.ENABLE_MULTI_LINES.key()));
