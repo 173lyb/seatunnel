@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.converter.JdbcRowConverter;
@@ -24,11 +25,14 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseI
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialectTypeMapper;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.dialectenum.FieldIdeEnum;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.source.JdbcSourceTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +60,44 @@ public class XuguDialect implements JdbcDialect {
     public JdbcDialectTypeMapper getJdbcDialectTypeMapper() {
         return new XuguTypeMapper();
     }
+    public Object[] sampleDataFromColumn(
+            Connection connection,
+            JdbcSourceTable table,
+            String columnName,
+            int samplingRate,
+            int fetchSize)
+            throws SQLException {
+        String sampleQuery;
+        if (StringUtils.isNotBlank(table.getQuery())) {
+            sampleQuery =
+                    String.format(
+                            "SELECT %s FROM (%s) AS T ",
+                            quoteIdentifier(columnName), table.getQuery());
+        } else {
+            sampleQuery =
+                    String.format(
+                            "SELECT %s FROM %s",
+                            quoteIdentifier(columnName), tableIdentifier(table.getTablePath()));
+        }
 
+        try (PreparedStatement stmt = creatPreparedStatement(connection, sampleQuery, fetchSize)) {
+            log.info(String.format("Split Chunk, approximateRowCntStatement: %s", sampleQuery));
+            try (ResultSet rs = stmt.executeQuery()) {
+                int count = 0;
+                List<Object> results = new ArrayList<>();
+
+                while (rs.next()) {
+                    count++;
+                    if (count % samplingRate == 0) {
+                        results.add(rs.getObject(1));
+                    }
+                }
+                Object[] resultsArray = results.toArray();
+                Arrays.sort(resultsArray);
+                return resultsArray;
+            }
+        }
+    }
     @Override
     public String tableIdentifier(String database, String tableName) {
         if (tableName.contains(".")) {
@@ -172,6 +213,14 @@ public class XuguDialect implements JdbcDialect {
             statement.setFetchSize(DEFAULT_XUGU_FETCH_SIZE);
         }
         return statement;
+    }
+
+    @Override
+    //getResultSetMetaData
+    public ResultSetMetaData getResultSetMetaData(Connection conn, String query)
+            throws SQLException {
+        PreparedStatement ps = conn.prepareStatement(query);
+        return ps.executeQuery().getMetaData();
     }
 
 }

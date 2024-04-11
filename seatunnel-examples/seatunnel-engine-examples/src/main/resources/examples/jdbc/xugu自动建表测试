@@ -1,5 +1,5 @@
 env {
-  #execution.parallelism = 3
+  parallelism = "2"
   job.mode = "BATCH"
   #checkpoint.interval = 100000
 }
@@ -11,10 +11,13 @@ source {
 		connection_check_timeout_sec = 100
 		user = "SYSDBA"
 		password = "SYSDBA"
+        partition_num = 4
+        fetch_size = 5000
+        partition_column = "ID"
 		#table_path是走catalog的sql语句拿列信息的
 		table_path = "SYSDBA.TEST_KEY_CON1"
 		#query是走jdbc拿列信息的
-		#query = "select * from SYSDBA.TEST_KEY_CON1"
+		query = "select * from SYSDBA.TEST_KEY_CON1 where ID >= 1"
 		fetch_size = 10000
 		result_table_name = "test1"
 	}

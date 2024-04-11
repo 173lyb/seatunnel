@@ -232,9 +232,6 @@ public interface JdbcDialect extends Serializable {
     default ResultSetMetaData getResultSetMetaData(Connection conn, String query)
             throws SQLException {
         PreparedStatement ps = conn.prepareStatement(query);
-        if (conn.getMetaData().getDriverName().equals("com.xugu.cloudjdbc.Driver")){
-            return ps.executeQuery().getMetaData();
-        }
         return ps.getMetaData();
     }
 

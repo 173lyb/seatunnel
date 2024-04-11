@@ -1,0 +1,45 @@
+env {
+	job.mode = "BATCH"
+	parallelism = "5"
+	job.name = "5fb9360873ab4e50aaacd402bba4ae7e"
+}
+
+source {
+	MappingJdbc {
+		result_table_name = "MST_TEST_20G"
+		query = "select * from SYSDBA.MST_TEST_20G"
+	    partition_num = 5
+		fetch_size = 5000
+		partition_column = "ID"
+		password_decrypt = true
+		table_path = "SYSDBA.MST_TEST_20G"
+		driver = "com.xugu.cloudjdbc.Driver"
+		url = "jdbc:xugu://192.168.2.236:5190/system?batch_mode=true&recv_mode=2"
+		user = "SYSDBA"
+		password = "I279B5gzwI/zjldo6CieVX4XfLfcjV5KHVbJ2CT9K+R1cGppkpKNtIiCURS8eaIPcNs8HIEFUV6Kneb12Tt50ApNi6esyVFm/8bk4E/UG3wIrq4iRKjk51dLcjKyj0Gm+8XylLF5J3aZEnvuAATqxfPtXm9mQ5Ze2Gs3VajT+I8="
+	}
+}
+
+transform {
+}
+
+sink {
+	MappingJdbc {
+		database = "SYSTEM"
+		table = "SYSDBA.MST_TEST_20G"
+		batch_size = 5000
+		generate_sink_sql = true
+		#parallelism = 20
+		#field_mapper = {"id":"ID","a":"A","b":"B","c":"C","d":"D","e":"E","f":"F","g":"G","h":"H"}
+		primary_keys = []
+		source_table_name = "MST_TEST_20G"
+		password_decrypt = true
+		data_save_mode = "DROP_DATA"
+		schema_save_mode = "ERROR_WHEN_SCHEMA_NOT_EXIST"
+		enable_upsert = false
+		driver = "com.xugu.cloudjdbc.Driver"
+		url = "jdbc:xugu://192.168.2.239:5190/system?batch_mode=true&recv_mode=2"
+		user = "SYSDBA"
+		password = "I279B5gzwI/zjldo6CieVX4XfLfcjV5KHVbJ2CT9K+R1cGppkpKNtIiCURS8eaIPcNs8HIEFUV6Kneb12Tt50ApNi6esyVFm/8bk4E/UG3wIrq4iRKjk51dLcjKyj0Gm+8XylLF5J3aZEnvuAATqxfPtXm9mQ5Ze2Gs3VajT+I8="
+	}
+}

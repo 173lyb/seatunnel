@@ -30,10 +30,12 @@ import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialectTypeMapper;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu.XuguTypeMapper;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -259,8 +261,9 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     @Override
     public CatalogTable getTable(String sqlQuery) throws SQLException {
         Connection defaultConnection = getConnection(defaultUrl);
-        return CatalogUtils.getCatalogTable(defaultConnection, sqlQuery, new XuguTypeMapper());
+        return CatalogUtils.getXuguCatalogTable(defaultConnection, sqlQuery, new XuguTypeMapper());
     }
+
 
     @Override
     protected String getTruncateTableSql(TablePath tablePath) {
