@@ -71,6 +71,8 @@ public class HdfsConfiguration extends AbstractConfiguration {
                 authenticateKerberos(kerberosPrincipal, kerberosKeytabFilePath, hadoopConf);
             }
         }
+        hadoopConf.setBoolean(String.format(COMMON_DISABLE_CACHE, HDFS_IMPL_KEY)
+                , Boolean.parseBoolean(config.getOrDefault(DISABLE_CACHE_KEY, DISABLE_CACHE_DEFAULT_VALUE)));
         //  support other hdfs optional config keys
         config.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith(SEATUNNEL_HADOOP_PREFIX))
