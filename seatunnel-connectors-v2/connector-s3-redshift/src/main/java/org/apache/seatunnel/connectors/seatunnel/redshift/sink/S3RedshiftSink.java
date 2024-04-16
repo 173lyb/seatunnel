@@ -66,7 +66,7 @@ public class S3RedshiftSink extends BaseHdfsFileSink {
                             getPluginName(), PluginType.SINK, checkResult.getMsg()));
         }
         this.pluginConfig = pluginConfig;
-        hadoopConf = S3Conf.buildWithConfig(pluginConfig);
+        hadoopConf = S3Conf.getInstance().buildWithConfig(pluginConfig);
     }
 
     @Override

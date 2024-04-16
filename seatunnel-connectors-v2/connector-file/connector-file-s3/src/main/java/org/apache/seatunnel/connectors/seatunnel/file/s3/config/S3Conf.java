@@ -26,31 +26,31 @@ import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
 import java.util.HashMap;
 import java.util.Map;
 
-public class S3Conf extends HadoopConf {
-    private static final String HDFS_S3N_IMPL = "org.apache.hadoop.fs.s3native.NativeS3FileSystem";
-    private static final String HDFS_S3A_IMPL = "org.apache.hadoop.fs.s3a.S3AFileSystem";
-    private static final String S3A_SCHEMA = "s3a";
-    private static final String DEFAULT_SCHEMA = "s3n";
-    private static String SCHEMA = DEFAULT_SCHEMA;
 
+public class S3Conf extends HadoopConf {
+    private  static final String HDFS_S3N_IMPL = "org.apache.hadoop.fs.s3native.NativeS3FileSystem";
+    private  static final String HDFS_S3A_IMPL = "org.apache.hadoop.fs.s3a.S3AFileSystem";
+    private  static final String S3A_SCHEMA = "s3a";
+    private  static final String DEFAULT_SCHEMA = "s3n";
+    private String SCHEMA = DEFAULT_SCHEMA;
+    public S3Conf() {
+    }
+    public static S3Conf getInstance() {
+        return new S3Conf();
+    }
     @Override
     public String getFsHdfsImpl() {
         return switchHdfsImpl();
     }
-
     @Override
     public String getSchema() {
         return SCHEMA;
     }
 
-    private S3Conf(String hdfsNameKey) {
-        super(hdfsNameKey);
-    }
+    public  HadoopConf buildWithConfig(Config config) {
 
-    public static HadoopConf buildWithConfig(Config config) {
-
-        HadoopConf hadoopConf = new S3Conf(config.getString(S3ConfigOptions.S3_BUCKET.key()));
         String bucketName = config.getString(S3ConfigOptions.S3_BUCKET.key());
+        this.setHdfsNameKey(bucketName);
         if (bucketName.startsWith(S3A_SCHEMA)) {
             SCHEMA = S3A_SCHEMA;
         }
@@ -67,14 +67,14 @@ public class S3Conf extends HadoopConf {
         s3Options.put(
                 S3ConfigOptions.FS_S3A_ENDPOINT.key(),
                 config.getString(S3ConfigOptions.FS_S3A_ENDPOINT.key()));
-        hadoopConf.setExtraOptions(s3Options);
-        return hadoopConf;
+        this.setExtraOptions(s3Options);
+        return this;
     }
 
-    public static HadoopConf buildWithReadOnlyConfig(ReadonlyConfig readonlyConfig) {
+    public  HadoopConf buildWithReadOnlyConfig(ReadonlyConfig readonlyConfig) {
         Config config = readonlyConfig.toConfig();
-        HadoopConf hadoopConf = new S3Conf(readonlyConfig.get(S3ConfigOptions.S3_BUCKET));
-        String bucketName = readonlyConfig.get(S3ConfigOptions.S3_BUCKET);
+        String bucketName = config.getString(S3ConfigOptions.S3_BUCKET.key());
+        this.setHdfsNameKey(bucketName);
         if (bucketName.startsWith(S3A_SCHEMA)) {
             SCHEMA = S3A_SCHEMA;
         }
@@ -91,8 +91,8 @@ public class S3Conf extends HadoopConf {
         s3Options.put(
                 S3ConfigOptions.FS_S3A_ENDPOINT.key(),
                 readonlyConfig.get(S3ConfigOptions.FS_S3A_ENDPOINT));
-        hadoopConf.setExtraOptions(s3Options);
-        return hadoopConf;
+        this.setExtraOptions(s3Options);
+        return this;
     }
 
     private String switchHdfsImpl() {
@@ -104,7 +104,7 @@ public class S3Conf extends HadoopConf {
         }
     }
 
-    private static void putS3SK(Map<String, String> s3Options, Config config) {
+    private void putS3SK(Map<String, String> s3Options, Config config) {
         if (!CheckConfigUtil.isValidParam(config, S3ConfigOptions.S3_ACCESS_KEY.key())
                 && !CheckConfigUtil.isValidParam(config, S3ConfigOptions.S3_SECRET_KEY.key())) {
             return;
