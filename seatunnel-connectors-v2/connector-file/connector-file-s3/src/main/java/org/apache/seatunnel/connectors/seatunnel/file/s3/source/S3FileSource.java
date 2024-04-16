@@ -65,7 +65,7 @@ public class S3FileSource extends BaseFileSource {
                             getPluginName(), PluginType.SOURCE, result.getMsg()));
         }
         String path = pluginConfig.getString(S3ConfigOptions.FILE_PATH.key());
-        hadoopConf = S3Conf.getInstance().buildWithConfig(pluginConfig);
+        hadoopConf = S3Conf.buildWithConfig(pluginConfig);
         readStrategy =
                 ReadStrategyFactory.of(
                         pluginConfig.getString(S3ConfigOptions.FILE_FORMAT_TYPE.key()));

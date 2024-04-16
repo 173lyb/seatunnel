@@ -56,7 +56,7 @@ public class S3FileSink extends BaseMultipleTableFileSink implements SupportSave
     }
 
     public S3FileSink(CatalogTable catalogTable, ReadonlyConfig readonlyConfig) {
-        super(S3Conf.getInstance().buildWithConfig(readonlyConfig.toConfig()), readonlyConfig, catalogTable);
+        super(S3Conf.buildWithConfig(readonlyConfig.toConfig()), readonlyConfig, catalogTable);
         this.catalogTable = catalogTable;
         this.readonlyConfig = readonlyConfig;
         Config pluginConfig = readonlyConfig.toConfig();

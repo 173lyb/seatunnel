@@ -32,7 +32,7 @@ import com.google.auto.service.AutoService;
 public class S3FileCatalogFactory implements CatalogFactory {
     @Override
     public Catalog createCatalog(String catalogName, ReadonlyConfig options) {
-        HadoopConf hadoopConf = S3Conf.getInstance().buildWithReadOnlyConfig(options);
+        HadoopConf hadoopConf = S3Conf.buildWithReadOnlyConfig(options);
         HadoopFileSystemProxy fileSystemUtils = new HadoopFileSystemProxy(hadoopConf);
         return new S3FileCatalog(fileSystemUtils, options);
     }
