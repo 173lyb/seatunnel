@@ -29,8 +29,8 @@ import java.util.Map;
 public class S3Conf extends HadoopConf {
     private static final String HDFS_S3N_IMPL = "org.apache.hadoop.fs.s3native.NativeS3FileSystem";
     private static final String HDFS_S3A_IMPL = "org.apache.hadoop.fs.s3a.S3AFileSystem";
-    private static final String S3A_SCHEMA = "s3a";
-    private static final String DEFAULT_SCHEMA = "s3n";
+    protected static final String S3A_SCHEMA = "s3a";
+    protected static final String DEFAULT_SCHEMA = "s3n";
     private String schema = DEFAULT_SCHEMA;
 
     @Override
@@ -38,23 +38,23 @@ public class S3Conf extends HadoopConf {
         return switchHdfsImpl();
     }
 
-    public void setSchema(String schema) {
-        this.schema = schema;
-    }
-
     @Override
     public String getSchema() {
         return this.schema;
     }
 
-    private S3Conf(String hdfsNameKey) {
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
+    protected S3Conf(String hdfsNameKey) {
         super(hdfsNameKey);
     }
 
     public static HadoopConf buildWithConfig(Config config) {
+
         String bucketName = config.getString(S3ConfigOptions.S3_BUCKET.key());
         S3Conf hadoopConf = new S3Conf(bucketName);
-
         if (bucketName.startsWith(S3A_SCHEMA)) {
             hadoopConf.setSchema(S3A_SCHEMA);
         }
@@ -77,30 +77,10 @@ public class S3Conf extends HadoopConf {
 
     public static HadoopConf buildWithReadOnlyConfig(ReadonlyConfig readonlyConfig) {
         Config config = readonlyConfig.toConfig();
-        String bucketName = config.getString(S3ConfigOptions.S3_BUCKET.key());
-        S3Conf hadoopConf = new S3Conf(bucketName);
-
-        if (bucketName.startsWith(S3A_SCHEMA)) {
-            hadoopConf.setSchema(S3A_SCHEMA);
-        }
-        HashMap<String, String> s3Options = new HashMap<>();
-        hadoopConf.putS3SK(s3Options, config);
-        if (CheckConfigUtil.isValidParam(config, S3ConfigOptions.S3_PROPERTIES.key())) {
-            config.getObject(S3ConfigOptions.S3_PROPERTIES.key())
-                    .forEach((key, value) -> s3Options.put(key, String.valueOf(value.unwrapped())));
-        }
-
-        s3Options.put(
-                S3ConfigOptions.S3A_AWS_CREDENTIALS_PROVIDER.key(),
-                readonlyConfig.get(S3ConfigOptions.S3A_AWS_CREDENTIALS_PROVIDER).getProvider());
-        s3Options.put(
-                S3ConfigOptions.FS_S3A_ENDPOINT.key(),
-                readonlyConfig.get(S3ConfigOptions.FS_S3A_ENDPOINT));
-        hadoopConf.setExtraOptions(s3Options);
-        return hadoopConf;
+        return buildWithConfig(config);
     }
 
-    private String switchHdfsImpl() {
+    protected String switchHdfsImpl() {
         switch (this.schema) {
             case S3A_SCHEMA:
                 return HDFS_S3A_IMPL;
