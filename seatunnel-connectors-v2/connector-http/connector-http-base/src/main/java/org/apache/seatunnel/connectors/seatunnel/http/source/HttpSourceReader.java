@@ -29,6 +29,7 @@ import org.apache.seatunnel.common.exception.SeaTunnelErrorCode;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.http.exception.HttpConnectorErrorCode;
+import org.apache.seatunnel.connectors.seatunnel.http.exception.HttpConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptHandler;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.DefaultEncryptStrategyFactory;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.EncryptStrategyFactory;
@@ -642,14 +643,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     encryptBody,
                     response.getCode(),
                     response.getContent());
-            throw  new SeaTunnelException(error);
-//            log.error("http client execute exception, request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
-//                    url,
-//                    encryptHeaders,
-//                    encryptParams,
-//                    encryptBody,
-//                    response.getCode(),
-//                    response.getContent());
+            throw  new HttpConnectorException(HttpConnectorErrorCode.HTTP_GET_FAILED,error);
         }
     }
 
