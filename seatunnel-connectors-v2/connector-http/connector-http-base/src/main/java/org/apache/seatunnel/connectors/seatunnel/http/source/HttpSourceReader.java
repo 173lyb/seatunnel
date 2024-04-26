@@ -25,6 +25,7 @@ import net.minidev.json.JSONArray;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.apache.seatunnel.common.exception.SeaTunnelErrorCode;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
@@ -61,8 +62,6 @@ import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.apache.seatunnel.connectors.seatunnel.http.client.HttpClientProvider.APPLICATION_JSON;
@@ -92,6 +91,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
     public static final String SDK = "sdk";
     //authCode
     public static final String AUTHCODE = "authCode";
+    private int code =0;
 
 
     public HttpSourceReader(
@@ -140,7 +140,6 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         Map<String, String> params = this.httpParameter.getParams();
         String body = replaceBody(this.httpParameter.getBody());
         Map<String, String> headers = this.httpParameter.getHeaders();
-        List<String> banLooPKeys = this.httpParameter.getParamsBanLooP();
         //检查是否存在params_convert,body_convert
         if (!Optional.ofNullable(this.httpParameter.getParamsConvert()).map(List::isEmpty).orElse(true)
                 || !Optional.ofNullable(this.httpParameter.getBodyConvert()).map(List::isEmpty).orElse(true)) {
@@ -187,7 +186,13 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                 isBodyArrays = CollectionUtils.isNotEmpty(bodyPListKey)
                         && bodyPListKey.stream()
                         .allMatch(key ->
-                                isKeyPresent(jsonContext,key));
+                        {
+                            try {
+                                return isKeyPresent(jsonContext,key);
+                            } catch (Exception e) {
+                                throw new SeaTunnelException(e);
+                            }
+                        });
             } catch (Exception e){
                 throw new SeaTunnelException("body转json失败，请保证body是正常的json字符串",e);
             }
@@ -206,7 +211,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         }
     }
 
-    public boolean isKeyPresent(DocumentContext jsonContext, String key){
+    public boolean isKeyPresent(DocumentContext jsonContext, String key) throws Exception{
         try{
             jsonContext.read(key);
             return true;
@@ -216,7 +221,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
     }
 
     // TODO 更新body为list的情况
-    private void updateListBody(Collector<SeaTunnelRow> output, String url, Map<String, String> params, String body, List<String> bodyPListKey,Map<String, String> headers) throws Exception {
+    private void updateListBody(Collector<SeaTunnelRow> output, String url, Map<String, String> params, String body, List<String> bodyPListKey,Map<String, String> headers) throws Exception{
 
         //解析body
         DocumentContext jsonContext = JsonPath.using(Configuration.defaultConfiguration()).parse(body);
@@ -317,7 +322,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         }
     }
 
-    public void executePageRequest(Collector<SeaTunnelRow> output, Map<String, String> params, String url, String body,Map<String, String> headers)   {
+    public void executePageRequest(Collector<SeaTunnelRow> output, Map<String, String> params, String url, String body,Map<String, String> headers) throws Exception  {
         try {
             //TODO page分页判断
             String pageBody = body;
@@ -391,7 +396,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         return contentJson;
     }
 
-    private Map<String, String> headerConvertTime(List<String> convert, Map<String, String> map ) throws Exception{
+    private Map<String, String> headerConvertTime(List<String> convert, Map<String, String> map )throws Exception{
         if (convert == null) {
             return map;
         }
@@ -417,36 +422,8 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         return result;
     }
 
-    private  String addQuotesToJsonValues(String json) {
-        // Regex to find all values in square brackets ([]), that are not already surrounded by quotes
-        String regex = "\\[(.*?)\\]";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(json);
-        StringBuffer jsonBuffer = new StringBuffer();
 
-        while (matcher.find()) {
-            String group = matcher.group(1);
-            // Regex to find all individual values that are not already surrounded by quotes
-            String subRegex = "([^,]*)";
-            Pattern subPattern = Pattern.compile(subRegex);
-            Matcher subMatcher = subPattern.matcher(group);
-            StringBuffer groupBuffer = new StringBuffer();
-            while (subMatcher.find()) {
-                String replacement = subMatcher.group(1);
-                // add quotes around the value
-                String replacement2 = new String("\"" + replacement + "\"");
-                subMatcher.appendReplacement(groupBuffer, replacement2);
-            }
-            subMatcher.appendTail(groupBuffer);
-            // append the result to the original string
-            matcher.appendReplacement(jsonBuffer, groupBuffer.toString());
-        }
-
-        matcher.appendTail(jsonBuffer);
-        return jsonBuffer.toString();
-    }
-
-    private  String replaceBody(String json) {
+    private  String replaceBody(String json) throws Exception {
         if (StringUtils.isNotBlank(json)) {
             return json.replace("#+", "\"");
         }else {
@@ -549,6 +526,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         }
 
         //状态拦截
+        code = response.getCode();
         if (HttpResponse.STATUS_OK == response.getCode() || HttpResponse.STATUS_CREATED == response.getCode()) {
             String content = "";
             boolean paramsAdd = this.httpParameter.isParamsAdd();
@@ -648,7 +626,6 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
     }
 
 
-
     /**
      * 将参数追加到响应体
      * @param content
@@ -660,14 +637,14 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
      * @throws JsonProcessingException
      */
 
-    private String processAddition(String content, DocumentContext context, boolean isAdd, JsonNode dataJsonNode, String dataPath, String prefix) throws JsonProcessingException {
+    private String processAddition(String content, DocumentContext context, boolean isAdd, JsonNode dataJsonNode, String dataPath, String prefix) throws Exception {
         if (isAdd && !dataJsonNode.isNull() && !dataJsonNode.isEmpty()) {
             handleJsonNode(dataPath, context, prefix, dataJsonNode);
             content = context.jsonString();
         }
         return content;
     }
-    void handleJsonNode(String parentPath, DocumentContext context, String prefix, JsonNode jsonNode) {
+    void handleJsonNode(String parentPath, DocumentContext context, String prefix, JsonNode jsonNode) throws Exception{
             Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fields.next();
@@ -712,7 +689,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         }
         return content;
     }
-    private Map<String, String> updateParamPage(PageInfo pageInfo, Map<String, String> params) {
+    private Map<String, String> updateParamPage(PageInfo pageInfo, Map<String, String> params) throws Exception{
         Map<String, String> pageParams = params != null ? params : new HashMap<>();
         pageParams.put(pageInfo.getPageField(), String.valueOf(pageInfo.getPageIndex()));
         return pageParams;
@@ -759,32 +736,6 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
     public void pollNext(Collector<SeaTunnelRow> output) throws Exception {
         try {
             pollAndCollectData(output);
-//            if (pageInfoOptional.isPresent()) {
-//                noMoreElementFlag = false;
-//                while (!noMoreElementFlag) {
-//                    PageInfo info = pageInfoOptional.get();
-//                    // increment page
-//                    info.setPageIndex(pageIndex);
-//                    if("body".equals(info.getPagePath())){
-//                        // set request body
-//                        updateBodyPage(info);
-//                    }else {
-//                        // set request param
-//                      updateParamPage(info);
-//                    }
-//                    try {
-//                        pollAndCollectData(output);
-//                    }catch (Exception e){
-//                        noMoreElementFlag = true;
-//                        throw new SeaTunnelException("http requests error",e );
-//                    }
-//                    pageIndex += 1;
-//                }
-//            } else {
-//                pollAndCollectData(output);
-//            }
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
         } finally {
             if (Boundedness.BOUNDED.equals(context.getBoundedness()) && noMoreElementFlag) {
                 // signal to the source that we have reached the end of the data.
