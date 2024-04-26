@@ -47,7 +47,7 @@ public interface EnvCommonOptions {
     Option<Integer> JOB_RETRY_TIMES =
             Options.key("job.retry.times")
                     .intType()
-                    .defaultValue(3)
+                    .defaultValue(0)
                     .withDescription("The retry times of this job");
 
     Option<Long> CHECKPOINT_INTERVAL =
