@@ -20,6 +20,7 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.kingbase
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.DecimalType;
 import org.apache.seatunnel.api.table.type.LocalTimeType;
+import org.apache.seatunnel.api.table.type.PrimitiveByteArrayType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.common.exception.CommonError;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
@@ -78,6 +79,8 @@ public class KingbaseTypeMapper implements JdbcDialectTypeMapper {
         int precision = metadata.getPrecision(colIndex);
 
         switch (kbType) {
+            case KB_BYTEA:
+                return PrimitiveByteArrayType.INSTANCE;
             case KB_BOOLEAN:
                 return BasicType.BOOLEAN_TYPE;
             case KB_SMALLINT:
@@ -128,7 +131,6 @@ public class KingbaseTypeMapper implements JdbcDialectTypeMapper {
             case KB_DATE_ARRAY:
             case KB_JSONB:
             case KB_JSON:
-            case KB_BYTEA:
             default:
                 final String jdbcColumnName = metadata.getColumnName(colIndex);
                 throw CommonError.convertToSeaTunnelTypeError(

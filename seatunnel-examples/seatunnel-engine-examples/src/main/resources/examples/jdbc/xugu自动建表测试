@@ -30,8 +30,8 @@ sink {
         #field_mapper = {"ID":"ID","A":"B","B":"A","C":"C","D":"D","E":"E","F":"F","G":"G","A1":"A1","B1":"B1","C1":"C1","D1":"D1","E1":"E1","G1":"G1"}
         password = "SYSDBA"
         generate_sink_sql = true
-        #primary_keys = ["ID"]
-        #enable_upsert = true
+        primary_keys = ["ID"]
+        enable_upsert = true
         data_save_mode = "APPEND_DATA"
         schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
         database = SYSTEM

@@ -1,0 +1,39 @@
+env {
+  parallelism = 2
+  job.mode = "BATCH"
+  job.retry.times = 0
+}
+
+source {
+  MappingJdbc {
+    driver = "com.kingbase8.Driver"
+	partition_column = "ID"
+	partition_num = 2
+	fetch_size = 5000
+	table_path = "PUBLIC.ALL_TYPES_TABLE1"
+    url = "jdbc:kingbase8://10.28.23.227:54321/TEST"
+    user = "SYSTEM"
+    password = "123456"
+    query = """ SELECT * FROM PUBLIC.ALL_TYPES_TABLE """
+	result_table_name = "aaa"
+  }
+}
+
+
+sink {
+	MappingJdbc {
+		database = "TEST"
+		table = "PUBLIC.ALL_TYPES_TABLE2"
+		batch_size = 5000
+		generate_sink_sql = true
+		primary_keys = ["ID"]
+		source_table_name = "aaa"
+		data_save_mode = "DROP_DATA"
+		schema_save_mode = "ERROR_WHEN_SCHEMA_NOT_EXIST"
+		enable_upsert = true
+		driver = "com.kingbase8.Driver"
+		url = "jdbc:kingbase8://10.28.23.227:54321/TEST"
+		user = "SYSTEM"
+		password = "123456"
+	}
+}
