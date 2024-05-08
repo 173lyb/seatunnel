@@ -1,6 +1,7 @@
 package org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptStrategy;
 import org.apache.seatunnel.connectors.seatunnel.http.util.TimeUtils;
@@ -18,8 +19,10 @@ public class HeaderSHA256Strategy implements EncryptStrategy {
     }
 
     @Override
-    public void encryptHeader(Map<String, String> headers, Map<String, String> headerEncrypt, String body) throws SeaTunnelException {
-        Map<String, String> encryptHeaders = new HashMap<>(headers);
+    public Map<String, String> encryptHeader(Map<String, String> headers, Map<String, String> headerEncrypt, String body) throws SeaTunnelException {
+        // 深拷贝，防止加密后影响循环调用时数据的使用
+        Map<String, String> encryptHeaders = JsonUtils.toMap(JsonUtils.toJsonString(headers));
+//        Map<String, String> encryptHeaders = new HashMap<>(headers);
         String accountKey = headerEncrypt.get(ACCOUNT_KEY);
         String secretKey = headerEncrypt.get(SECRET_KEY);
         if (StringUtils.isBlank(accountKey) || StringUtils.isBlank(secretKey)) {
@@ -34,12 +37,11 @@ public class HeaderSHA256Strategy implements EncryptStrategy {
         encryptHeaders.put(SIGNATURE, signature);
         encryptHeaders.put(REQUEST_TIME, requestTimeStamp + "");
         encryptHeaders.put(ACCOUNT, accountKey);
-        headers.clear();
-        headers.putAll(encryptHeaders);
+        return encryptHeaders;
     }
 
     @Override
-    public void encryptParam(Map<String, String> params, Map<String, String> paramsEncrypt) throws SeaTunnelException {
-
+    public Map<String, String> encryptParam(Map<String, String> params, Map<String, String> paramsEncrypt) throws SeaTunnelException {
+        return params;
     }
 }

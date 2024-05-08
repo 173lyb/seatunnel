@@ -31,13 +31,13 @@ public class BodySignMd5Strategy implements EncryptStrategy {
     }
 
     @Override
-    public void encryptHeader(Map<String, String> headers, Map<String, String> headerEncrypt, String body) throws SeaTunnelException {
-
+    public Map<String, String> encryptHeader(Map<String, String> headers, Map<String, String> headerEncrypt, String body) throws SeaTunnelException {
+        return headers;
     }
 
     @Override
-    public void encryptParam(Map<String, String> params, Map<String, String> paramsEncrypt) throws SeaTunnelException {
-
+    public Map<String, String> encryptParam(Map<String, String> params, Map<String, String> paramsEncrypt) throws SeaTunnelException {
+        return params;
     }
 
     private String getRequiredStringValue(Map<String, ?> map, String key) throws SeaTunnelException {

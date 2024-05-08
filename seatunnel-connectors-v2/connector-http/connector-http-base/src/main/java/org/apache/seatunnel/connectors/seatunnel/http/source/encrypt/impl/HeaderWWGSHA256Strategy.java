@@ -2,6 +2,7 @@ package org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptStrategy;
 
@@ -16,8 +17,9 @@ public class HeaderWWGSHA256Strategy implements EncryptStrategy {
     }
 
     @Override
-    public void encryptHeader(Map<String, String> headers, Map<String, String> headerEncrypt, String body) throws SeaTunnelException {
+    public Map<String, String> encryptHeader(Map<String, String> headers, Map<String, String> headerEncrypt, String body) throws SeaTunnelException {
         String token = headerEncrypt.get(TOKEN);
+        Map<String, String> encryptHeaders = JsonUtils.toMap(JsonUtils.toJsonString(headers));
         if (StringUtils.isBlank(token)){
             throw new SeaTunnelException("token is null");
         }
@@ -25,12 +27,13 @@ public class HeaderWWGSHA256Strategy implements EncryptStrategy {
         String s = Long.toString(timestamp);
         String signatureBefore = s + token + s;
         String signature = DigestUtils.sha256Hex(signatureBefore);
-        headers.put(XZ_SIGNATURE, signature);
-        headers.put(XZ_TIMESTAMP, s);
+        encryptHeaders.put(XZ_SIGNATURE, signature);
+        encryptHeaders.put(XZ_TIMESTAMP, s);
+        return encryptHeaders;
     }
 
     @Override
-    public void encryptParam(Map<String, String> params, Map<String, String> paramsEncrypt) throws SeaTunnelException {
-
+    public Map<String, String> encryptParam(Map<String, String> params, Map<String, String> paramsEncrypt) throws SeaTunnelException {
+        return params;
     }
 }

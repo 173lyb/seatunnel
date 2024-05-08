@@ -99,8 +99,8 @@ public class EncryptHandler {
         String encryptType = paramsEncrypt.get(ENCRYPT_TYPE);
         EncryptStrategy strategy = factory.create(encryptType);
         if (strategy != null) {
-            strategy.encryptParam(params,paramsEncrypt);
-            return params;
+            Map<String, String> encryptParams = strategy.encryptParam(params, paramsEncrypt);
+            return encryptParams;
         } else {
             throw new IllegalArgumentException("未知的加密类型: " + encryptType);
         }
@@ -114,8 +114,8 @@ public class EncryptHandler {
         String encryptType = headerEncrypt.get(ENCRYPT_TYPE);
         EncryptStrategy strategy = factory.create(encryptType);
         if (strategy != null) {
-            strategy.encryptHeader(headers, headerEncrypt, body);
-            return headers;
+            Map<String, String> encryptHeader = strategy.encryptHeader(headers, headerEncrypt, body);
+            return encryptHeader;
         }else {
             throw new IllegalArgumentException("未知的加密类型: " + encryptType);
         }

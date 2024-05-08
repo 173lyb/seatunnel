@@ -2,38 +2,72 @@ env {
   execution.parallelism = 1
   job.mode = "BATCH"
 }
-source {
-  Http {
-result_table_name = "http1"
-url = "https://api.cdmbc.cn:4433/gateway/api/2/bdjt/hqzdyjydxq"
-method = "GET"
-headers = {
-    AppKey = "963394368528449536"
-    requestTime = "2024-01-17 15:34:01.225"
-}
-params = {
-      nodeId = "7709"
-      eventId = "131-首都机场辅路-201905280708-15260461540"
-      date = "2023-01-17 15:34:01"
-}
-params_convert = [date]
-#skip_ssl_verification = true
-headers_encrypt = {
-		encrypt_type = "SHA256"
-	    accountKey = "9c4e883c8cc841edbaa0268b9e9cdd13"
-		secretKey = "ba04c8c1874e4d3c99133fff9ea69528"
-}
-format = "json"
-json_field = {
-code= "$.code"
-}
-schema = {
-fields {
-code = string
-      }
-    }
-  }
-}
+	source {
+	  Http {
+	result_table_name = "http"
+	url = "https://api.cdmbc.cn:4433/gateway/api/2/bdjt/hqzdyjydxq?nodeId=7709"
+	method = "POST"
+
+	headers = {
+	    AppKey = "963394368528449536"
+	    requestTime = "2024-05-08 17:03:00.000"
+	}
+	params = {
+	      nodeId = "7709"
+	      eventId = "[75-沪蓉高速-202401181555-15639723100,75-五环路东段-202405081654-15913786571,75-青台山路-202405081656-15291579910]"
+	}
+	   params_parsing_arrays=[eventId]
+	   params_add = true
+	   params_path = "$"
+	#skip_ssl_verification = true
+	headers_encrypt = {
+	      encrypt_type = "SHA256"
+	       accountKey = "9c4e883c8cc841edbaa0268b9e9cdd13"
+	      secretKey = "ba04c8c1874e4d3c99133fff9ea69528"
+	}
+	    format = "json"
+	          json_field = {
+	  EVENTID= "$.result.eventId"
+	  SEMANTIC= "$.result.semantic"
+	  CONGESTTAILDESC= "$.result.congestTailDesc"
+	  CONGESTSOURCELOC= "$.result.congestSourceLoc"
+	  EVENTSOURCE= "$.result.eventSource"
+	  ROADNAME= "$.result.roadName"
+	  SPEED= "$.result.speed"
+	  CONGESTINDEX= "$.result.congestIndex"
+	  CONGESTDURATION= "$.result.congestDuration"
+	  ORIGINTYPE= "$.result.originType"
+	  ABNORMAL= "$.result.abnormal"
+	  CONGESTSOURCEDESC= "$.result.congestSourceDesc"
+	  CONGESTSOURCEAREA= "$.result.congestSourceArea"
+	  CONGESTLENGTH= "$.result.congestLength"
+	  STARTTIME= "$.result.startTime"
+	  ENDTIME= "$.result.endTime"
+	   CONGESTAFFECTAREA= "$.result.congestAffectArea"
+	    }
+	    schema = {
+	      fields {
+	  EVENTID= STRING
+	  SEMANTIC= STRING
+	  CONGESTTAILDESC= STRING
+	  CONGESTSOURCELOC= STRING
+	  EVENTSOURCE= STRING
+	  ROADNAME= STRING
+	  SPEED= STRING
+	  CONGESTINDEX= STRING
+	  CONGESTDURATION= STRING
+	  ORIGINTYPE= STRING
+	  ABNORMAL= STRING
+	  CONGESTSOURCEDESC= STRING
+	  CONGESTSOURCEAREA= STRING
+	  CONGESTLENGTH= STRING
+	  STARTTIME= STRING
+	  ENDTIME= STRING
+	   CONGESTAFFECTAREA= STRING
+	      }
+	    }
+	  }
+	}
 
 sink {
 Console {
