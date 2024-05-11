@@ -18,31 +18,20 @@
 package org.apache.seatunnel.connectors.seatunnel.http.source;
 
 
-
+import com.google.common.base.Strings;
 import com.jayway.jsonpath.*;
-import com.sangfor.ngsoc.common.aksk.service.impl.SigSignerJavaImpl;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.seatunnel.common.exception.SeaTunnelErrorCode;
-import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
-import org.apache.seatunnel.common.utils.SeaTunnelException;
-import org.apache.seatunnel.connectors.seatunnel.http.exception.HttpConnectorErrorCode;
-import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptHandler;
-import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.DefaultEncryptStrategyFactory;
-import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.EncryptStrategyFactory;
-import org.apache.seatunnel.connectors.seatunnel.http.util.EncryptUtil;
-import org.apache.seatunnel.connectors.seatunnel.http.util.TimeUtils;
-import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
 import org.apache.seatunnel.api.serialization.DeserializationSchema;
 import org.apache.seatunnel.api.source.Boundedness;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.utils.JsonUtils;
-import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.common.source.AbstractSingleSplitReader;
 import org.apache.seatunnel.connectors.seatunnel.common.source.SingleSplitReaderContext;
 import org.apache.seatunnel.connectors.seatunnel.http.client.HttpClientProvider;
@@ -50,10 +39,14 @@ import org.apache.seatunnel.connectors.seatunnel.http.client.HttpResponse;
 import org.apache.seatunnel.connectors.seatunnel.http.config.HttpParameter;
 import org.apache.seatunnel.connectors.seatunnel.http.config.JsonField;
 import org.apache.seatunnel.connectors.seatunnel.http.config.PageInfo;
-
-import com.google.common.base.Strings;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptHandler;
+import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.DefaultEncryptStrategyFactory;
+import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.EncryptStrategyFactory;
+import org.apache.seatunnel.connectors.seatunnel.http.util.EncryptUtil;
+import org.apache.seatunnel.connectors.seatunnel.http.util.TimeUtils;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -66,7 +59,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.apache.seatunnel.connectors.seatunnel.http.client.HttpClientProvider.APPLICATION_JSON;
-import static org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptRequest.*;
+import static org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptRequest.handleHikvisionApi;
 
 @Slf4j
 @Setter
@@ -546,13 +539,15 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     encryptBody,
                     otherSdk);
         }
+        String actualContent = response.getContent();
+        String processLogActualContent = processLogContent(actualContent);
         log.info("实际请求后的返回结果： request url:[{}], request headers:[{}] ,request param:[{}], request body:[{}], http response status code:[{}], content:[{}]",
                 url,
                 encryptHeaders,
                 encryptParams,
                 encryptBody,
                 response.getCode(),
-                response.getContent()
+                processLogActualContent
                 );
 
         //状态拦截
@@ -619,21 +614,14 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     collect(output, content);
                 }
             }
-            if (content.length() > 500) {
-                StringBuilder sb = new StringBuilder(content);
-                if (sb.length() > 500) {
-                    sb.setLength(500);
-                    sb.append("......");
-                }
-                content = sb.toString();
-            }
+            String processLogContent = processLogContent(content);
             log.info("经过加工后的返回结果： request url:[{}], request headers:[{}] ,request param:[{}], request body:[{}], http response status code:[{}], content:[{}]",
                     url,
                     encryptHeaders,
                     encryptParams,
                     encryptBody,
                     response.getCode(),
-                    content);
+                    processLogContent);
             log.debug(
                     "经过加工后的返回结果： request url:[{}], request headers:[{}], request param:[{}],request body:[{}], http response status code:[{}], content:[{}]",
                     url,
@@ -641,7 +629,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     encryptParams,
                     encryptBody,
                     response.getCode(),
-                    content);
+                    processLogContent);
         } else {
             noMoreElementFlag = true;
             String error = String.format("接口请求异常, request url:%s, request headers:%s, request param:%s, request body:%s,http response status code:%s, content:%s",
@@ -655,6 +643,25 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
         }
     }
 
+    public static String processLogContent(String actualContent) {
+        // 如果实际内容长度超过500个字符
+        if (actualContent.length() > 500) {
+            // 创建一个StringBuilder对象
+            StringBuilder sb = new StringBuilder(actualContent);
+
+            // 将StringBuilder的长度限制为500，并在末尾添加省略号
+            if (sb.length() > 500) {
+                sb.setLength(500);
+                sb.append("......");
+            }
+
+            // 转换回字符串并返回
+            return sb.toString();
+        } else {
+            // 如果长度未超过500，直接返回原始内容
+            return actualContent;
+        }
+    }
 
 
     /**
