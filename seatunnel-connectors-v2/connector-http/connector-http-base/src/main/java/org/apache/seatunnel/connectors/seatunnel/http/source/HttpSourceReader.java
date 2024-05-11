@@ -546,27 +546,14 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     encryptBody,
                     otherSdk);
         }
-        try {
-            String ActualResult = JsonPath.parse(response.getContent()).jsonString();
-            log.info("实际请求后的返回结果： request url:[{}], request headers:[{}] ,request param:[{}], request body:[{}], http response status code:[{}], content:[{}]",
-                    url,
-                    encryptHeaders,
-                    encryptParams,
-                    encryptBody,
-                    response.getCode(),
-                    ActualResult
-                    );
-            // 使用 jsonString
-        } catch (Exception e) {
-            log.error("请求异常，request url:[{}], request headers:[{}] ,request param:[{}], request body:[{}], http response status code:[{}], content:[{}]",
-                    url,
-                    encryptHeaders,
-                    encryptParams,
-                    encryptBody,
-                    response.getCode(),
-                    response.toString());
-        }
-
+        log.info("实际请求后的返回结果： request url:[{}], request headers:[{}] ,request param:[{}], request body:[{}], http response status code:[{}], content:[{}]",
+                url,
+                encryptHeaders,
+                encryptParams,
+                encryptBody,
+                response.getCode(),
+                response.getContent()
+                );
 
         //状态拦截
         if (HttpResponse.STATUS_OK == response.getCode() || HttpResponse.STATUS_CREATED == response.getCode()) {
@@ -665,13 +652,6 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     response.getCode(),
                     response.getContent());
             throw  new SeaTunnelException(error);
-//            log.error("http client execute exception, request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
-//                    url,
-//                    encryptHeaders,
-//                    encryptParams,
-//                    encryptBody,
-//                    response.getCode(),
-//                    response.getContent());
         }
     }
 
