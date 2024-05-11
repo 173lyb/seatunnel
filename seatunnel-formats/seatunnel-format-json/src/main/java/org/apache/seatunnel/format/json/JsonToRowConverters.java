@@ -18,6 +18,7 @@
 
 package org.apache.seatunnel.format.json;
 
+import org.apache.seatunnel.common.exception.CommonErrorCode;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
 
 import org.apache.seatunnel.api.table.type.ArrayType;
@@ -40,6 +41,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
@@ -255,8 +257,19 @@ public class JsonToRowConverters implements Serializable {
     }
 
     private LocalDateTime convertToLocalDateTime(JsonNode jsonNode) {
-        TemporalAccessor parsedTimestamp =
-                DateTimeFormatter.ISO_LOCAL_DATE_TIME.parse(jsonNode.asText());
+        LocalDateTime parsedTimestamp;
+        DateTimeFormatter combinedFormatter = new DateTimeFormatterBuilder()
+                .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"))
+                .toFormatter();
+        try {
+            parsedTimestamp = LocalDateTime.parse(jsonNode.asText(), combinedFormatter);
+        } catch (DateTimeParseException e) {
+            // 如果所有尝试都失败，这里可以添加日志记录或自定义错误处理
+            throw new SeaTunnelJsonFormatException(CommonErrorCode.JSON_OPERATION_FAILED,"不支持的时间格式");
+        }
+
         LocalTime localTime = parsedTimestamp.query(TemporalQueries.localTime());
         LocalDate localDate = parsedTimestamp.query(TemporalQueries.localDate());
         return LocalDateTime.of(localDate, localTime);
