@@ -216,6 +216,8 @@ public class PostgresDataTypeConvertor implements DataTypeConvertor<String> {
             case BOOLEAN:
                 return PG_BOOLEAN;
             case STRING:
+            case MAP:
+            case ROW:
                 return PG_TEXT;
             case DATE:
                 return PG_DATE;

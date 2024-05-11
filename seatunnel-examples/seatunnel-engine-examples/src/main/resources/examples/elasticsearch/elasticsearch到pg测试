@@ -1,0 +1,39 @@
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+  job.retry.times = 0
+}
+
+source {
+  Elasticsearch {
+    hosts = ["http://10.28.23.131:51942"]
+    tls_verify_certificate = false
+    tls_verify_hostname = false
+    index = "all_type_table"
+    query = {"match_all": {}}
+    source = ["id","name","double_type","join_date","ip_type","nested_type.nested_field1","nested_type.nested_field2"]
+  }
+}
+
+transform {
+}
+
+sink {
+    MappingJdbc {
+        url = "jdbc:postgresql://10.28.23.162:5432/d_migrate"
+        driver = "org.postgresql.Driver"
+        user = "u_migrate"
+        password = "123456"
+        generate_sink_sql = false
+        query = """INSERT INTO u_migrate."TEST_ELASTICSEARCH_ALL_TYPE3"
+                 (id, "name", double_type, join_date, ip_type, nested_field1, nested_field2)
+                 VALUES(?, ?, ?, ?, ?, ?, ?);"""
+        #primary_keys = ["ID"]
+        #enable_upsert = true
+        data_save_mode = "DROP_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        database = d_migrate
+        table = u_migrate.TEST_ELASTICSEARCH_ALL_TYPE3
+        batch_size = 10000
+        }
+}

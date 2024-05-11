@@ -1,0 +1,63 @@
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+  job.retry.times = 0
+}
+
+source {
+
+  Clickhouse {
+    host = "10.28.23.109:8123"
+    database = "default"
+    sql = "SELECT id, id2, id3, id4, id5, name, float_typ, salary, `dec`, join_date,  toDateTime(create_time,'UTC') as create_time from all_type_table2"
+    username = "xugu"
+    password = "123456"
+    result_table_name = "fake1"
+    server_time_zone = 'Asia/Shanghai'
+  }
+
+    Clickhouse {
+      host = "10.28.23.109:8123"
+      database = "default"
+      sql = "SELECT * from all_type_table2"
+      server_time_zone = 'Asia/Shanghai'
+      username = "xugu"
+      password = "123456"
+      result_table_name = "fake2"
+    }
+}
+
+
+sink {
+    MappingJdbc {
+        source_table_name = "fake1"
+        url = "jdbc:postgresql://10.28.23.162:5432/d_migrate"
+        driver = "org.postgresql.Driver"
+        user = "u_migrate"
+        password = "123456"
+        generate_sink_sql = true
+        #primary_keys = ["ID"]
+        #enable_upsert = true
+        data_save_mode = "DROP_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        database = d_migrate
+        table = u_migrate.TEST_CLICKHOUSE_ALL_TYPE
+        batch_size = 10000
+        }
+
+    MappingJdbc {
+        source_table_name = "fake2"
+        url = "jdbc:postgresql://10.28.23.162:5432/d_migrate"
+        driver = "org.postgresql.Driver"
+        user = "u_migrate"
+        password = "123456"
+        generate_sink_sql = true
+        #primary_keys = ["ID"]
+        #enable_upsert = true
+        data_save_mode = "DROP_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        database = d_migrate
+        table = u_migrate.TEST_CLICKHOUSE_ALL_TYPE3
+        batch_size = 10000
+        }
+}
