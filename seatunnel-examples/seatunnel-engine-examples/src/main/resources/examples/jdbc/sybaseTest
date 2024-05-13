@@ -1,0 +1,39 @@
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+  job.retry.times = 0
+}
+
+source {
+  MappingJdbc {
+    driver = "net.sourceforge.jtds.jdbc.Driver"
+	partition_column = "int_col"
+	partition_num = 2
+	fetch_size = 5000
+	table_path = "guest.AllTypesTable2"
+    url = "jdbc:jtds:sybase://10.28.23.109:5000/guest"
+    user = "guest"
+    password = "guest1234"
+    query = """ SELECT * from guest.AllTypesTable2 """
+	result_table_name = "aaa"
+  }
+}
+
+
+sink {
+	MappingJdbc {
+		database = "guest"
+		table = "guest.AllTypesTable4"
+		batch_size = 5000
+		generate_sink_sql = true
+		primary_keys = ["int_col"]
+		source_table_name = "aaa"
+		data_save_mode = "DROP_DATA"
+		schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+		enable_upsert = false
+        driver = "net.sourceforge.jtds.jdbc.Driver"
+        url = "jdbc:jtds:sybase://10.28.23.109:5000/guest"
+        user = "guest"
+        password = "guest1234"
+	}
+}

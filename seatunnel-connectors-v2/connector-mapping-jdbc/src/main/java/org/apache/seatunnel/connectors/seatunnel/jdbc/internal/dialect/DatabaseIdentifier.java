@@ -39,5 +39,6 @@ public class DatabaseIdentifier {
     public static final String OCENABASE = "OceanBase";
     public static final String TIDB = "TiDB";
     public static final String XUGU = "XUGU";
+    public static final String SYBASE = "Sybase";
 
 }

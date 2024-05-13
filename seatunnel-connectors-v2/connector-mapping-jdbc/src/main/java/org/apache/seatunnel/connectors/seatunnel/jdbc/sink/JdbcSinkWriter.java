@@ -25,7 +25,6 @@ import org.apache.seatunnel.api.sink.SupportMultiTableSinkWriter;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
-import org.apache.seatunnel.common.exception.CommonErrorCode;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcSinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorErrorCode;
@@ -35,6 +34,7 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.JdbcOutputFormatB
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.connection.JdbcConnectionProvider;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.connection.SimpleJdbcConnectionPoolProviderProxy;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.sybase.SybaseJdbcConnectionPoolProviderProxy;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.JdbcBatchStatementExecutor;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.JdbcSinkState;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.XidInfo;
@@ -104,11 +104,22 @@ public class JdbcSinkWriter
             MultiTableResourceManager<ConnectionPoolManager> multiTableResourceManager,
             int queueIndex) {
         connectionProvider.closeConnection();
-        this.connectionProvider =
-                new SimpleJdbcConnectionPoolProviderProxy(
-                        multiTableResourceManager.getSharedResource().get(),
-                        jdbcSinkConfig.getJdbcConnectionConfig(),
-                        queueIndex);
+
+        if (this.jdbcSinkConfig.getJdbcConnectionConfig().getDriverName().equals("net.sourceforge.jtds.jdbc.Driver"))
+        {
+            this.connectionProvider =
+                    new SybaseJdbcConnectionPoolProviderProxy(
+                            multiTableResourceManager.getSharedResource().get(),
+                            jdbcSinkConfig.getJdbcConnectionConfig(),
+                            queueIndex);
+        }else {
+            this.connectionProvider =
+                    new SimpleJdbcConnectionPoolProviderProxy(
+                            multiTableResourceManager.getSharedResource().get(),
+                            jdbcSinkConfig.getJdbcConnectionConfig(),
+                            queueIndex);
+        }
+
         this.outputFormat =
                 new JdbcOutputFormatBuilder(
                                 dialect, connectionProvider, jdbcSinkConfig, tableSchema)
