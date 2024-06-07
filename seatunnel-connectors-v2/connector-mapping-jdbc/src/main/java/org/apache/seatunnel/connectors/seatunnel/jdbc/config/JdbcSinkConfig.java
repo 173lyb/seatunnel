@@ -53,6 +53,7 @@ public class JdbcSinkConfig implements Serializable {
         builder.isExactlyOnce(config.get(JdbcOptions.IS_EXACTLY_ONCE));
         config.getOptional(JdbcOptions.PRIMARY_KEYS).ifPresent(builder::primaryKeys);
         config.getOptional(JdbcOptions.DATABASE).ifPresent(builder::database);
+        // TODO 优化多余的空格
         config.getOptional(JdbcOptions.TABLE).ifPresent(builder::table);
         builder.enableUpsert(config.get(ENABLE_UPSERT));
         builder.isPrimaryKeyUpdated(config.get(IS_PRIMARY_KEY_UPDATED));

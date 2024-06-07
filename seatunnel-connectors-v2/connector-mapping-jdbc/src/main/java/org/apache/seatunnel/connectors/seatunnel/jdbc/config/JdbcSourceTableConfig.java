@@ -73,6 +73,7 @@ public class JdbcSourceTableConfig implements Serializable {
         } else {
             JdbcSourceTableConfig tableProperty =
                     JdbcSourceTableConfig.builder()
+                            // TODO 优化多余的空格
                             .tablePath(connectorConfig.get(JdbcSourceOptions.TABLE_PATH))
                             .query(connectorConfig.get(JdbcOptions.QUERY))
                             .partitionColumn(connectorConfig.get(JdbcOptions.PARTITION_COLUMN))

@@ -32,12 +32,10 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalo
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialectTypeMapper;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu.XuguTypeMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,6 +59,7 @@ import static org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.xugu.XuguDa
 
 @Slf4j
 public class XuguCatalog extends AbstractJdbcCatalog {
+    private static final Logger LOG = LoggerFactory.getLogger(XuguCatalog.class);
 
     private static final XuguDataTypeConvertor DATA_TYPE_CONVERTOR =
             new XuguDataTypeConvertor();
@@ -145,6 +144,15 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     @Override
     protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
         return new XuguCreateTableSqlBuilder(table).build(tablePath);
+    }
+    protected boolean executeInternal(String url, String sql) throws SQLException {
+        LOG.info("Execute sql : {}", sql);
+//        try (PreparedStatement ps = getConnection(url).prepareStatement(sql)) {
+//            return ps.execute();
+//        }
+        try (Statement stmt = getConnection(url).createStatement()) {
+            return stmt.execute(sql);
+        }
     }
 
     @Override
