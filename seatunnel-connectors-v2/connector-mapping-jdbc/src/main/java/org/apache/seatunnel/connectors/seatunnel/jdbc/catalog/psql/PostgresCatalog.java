@@ -100,7 +100,7 @@ public class PostgresCatalog extends AbstractJdbcCatalog {
         SYS_DATABASES.add("pg_toast");
         SYS_DATABASES.add("pg_temp_1");
         SYS_DATABASES.add("pg_toast_temp_1");
-        SYS_DATABASES.add("postgres");
+        //SYS_DATABASES.add("postgres");
         SYS_DATABASES.add("template0");
         SYS_DATABASES.add("template1");
     }

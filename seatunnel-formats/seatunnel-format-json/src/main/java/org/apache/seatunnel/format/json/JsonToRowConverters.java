@@ -18,6 +18,7 @@
 
 package org.apache.seatunnel.format.json;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.seatunnel.common.exception.CommonErrorCode;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
 
@@ -47,6 +48,7 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -255,16 +257,16 @@ public class JsonToRowConverters implements Serializable {
         TemporalAccessor parsedTime = TIME_FORMAT.parse(jsonNode.asText());
         return parsedTime.query(TemporalQueries.localTime());
     }
-
+    private static final List<DateTimeFormatter> FORMATTERS = Arrays.asList(
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") // 添加更多格式
+    );
     private LocalDateTime convertToLocalDateTime(JsonNode jsonNode) {
         LocalDateTime parsedTimestamp;
-        DateTimeFormatter combinedFormatter = new DateTimeFormatterBuilder()
-                .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"))
-                .toFormatter();
         try {
-            parsedTimestamp = LocalDateTime.parse(jsonNode.asText(), combinedFormatter);
+            parsedTimestamp = tryParse(jsonNode.asText());
         } catch (DateTimeParseException e) {
             // 如果所有尝试都失败，这里可以添加日志记录或自定义错误处理
             throw new SeaTunnelJsonFormatException(CommonErrorCode.JSON_OPERATION_FAILED,"不支持的时间格式");
@@ -274,7 +276,18 @@ public class JsonToRowConverters implements Serializable {
         LocalDate localDate = parsedTimestamp.query(TemporalQueries.localDate());
         return LocalDateTime.of(localDate, localTime);
     }
+    private LocalDateTime tryParse(String text) throws DateTimeParseException {
+        DateTimeParseException lastException = null;
 
+        for (DateTimeFormatter formatter : FORMATTERS) {
+            try {
+                return LocalDateTime.parse(text, formatter);
+            } catch (DateTimeParseException e) {
+                lastException = e;
+            }
+        }
+        throw lastException;
+    }
     private String convertToString(JsonNode jsonNode) {
         if (jsonNode.isContainerNode()) {
             return jsonNode.toString();
@@ -397,7 +410,7 @@ public class JsonToRowConverters implements Serializable {
 
     private Object convertField(
             JsonToRowConverter fieldConverter, String fieldName, JsonNode field) {
-        if (field == null) {
+        if (field == null ) {
             if (failOnMissingField) {
                 throw new IllegalArgumentException(
                         String.format("Could not find field with name %s .", fieldName));
@@ -405,6 +418,9 @@ public class JsonToRowConverters implements Serializable {
                 return null;
             }
         } else {
+            if (StringUtils.isBlank(field.asText())){
+                return null;
+            }
             return fieldConverter.convert(field);
         }
     }
