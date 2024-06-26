@@ -9,5 +9,5 @@ public interface EncryptStrategy {
 
     Map<String, String> encryptHeader(Map<String, String> headers, Map<String, String> headerEncrypt, String body) throws SeaTunnelException;
 
-    Map<String, String> encryptParam(Map<String, String> params, Map<String, String> paramsEncrypt) throws SeaTunnelException;
+    Map<String, String> encryptParam(Map<String, String> params, Map<String, String> paramsEncrypt) throws Exception;
 }

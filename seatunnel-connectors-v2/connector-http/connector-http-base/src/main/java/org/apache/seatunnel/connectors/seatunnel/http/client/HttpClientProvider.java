@@ -328,7 +328,7 @@ public class HttpClientProvider implements AutoCloseable {
         if (MapUtils.isNotEmpty(headers)){
             contentType = headers.get("Content-Type");
         }
-        //处理params位置
+        //处理params位置 ,如果非form表单请求，那么将params拼接的url里面
         if (APPLICATION_JSON.equals(contentType)) {
             // Create access address
             URIBuilder uriBuilder = new URIBuilder(url);

@@ -11,7 +11,7 @@ import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptCo
 import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.SIGN;
 
 @Slf4j
-public class SingUtil {
+public class SignUtil {
     public static String sign(Map<String, Object> params, String secretKey) {
         String signStr = params.keySet().stream()
                 .filter(key -> !SIGN.equals(key))

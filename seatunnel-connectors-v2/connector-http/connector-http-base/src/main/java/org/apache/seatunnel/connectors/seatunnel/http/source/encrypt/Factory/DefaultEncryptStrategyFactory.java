@@ -25,6 +25,8 @@ public class DefaultEncryptStrategyFactory implements EncryptStrategyFactory {
                 return new BodySignBase64Strategy();
             case HEADER_WWG_SHA256:
                 return new HeaderWWGSHA256Strategy();
+            case SHA256_WITH_RSA:
+                return new ParamsSHA256withRSAStrategy();
             default:
                 return null;
         }

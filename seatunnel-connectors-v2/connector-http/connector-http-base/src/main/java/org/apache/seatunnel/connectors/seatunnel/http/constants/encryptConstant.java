@@ -13,6 +13,8 @@ public class encryptConstant {
     public static final String BODY_SIGN_BASE64 = "BODY-SIGN-BASE64";
     //HeaderWWGSHA256Strategy
     public static final String HEADER_WWG_SHA256 = "HEADER-WWG-SHA256";
+    //SHA256_WITH_RSA
+    public static final String SHA256_WITH_RSA = "SHA256-RSA";
 
     //其他
     public static final String SEMICOLON = ";";
@@ -51,6 +53,14 @@ public class encryptConstant {
     public static final String LOGIN_ID = "loginid";
     public static final String PASSWORD = "password";
     public static final String TOKEN = "token";
+    //biz_content
+    public static final String BIZ_CONTENT = "biz_content";
+    //request_id
+    public static final String REQUEST_ID = "request_id";
+    //ACCESS_KEY
+    public static final String ACCESS_KEY = "access_key";
+    //encrypt_biz_content
+    public static final String ENCRYPT_BIZ_CONTENT = "encrypt_biz_content";
 
 
 

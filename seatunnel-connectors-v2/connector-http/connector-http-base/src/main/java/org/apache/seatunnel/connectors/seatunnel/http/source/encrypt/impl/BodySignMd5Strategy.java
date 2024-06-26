@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.*;
-import static org.apache.seatunnel.connectors.seatunnel.http.util.SingUtil.sign;
+import static org.apache.seatunnel.connectors.seatunnel.http.util.SignUtil.sign;
 
 public class BodySignMd5Strategy implements EncryptStrategy {
     @Override

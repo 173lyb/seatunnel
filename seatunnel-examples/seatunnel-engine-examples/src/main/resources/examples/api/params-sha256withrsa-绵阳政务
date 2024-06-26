@@ -1,0 +1,78 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+source {
+  Http {
+    result_table_name = "SGXPT_JHSR_ZZ"
+    url = "http://lpn.jkzhtc.cn/partnerService/ParkLot"
+    method = "POST"
+    headers = {
+        Content-Type = "application/x-www-form-urlencoded"
+    }
+    params = {
+        #biz_content = "{\"serialNo\":\"123123\",\"reqTime\":\"20170907143740772\",\"reqBody\":{\"zxbm\":\"C51011\",\"zjhm\":\"510127197612191915\",\"xingming\":\"张三\"}}";
+        biz_content = "{\"clientName\":\"中心\",\"cert_num_man\":\"21028119801230121X\",\"name_man\":\"王岩松\",\"cert_num_woman\":\"210225198312240147\",\"name_woman\":\"杨丹玉\"}"
+        access_key = "MYXT121494"
+        version = ""
+        format = "JSON"
+        request_id = ""
+        timestamp = ""
+    }
+    params_encrypt = {
+            encrypt_type = "SHA256-RSA"
+            privateKey = "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCtx1NKCrKKKHrG8h3xpT13fr/ppG3OjBpBMQjstIDnUG/tDoDsI+jrtycqK6RXzA6RY9IWlQ8c1M6cMI35aNgEGSk2pMOLqe6JKkQFdp13y4QOR0TLbOyZ/OxHxs571az+0wJ+xBoNamMsFyZVwPtBApeT8x8OuhpysZ23840VrkT0BAKNZrGwW6KJHxWKGxZuQ4ENZXacHxlkXvXQjXIs5m8gz1yYqpJJ9BeM7/8zqoKIPNYwMCYbWLkD8PkuYEYCYJ2POapFFJJlPxqUOaWaQTizPrTI2YQUAao1o1xcBWDAPgISC36jYjqGJHE7ZLzKDNXEqK+dAV+2+eeOHBYpAgMBAAECggEAInfhvlLm3N5wk9tcMxzqVzRNzoLtwMUrQ/j84y5eTwM2YBe7XJs2zOI0I3oqi7uOvCnHdvEz4S0YmgRLdMfl6NIwyYTewGoBRTWb7lV7oFI+rDJYo9zEBTsUhpwZQpi8SoMCALDW1ghfCVTCJsozS86+z/quE1a4fj1aoizts/ncSGComRxyuI188JS24cyKzziFz65cRE8m9gEA1WEy3pL4RDLoS+Wi68gq2b2iBzpRARKzYnoLdIoEwJfB0kShw7n6WfnZHRFAqpDhUY7QTq3qALbO3CEmc49jv3ARKVge/0k9q3FVasf5gWNcccoOAgq1VdW7uCF7iKPzy92jMQKBgQDVDoPivrMBkxs4jYaSWLa66pkDc8pKWdtnSQGkMjxFcpgKFvJqypXf6dhtlJIrgGc/utzzbqggG9OM5ygbPaiccnYeBLDiSzieKu/01AOnR0k2Uq4JSmey4F3kRPjfsikcaO6CXVdXrjNAjsdCMRtgb84m6NNPXq+d2VndrMccVQKBgQDQzhr6LVRupuhGQcCAYuTZAg3skhlzYTcB8UyaGpWgI1YoPYlGgxGCjPL71taN/KKYG7Pj/kI1zaBdHkqA09FSoGehl7mo0nHUSbf63mYguDDQAfq6wgOPSs2Enny/AQABKEv0b/ji6c/8y4c2srfOxY/kl6v9Akni6NdPgF7mhQKBgDBMlxdrFdeQisY6RzycAejD0CZZNI3Aax2yDj4z6TfxL4hyBUiyXmGheJ/242AbPszSxs4k0tZcmIvDx3LNepDk3eQWOidC2DX7E+TTv3RHk9BN1AhlJrcFaCOcgzLrB6jaHN/O20MUSagj9gYKbeNh1UE63NSMaZGGOXoodgb1AoGAXpGaYkh5fwwVEwzglMU1hJuLluOspzcWZMjWuszji321ndARBmCCY7BWtHze+7u6IE4bsV0Mu7V/tezsLWDB4zxG80b2jWGSsGUa8IIdmyAQ64SZ/E+2sQVeA3yMXy2ixONtUy4LeSoQSxwbB0j2Oq37t7qB6LtKn3x5V8Z6NMkCgYBzmukNM0y00LxNOPcaDC3DO+qX7VQ32eYu0wVihGvQT9OqGWXnFHj6J/RZgTda6+iPXzym0CZ1nNiShdXkbofBu4vaP159RY4yqDJvjJJGsRXBk7G3T63bBdLQktGzkyM1PfQ64DB8GtYL0NZHom5cNYmatzc5XxvOkQuDJl/+hg=="
+            encrypt_biz_content = "false"
+    }
+
+    format = "json"
+    json_field = {
+        REGNUM = "$.biz_data.rows[*].regNum"
+        INTCLS = "$.biz_data.rows[*].intCls"
+        TMNAME = "$.biz_data.rows[*].tmName"
+        APPDATE = "$.biz_data.rows[*].appDate"
+        REGCNNAME = "$.biz_data.rows[*].regCnName"
+        REGENNAME = "$.biz_data.rows[*].regEnName"
+        REGCNADDR = "$.biz_data.rows[*].regCnAddr"
+        REGENADDR = "$.biz_data.rows[*].regEnAddr"
+        REGANNCDATE = "$.biz_data.rows[*].regAnncDate"
+        PROPERTYBGNDATE = "$.biz_data.rows[*].propertyBgnDate"
+        PROPERTYENDDATE = "$.biz_data.rows[*].propertyEndDate"
+    }
+    schema = {
+        fields {
+            REGNUM = string
+            INTCLS = string
+            TMNAME = string
+            APPDATE = string
+            REGCNNAME = string
+            REGENNAME = string
+            REGCNADDR = string
+            REGENADDR = string
+            REGANNCDATE = string
+            PROPERTYBGNDATE = string
+            PROPERTYENDDATE = string
+        }
+    }
+  }
+}
+
+sink {
+    MappingJdbc {
+        database = "SYSTEM"
+        table = "SYSDBA.SGXPT_JHSR_ZZ"
+        batch_size = 1000
+        generate_sink_sql = true
+        parallelism = 1
+        #primary_keys = ["id"]
+        source_table_name = "SGXPT_JHSR_ZZ"
+        password_decrypt = false
+        data_save_mode = "APPEND_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        #enable_upsert = true
+        driver = "com.xugu.cloudjdbc.Driver"
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        user = "SYSDBA"
+        password = "SYSDBA"
+    }
+}

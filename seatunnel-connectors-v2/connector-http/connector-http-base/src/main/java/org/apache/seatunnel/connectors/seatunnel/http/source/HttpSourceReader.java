@@ -43,6 +43,7 @@ import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptHand
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.DefaultEncryptStrategyFactory;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.Factory.EncryptStrategyFactory;
 import org.apache.seatunnel.connectors.seatunnel.http.util.EncryptUtil;
+import org.apache.seatunnel.connectors.seatunnel.http.util.SecurityUtil;
 import org.apache.seatunnel.connectors.seatunnel.http.util.TimeUtils;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
@@ -59,6 +60,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.apache.seatunnel.connectors.seatunnel.http.client.HttpClientProvider.APPLICATION_JSON;
+import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.*;
 import static org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.EncryptRequest.handleHikvisionApi;
 
 @Slf4j
@@ -565,22 +567,63 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
 
             log.info("开始加工返回结果...");
 
-            if (MapUtils.isNotEmpty(this.httpParameter.getParamsEncrypt())&& "RSA".equals(this.httpParameter.getParamsEncrypt().get("encrypt_type"))){
-                String privateKey = this.httpParameter.getParamsEncrypt().get("privateKey");
-                Map<String, String> contentMap = JsonUtils.toMap(responseString);
-                String data = contentMap.get("data");
-                responseString =  EncryptUtil.decryptByPrivateKey(data, privateKey);
-                if (StringUtils.isBlank(responseString)){
-                    log.error("接口请求异常： request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
-                            url,
-                            encryptHeaders,
-                            encryptParams,
-                            encryptBody,
-                            response.getCode(),
-                            responseString);
-                    throw new SeaTunnelException("未正确获取到RSA加密数据");
+            if (MapUtils.isNotEmpty(this.httpParameter.getParamsEncrypt())) {
+
+                if ("RSA".equals(this.httpParameter.getParamsEncrypt().get(ENCRYPT_TYPE))){
+                    String privateKey = this.httpParameter.getParamsEncrypt().get("privateKey");
+                    Map<String, String> contentMap = JsonUtils.toMap(responseString);
+                    String data = contentMap.get(DATA);
+                    responseString =  EncryptUtil.decryptByPrivateKey(data, privateKey);
+                    if (StringUtils.isBlank(responseString)){
+                        log.error("接口请求异常： request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
+                                url,
+                                encryptHeaders,
+                                encryptParams,
+                                encryptBody,
+                                response.getCode(),
+                                responseString);
+                        throw new SeaTunnelException("未正确获取到RSA加密数据");
+                    }
+                } else if ("SHA256-RSA".equals(this.httpParameter.getParamsEncrypt().get(ENCRYPT_TYPE))) {
+                    String access_key = this.httpParameter.getParams().get(ACCESS_KEY);
+                    String data= "";
+                    try {
+                         data = JsonUtils.stringToJsonNode(responseString).get("biz_data").get("data").asText();;
+                    } catch (Exception e) {
+                        log.error("接口请求异常： request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
+                                url,
+                                encryptHeaders,
+                                encryptParams,
+                                encryptBody,
+                                response.getCode(),
+                                responseString);
+                        throw new SeaTunnelException("未正确获取数据，请检查返回格式是否满足 $.biz_data.data");
+                    }
+                    responseString = data;
+                    if ( Boolean.parseBoolean(this.httpParameter.getParamsEncrypt().get(ENCRYPT_BIZ_CONTENT))){
+                        try {
+                            responseString =  SecurityUtil.decrypt(data, access_key);
+                        } catch (Exception e) {
+                            log.error("接口请求异常： request url:[{}], request headers:[{}], request param:[{}], request body:[{}],http response status code:[{}], content:[{}]",
+                                    url,
+                                    encryptHeaders,
+                                    encryptParams,
+                                    encryptBody,
+                                    response.getCode(),
+                                    responseString);
+                            throw new SeaTunnelException("非法值，无法解密RSA-SHA256的数据");
+                        }
+                    }
+
                 }
             }
+
+
+
+
+
+
+
             DocumentContext context = JsonPath.parse(responseString);
             // responseString如果是个空数组,会影响processAddition，空json没问题
             //params追加

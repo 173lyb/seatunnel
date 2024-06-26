@@ -24,11 +24,9 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.*;
-import static org.apache.seatunnel.connectors.seatunnel.http.util.SingUtil.sign;
+import static org.apache.seatunnel.connectors.seatunnel.http.util.SignUtil.sign;
 
 @Slf4j
 public class EncryptRequest {

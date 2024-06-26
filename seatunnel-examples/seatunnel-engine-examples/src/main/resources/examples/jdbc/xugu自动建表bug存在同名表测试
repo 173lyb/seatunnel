@@ -1,0 +1,45 @@
+env {
+    job.mode = "BATCH"
+    parallelism = "1"
+    job.retry.times = "0"
+    job.name = "PASSBY_TRUCK_AREA_PRO"
+}
+source {
+    MappingJdbc {
+        result_table_name = "PASSBY_TRUCK_AREA_PRO"
+        query = "SELECT * FROM passby_truck_area WHERE create_time > DATE_SUB(NOW(), INTERVAL 1 HOUR) "
+        parallelism = 1
+        fetch_size = 1000
+        #partition_column = "id"
+        password_decrypt = false
+        table_path = "test.passby_truck_area"
+        partition_num = 1
+        driver = "com.mysql.cj.jdbc.Driver"
+        url = "jdbc:mysql://10.28.23.152:3306/test?useServerPrepStmts=true&cachePrepStmts=true&defaultFetchSize=10000&useCursorFetch=true&useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+        user = "root"
+        password = "123456"
+    }
+}
+
+transform {
+}
+
+sink {
+    MappingJdbc {
+        database = "SYSTEM"
+        table = "SYSDBA.PASSBY_TRUCK_AREA_PRO"
+        batch_size = 1000
+        generate_sink_sql = true
+        parallelism = 1
+        primary_keys = ["id"]
+        source_table_name = "PASSBY_TRUCK_AREA_PRO"
+        password_decrypt = false
+        data_save_mode = "DROP_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        enable_upsert = true
+        driver = "com.xugu.cloudjdbc.Driver"
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        user = "SYSDBA"
+        password = "SYSDBA"
+    }
+}
