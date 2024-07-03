@@ -82,7 +82,7 @@ public class HadoopFileSystemProxy implements Serializable, Closeable {
             boolean removeWhenNewFilePathExist)
             throws IOException {
         Path oldPath = new Path(oldFilePath);
-        Path newPath = new Path(newFilePath);
+        Path newPath = new Path(newFilePath.replace("\\", "/"));
 
         if (!fileExist(oldPath.toString())) {
             log.warn(
