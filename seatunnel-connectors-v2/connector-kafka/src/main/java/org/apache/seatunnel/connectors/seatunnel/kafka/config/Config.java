@@ -21,6 +21,7 @@ import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
 
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.Options;
+import org.apache.seatunnel.format.json.JsonField;
 
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,18 @@ public class Config {
                     .noDefaultValue()
                     .withDescription(
                             "Kafka topic name. If there are multiple topics, use , to split, for example: \"tpc1,tpc2\".");
-
+    public static final Option<JsonField> JSON_FIELD =
+            Options.key("json_field")
+                    .objectType(JsonField.class)
+                    .noDefaultValue()
+                    .withDescription(
+                            "SeaTunnel json field.When partial json data is required, this parameter can be configured to obtain data");
+    public static final Option<String> CONTENT_FIELD =
+            Options.key("content_field")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "SeaTunnel content field.This parameter can get some json data, and there is no need to configure each field separately.");
     public static final Option<Boolean> PATTERN =
             Options.key("pattern")
                     .booleanType()

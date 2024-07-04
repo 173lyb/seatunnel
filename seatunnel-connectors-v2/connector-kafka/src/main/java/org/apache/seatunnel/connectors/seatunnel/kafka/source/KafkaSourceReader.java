@@ -27,6 +27,8 @@ import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormatError
 import org.apache.seatunnel.connectors.seatunnel.kafka.exception.KafkaConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.kafka.exception.KafkaConnectorException;
 import org.apache.seatunnel.format.compatible.kafka.connect.json.CompatibleKafkaConnectDeserializationSchema;
+import org.apache.seatunnel.format.json.JsonDeserializationSchema;
+import org.apache.seatunnel.format.json.JsonField;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -58,7 +60,6 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
 
     private final SourceReader.Context context;
     private final KafkaSourceConfig kafkaSourceConfig;
-
     private final Map<TablePath, ConsumerMetadata> tablePathMetadataMap;
     private final Set<KafkaSourceSplit> sourceSplits;
     private final Map<Long, Map<TopicPartition, Long>> checkpointOffsetMap;
@@ -69,6 +70,9 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
     private final LinkedBlockingQueue<KafkaSourceSplit> pendingPartitionsQueue;
 
     private volatile boolean running = false;
+
+    private final JsonField jsonField;
+    private final String contentJson;
 
     KafkaSourceReader(
             KafkaSourceConfig kafkaSourceConfig,
@@ -84,6 +88,8 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
         this.executorService =
                 Executors.newCachedThreadPool(r -> new Thread(r, "Kafka Source Data Consumer"));
         pendingPartitionsQueue = new LinkedBlockingQueue<>();
+        this.jsonField = kafkaSourceConfig.getJsonField();
+        this.contentJson = kafkaSourceConfig.getContentField();
     }
 
     @Override
@@ -159,6 +165,16 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
                                                                                 deserializationSchema)
                                                                         .deserialize(
                                                                                 record, output);
+                                                            } else if (deserializationSchema
+                                                                    instanceof
+                                                                    JsonDeserializationSchema) {
+                                                                ((JsonDeserializationSchema)
+                                                                                deserializationSchema)
+                                                                        .collect(
+                                                                                record.value(),
+                                                                                output,
+                                                                                jsonField,
+                                                                                contentJson);
                                                             } else {
                                                                 deserializationSchema.deserialize(
                                                                         record.value(), output);

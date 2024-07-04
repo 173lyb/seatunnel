@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 public class KafkaSource
         implements SeaTunnelSource<SeaTunnelRow, KafkaSourceSplit, KafkaSourceState>,
                 SupportParallelism {
-
     private JobContext jobContext;
 
     private final KafkaSourceConfig kafkaSourceConfig;
