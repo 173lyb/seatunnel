@@ -162,8 +162,10 @@ public class XuguCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getListTableSql(String databaseName) {
-        return "SELECT user_name ,table_name FROM all_users au \n" +
-                "INNER JOIN all_tables at ON au.user_id=at.user_id AND au.db_id=at.db_id";
+        return "select s.schema_name,t.table_name \n" +
+                "from all_schemas s,all_tables t\n" +
+                "where\n" +
+                "s.schema_id=t.schema_id";
     }
 
     @Override
