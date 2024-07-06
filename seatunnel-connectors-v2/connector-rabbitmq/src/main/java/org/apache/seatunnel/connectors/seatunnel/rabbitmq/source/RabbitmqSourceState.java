@@ -15,16 +15,8 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.api.table.event;
+package org.apache.seatunnel.connectors.seatunnel.rabbitmq.source;
 
-import org.apache.seatunnel.api.table.catalog.TableIdentifier;
+import java.io.Serializable;
 
-import lombok.ToString;
-
-@ToString(callSuper = true)
-public abstract class AlterTableColumnEvent extends AlterTableEvent {
-
-    public AlterTableColumnEvent(TableIdentifier tableIdentifier) {
-        super(tableIdentifier);
-    }
-}
+public class RabbitmqSourceState implements Serializable {}
