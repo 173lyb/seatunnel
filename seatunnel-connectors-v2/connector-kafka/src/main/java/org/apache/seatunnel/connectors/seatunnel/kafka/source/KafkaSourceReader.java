@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -109,7 +110,7 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
             return;
         }
 
-        while (pendingPartitionsQueue.size() != 0) {
+        while (!pendingPartitionsQueue.isEmpty()) {
             sourceSplits.add(pendingPartitionsQueue.poll());
         }
         sourceSplits.forEach(
@@ -126,9 +127,10 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
                                     executorService.submit(thread);
                                     return thread;
                                 }));
+        List<KafkaSourceSplit> finishedSplits = new CopyOnWriteArrayList<>();
         sourceSplits.forEach(
                 sourceSplit -> {
-                    CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+                    CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
                     TablePath tablePath = sourceSplit.getTablePath();
                     DeserializationSchema<SeaTunnelRow> deserializationSchema =
                             tablePathMetadataMap.get(tablePath).getDeserializationSchema();
@@ -154,9 +156,14 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
                                                 for (TopicPartition partition : partitions) {
                                                     List<ConsumerRecord<byte[], byte[]>>
                                                             recordList = records.records(partition);
+                                                    if (Boundedness.BOUNDED.equals(
+                                                                    context.getBoundedness())
+                                                            && recordList.isEmpty()) {
+                                                        completableFuture.complete(true);
+                                                        return;
+                                                    }
                                                     for (ConsumerRecord<byte[], byte[]> record :
                                                             recordList) {
-
                                                         try {
                                                             if (deserializationSchema
                                                                     instanceof
@@ -196,7 +203,8 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
                                                                 && record.offset()
                                                                         >= sourceSplit
                                                                                 .getEndOffset()) {
-                                                            break;
+                                                            completableFuture.complete(true);
+                                                            return;
                                                         }
                                                     }
                                                     long lastOffset = -1;
@@ -215,18 +223,21 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
                                             } catch (Exception e) {
                                                 completableFuture.completeExceptionally(e);
                                             }
-                                            completableFuture.complete(null);
+                                            completableFuture.complete(false);
                                         });
-                    } catch (InterruptedException e) {
+                        if (completableFuture.get()) {
+                            finishedSplits.add(sourceSplit);
+                        }
+                    } catch (Exception e) {
                         throw new KafkaConnectorException(
                                 KafkaConnectorErrorCode.CONSUME_DATA_FAILED, e);
                     }
-                    completableFuture.join();
                 });
-
         if (Boundedness.BOUNDED.equals(context.getBoundedness())) {
-            // signal to the source that we have reached the end of the data.
-            context.signalNoMoreElement();
+            finishedSplits.forEach(sourceSplits::remove);
+            if (sourceSplits.isEmpty()) {
+                context.signalNoMoreElement();
+            }
         }
     }
 
