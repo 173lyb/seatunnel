@@ -29,7 +29,7 @@ import javax.annotation.Nonnull;
 public class PostgresDialectFactory implements JdbcDialectFactory {
     @Override
     public boolean acceptsURL(String url) {
-        return url.startsWith("jdbc:postgresql:");
+        return url.startsWith("jdbc:postgresql:") || url.startsWith("jdbc:gaussdb:");
     }
 
     @Override

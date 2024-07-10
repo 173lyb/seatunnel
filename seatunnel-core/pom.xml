@@ -32,8 +32,8 @@
 
     <modules>
         <module>seatunnel-core-starter</module>
-        <module>seatunnel-flink-starter</module>
-        <module>seatunnel-spark-starter</module>
+        <!--  <module>seatunnel-flink-starter</module>
+        <module>seatunnel-spark-starter</module>-->
         <module>seatunnel-starter</module>
     </modules>
 

@@ -65,6 +65,7 @@ public class JdbcSinkConfig implements Serializable {
         builder.gaussSupportMerge(config.get(JdbcOptions.GAUSS_SUPPORT_MERGE));
         builder.createIndex(config.get(JdbcCatalogOptions.CREATE_INDEX));
         config.getOptional(JdbcOptions.FIELD_MAPPER).ifPresent(builder::FieldMapper);
+        builder.gaussSupportMerge(config.get(JdbcOptions.GAUSS_SUPPORT_MERGE));
         return builder.build();
     }
 }
