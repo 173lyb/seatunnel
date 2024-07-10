@@ -218,4 +218,10 @@ public interface JdbcOptions {
                     .mapType()
                     .noDefaultValue()
                     .withDescription("additional connection configuration parameters");
+
+    Option<Boolean> GAUSS_SUPPORT_MERGE =
+            Options.key("gauss_support_merge")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("对于opengauss使用postgresql连接器,改为merge into语法");
 }

@@ -24,7 +24,9 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcSinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.connection.JdbcConnectionProvider;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.converter.JdbcRowConverter;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.psql.PostgresDialect;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.BufferReducedBatchStatementExecutor;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.BufferedBatchStatementExecutor;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.CopyManagerBatchStatementExecutor;
@@ -91,7 +93,8 @@ public class JdbcOutputFormatBuilder {
                                     primaryKeys.toArray(new String[0]),
                                     jdbcSinkConfig.isEnableUpsert(),
                                     jdbcSinkConfig.isPrimaryKeyUpdated(),
-                                    jdbcSinkConfig.isSupportUpsertByInsertOnly());
+                                    jdbcSinkConfig.isSupportUpsertByInsertOnly(),
+                                    jdbcSinkConfig.isGaussSupportMerge());
         }
 
         return new JdbcOutputFormat(
@@ -122,7 +125,8 @@ public class JdbcOutputFormatBuilder {
             String[] pkNames,
             boolean enableUpsert,
             boolean isPrimaryKeyUpdated,
-            boolean supportUpsertByInsertOnly) {
+            boolean supportUpsertByInsertOnly,
+            boolean isGaussSupportMerge) {
         int[] pkFields =
                 Arrays.stream(pkNames)
                         .mapToInt(tableSchema.toPhysicalRowDataType()::indexOf)
@@ -151,7 +155,8 @@ public class JdbcOutputFormatBuilder {
                         keyExtractor,
                         enableUpsert,
                         isPrimaryKeyUpdated,
-                        supportUpsertByInsertOnly);
+                        supportUpsertByInsertOnly,
+                        isGaussSupportMerge);
         return new BufferReducedBatchStatementExecutor(
                 upsertExecutor, deleteExecutor, keyExtractor, Function.identity());
     }
@@ -166,14 +171,29 @@ public class JdbcOutputFormatBuilder {
             Function<SeaTunnelRow, SeaTunnelRow> keyExtractor,
             boolean enableUpsert,
             boolean isPrimaryKeyUpdated,
-            boolean supportUpsertByInsertOnly) {
+            boolean supportUpsertByInsertOnly,
+            boolean isGaussSupportMerge) {
         if (supportUpsertByInsertOnly) {
             return createInsertOnlyExecutor(dialect, database, table, tableSchema);
         }
         if (enableUpsert) {
-            Optional<String> upsertSQL =
-                    dialect.getUpsertStatement(
-                            database, table, tableSchema.getFieldNames(), pkNames);
+            Optional<String> upsertSQL;
+            if (isGaussSupportMerge) {
+                if (dialect.dialectName().equals(DatabaseIdentifier.POSTGRESQL)
+                        && dialect instanceof PostgresDialect) {
+                    PostgresDialect pregresDialect = (PostgresDialect) dialect;
+                    upsertSQL =
+                            pregresDialect.getOtherUpsertStatement(
+                                    database, table, tableSchema.getFieldNames(), pkNames);
+                } else {
+                    throw new UnsupportedOperationException(
+                            "gauss_support_merge = true 参数仅支持Postgres数据源");
+                }
+            } else {
+                upsertSQL =
+                        dialect.getUpsertStatement(
+                                database, table, tableSchema.getFieldNames(), pkNames);
+            }
             if (upsertSQL.isPresent()) {
                 return createSimpleExecutor(
                         upsertSQL.get(), tableSchema, dialect.getRowConverter());
