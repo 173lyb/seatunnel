@@ -38,6 +38,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,74 +51,63 @@ public class XuguCatalog extends AbstractJdbcCatalog {
             Collections.unmodifiableList(Arrays.asList("GUEST", "SYSAUDITOR", "SYSSSO"));
 
     private static final String SELECT_COLUMNS_SQL_TEMPLATE =
-            "SELECT\n"
-                    + "    dc.COLUMN_NAME,\n"
-                    + "    CASE\n"
-                    + "        WHEN dc.TYPE_NAME LIKE 'INTERVAL%%' THEN 'INTERVAL' ELSE REGEXP_SUBSTR(dc.TYPE_NAME, '^[^(]+')\n"
-                    + "    END AS TYPE_NAME,\n"
-                    + "    dc.TYPE_NAME ||\n"
-                    + "    CASE\n"
-                    + "        WHEN dc.TYPE_NAME IN ('VARCHAR', 'CHAR') THEN '(' || dc.COLUMN_LENGTH || ')'\n"
-                    + "        WHEN dc.TYPE_NAME IN ('NUMERIC') AND dc.COLUMN_PRECISION IS NOT NULL AND dc.COLUMN_SCALE IS NOT NULL THEN '(' || dc.COLUMN_PRECISION || ', ' || dc.COLUMN_SCALE || ')'\n"
-                    + "        WHEN dc.TYPE_NAME IN ('NUMERIC') AND dc.COLUMN_PRECISION IS NOT NULL AND dc.COLUMN_SCALE IS NULL THEN '(' || dc.COLUMN_PRECISION || ')'\n"
-                    + "        WHEN dc.TYPE_NAME IN ('TIMESTAMP') THEN '(' || dc.COLUMN_SCALE || ')'\n"
-                    + "    END AS FULL_TYPE_NAME,\n"
-                    + "    dc.COLUMN_LENGTH,\n"
-                    + "    dc.COLUMN_PRECISION,\n"
-                    + "    dc.COLUMN_SCALE,\n"
-                    + "    dc.COLUMN_COMMENT,\n"
-                    + "    dc.DEFAULT_VALUE,\n"
-                    + "    CASE\n"
-                    + "        dc.IS_NULLABLE WHEN TRUE THEN 'NO' ELSE 'YES'\n"
-                    + "    END AS IS_NULLABLE\n"
-                    + "FROM\n"
-                    + "    (\n"
-                    + "    SELECT\n"
-                    + "        c.col_name AS COLUMN_NAME,\n"
-                    + "        CASE\n"
-                    + "            WHEN c.type_name = 'CHAR' AND c.\"VARYING\" = TRUE THEN 'VARCHAR'\n"
-                    + "            WHEN c.type_name = 'DATETIME' AND c.TIMESTAMP_T = 'i' THEN 'TIMESTAMP' ELSE c.type_name\n"
-                    + "        END AS TYPE_NAME,\n"
-                    + "        DECODE(c.type_name,\n"
-                    + "        'TINYINT', 1, 'SMALLINT', 2,\n"
-                    + "        'INTEGER', 4, 'BIGINT', 8,\n"
-                    + "        'FLOAT', 4, 'DOUBLE', 8,\n"
-                    + "        'NUMERIC', 17,\n"
-                    + "        'CHAR', DECODE(c.scale, -1, 60000, c.scale),\n"
-                    + "        'DATE', 4, 'DATETIME', 8,\n"
-                    + "        'TIMESTAMP', 8, 'DATETIME WITH TIME ZONE', 8,\n"
-                    + "        'TIME', 4, 'TIME WITH TIME ZONE', 4,\n"
-                    + "        'INTERVAL YEAR', 4, 'INTERVAL MONTH', 4,\n"
-                    + "        'INTERVAL DAY', 4, 'INTERVAL HOUR', 4,\n"
-                    + "        'INTERVAL MINUTE', 4, 'INTERVAL SECOND', 8,\n"
-                    + "        'INTERVAL YEAR TO MONTH', 4,\n"
-                    + "        'INTERVAL DAY TO HOUR', 4,\n"
-                    + "        'INTERVAL DAY TO MINUTE', 4,\n"
-                    + "        'INTERVAL DAY TO SECOND', 8,\n"
-                    + "        'INTERVAL HOUR TO MINUTE', 4,\n"
-                    + "        'INTERVAL HOUR TO SECOND', 8,\n"
-                    + "        'INTERVAL MINUTE TO SECOND', 8,\n"
-                    + "        'CLOB', 2147483648,\n"
-                    + "        'BLOB', 2147483648, 'BINARY', 2147483648,\n"
-                    + "        'GUID', 2, 'BOOLEAN', 1,\n"
-                    + "        'ROWVERSION', 8, 'ROWID', 10, NULL) AS COLUMN_LENGTH,\n"
-                    + "        DECODE(TRUNC(c.scale / 65536), 0, NULL, TRUNC(c.scale / 65536)::INTEGER) AS COLUMN_PRECISION,\n"
-                    + "        DECODE(DECODE(c.type_name, 'CHAR',-1, c.scale),-1, NULL, MOD(c.scale, 65536)) AS COLUMN_SCALE,\n"
-                    + "        c.comments AS COLUMN_COMMENT,\n"
-                    + "        c.DEF_VAL AS DEFAULT_VALUE,\n"
-                    + "        c.NOT_NULl AS IS_NULLABLE\n"
-                    + "    FROM\n"
-                    + "        dba_columns c\n"
-                    + "    LEFT JOIN dba_tables tab ON\n"
-                    + "        c.db_id = tab.db_id\n"
-                    + "        AND c.table_id = tab.table_id\n"
-                    + "    LEFT JOIN dba_schemas sc ON\n"
-                    + "        tab.schema_id = sc.schema_id\n"
-                    + "        AND tab.db_id = sc.db_id\n"
-                    + "    WHERE\n"
-                    + "        sc.schema_name = '%s'\n"
-                    + "        AND tab.table_name = '%s'\n"
-                    + ") AS dc \n";
+            " SELECT \n" +
+                    " \tdc.COLUMN_NAME\n" +
+                    "\t, CASE WHEN dc.TYPE_NAME LIKE 'INTERVAL%%' THEN 'INTERVAL'\n" +
+                    "\t ELSE REGEXP_SUBSTR(dc.TYPE_NAME, '^[^(]+')\n" +
+                    "\t END as TYPE_NAME\n" +
+                    " \t,dc.TYPE_NAME || \n" +
+                    " CASE \n" +
+                    " WHEN dc.TYPE_NAME IN ('VARCHAR2', 'CHAR') THEN '(' || dc.COLUMN_LENGTH || ')'\n" +
+                    " WHEN dc.TYPE_NAME IN ('NUMERIC') AND dc.COLUMN_PRECISION IS NOT NULL AND dc.COLUMN_SCALE IS NOT NULL THEN '(' || dc.COLUMN_PRECISION || ', ' || dc.COLUMN_SCALE || ')'\n" +
+                    " WHEN dc.TYPE_NAME IN ('NUMERIC') AND dc.COLUMN_PRECISION IS NOT NULL AND dc.COLUMN_SCALE IS NULL THEN '(' || dc.COLUMN_PRECISION || ')'\n" +
+                    " WHEN dc.TYPE_NAME IN ('RAW') THEN '(' || dc.COLUMN_LENGTH || ')'\n" +
+                    " WHEN dc.TYPE_NAME IN ('DATETIME') THEN '(' || dc.COLUMN_SCALE || ')'\n" +
+                    " END AS FULL_TYPE_NAME\n" +
+                    " \t,dc.COLUMN_LENGTH\n" +
+                    " \t,dc.COLUMN_PRECISION\n" +
+                    " \t,dc.COLUMN_SCALE\n" +
+                    " \t,dc.COLUMN_COMMENT\n" +
+                    " \t,dc.DEFAULT_VALUE\n" +
+                    "\t,CASE dc.IS_NULLABLE WHEN TRUE THEN 'NO'  ELSE 'YES' END AS IS_NULLABLE\n" +
+                    " FROM \n" +
+                    " (select\n" +
+                    "\t c.col_name AS COLUMN_NAME\n" +
+                    "\t,c.type_name AS  TYPE_NAME\n" +
+                    "\t,DECODE(c.type_name,\n" +
+                    "\t\t'TINYINT',1,'SMALLINT',2,\n" +
+                    "\t\t'INTEGER',4,'BIGINT',8,\n" +
+                    "\t\t'FLOAT',4,'DOUBLE',8,\n" +
+                    "\t\t'NUMERIC',17,\n" +
+                    "\t\t'CHAR',DECODE(c.scale,-1,60000,c.scale),\n" +
+                    "\t\t'DATE',4,'DATETIME',8,\n" +
+                    "\t\t'TIMESTAMP',8,'DATETIME WITH TIME ZONE',8,\n" +
+                    "\t\t'TIME',4,'TIME WITH TIME ZONE',4,\n" +
+                    "\t\t'INTERVAL YEAR',4,'INTERVAL MONTH',4,\n" +
+                    "\t\t'INTERVAL DAY',4,'INTERVAL HOUR',4,\n" +
+                    "\t\t'INTERVAL MINUTE',4,'INTERVAL SECOND',8,\n" +
+                    "\t\t'INTERVAL YEAR TO MONTH',4,\n" +
+                    "\t\t'INTERVAL DAY TO HOUR',4,\n" +
+                    "\t\t'INTERVAL DAY TO MINUTE',4,\n" +
+                    "\t\t'INTERVAL DAY TO SECOND',8,\n" +
+                    "\t\t'INTERVAL HOUR TO MINUTE',4,\n" +
+                    "\t\t'INTERVAL HOUR TO SECOND',8,\n" +
+                    "\t\t'INTERVAL MINUTE TO SECOND',8,\n" +
+                    "\t\t'BLOB',2000,'CLOB',2147483648,\n" +
+                    "\t\t'BLOB',2147483648,'BINARY',2147483648,\n" +
+                    "\t\t'GUID',2,'BOOLEAN',1,\n" +
+                    "\t\t'ROWVERSION',8,'ROWID',10,NULL) AS COLUMN_LENGTH\n" +
+                    "   \t,DECODE(TRUNC(c.scale/65536),0,NULL,TRUNC(c.scale/65536)::INTEGER) AS COLUMN_PRECISION\n" +
+                    "\t,DECODE(DECODE(c.type_name,'CHAR',-1,c.scale),-1,NULL,MOD(c.scale,65536)) AS COLUMN_SCALE\n" +
+                    "\t,c.comments AS COLUMN_COMMENT\n" +
+                    "\t,c.DEF_VAL AS DEFAULT_VALUE\n" +
+                    "\t,c.NOT_NULl AS IS_NULLABLE\n" +
+                    "from dba_columns c \n" +
+                    "LEFT JOIN dba_tables tab ON c.db_id = tab.db_id AND c.table_id = tab.table_id\n" +
+                    "LEFT JOIN dba_schemas sc ON tab.schema_id = sc.schema_id AND tab.db_id = sc.db_id\n" +
+                    "WHERE sc.schema_name = '%s'\n" +
+                    "AND tab.table_name ='%s'\n" +
+                    ") AS dc \n";
 
     public XuguCatalog(
             String catalogName,
@@ -134,16 +124,6 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
-        return new XuguCreateTableSqlBuilder(table).build(tablePath);
-    }
-
-    @Override
-    protected String getDropTableSql(TablePath tablePath) {
-        return String.format("DROP TABLE %s", tablePath.getSchemaAndTableName("\""));
-    }
-
-    @Override
     protected String getCreateDatabaseSql(String databaseName) {
         return String.format("CREATE DATABASE \"%s\"", databaseName);
     }
@@ -155,8 +135,26 @@ public class XuguCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getListTableSql(String databaseName) {
-        return "SELECT user_name ,table_name FROM all_users au \n"
-                + "INNER JOIN all_tables at ON au.user_id=at.user_id AND au.db_id=at.db_id";
+        return "select s.schema_name,t.table_name \n" +
+                "from all_schemas s,all_tables t\n" +
+                "where\n" +
+                "s.schema_id=t.schema_id";
+    }
+    @Override
+    protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
+        return new XuguCreateTableSqlBuilder(table).build(tablePath);
+    }
+
+    @Override
+    protected String getDropTableSql(TablePath tablePath) {
+        return String.format("DROP TABLE %s", tablePath.getSchemaAndTableName("\""));
+    }
+
+    @Override
+    protected String getTruncateTableSql(TablePath tablePath) {
+        return String.format(
+                "TRUNCATE TABLE \"%s\".\"%s\"",
+                tablePath.getSchemaName(), tablePath.getTableName());
     }
 
     @Override
@@ -232,14 +230,7 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     @Override
     public CatalogTable getTable(String sqlQuery) throws SQLException {
         Connection defaultConnection = getConnection(defaultUrl);
-        return CatalogUtils.getCatalogTable(defaultConnection, sqlQuery, new XuguTypeMapper());
-    }
-
-    @Override
-    protected String getTruncateTableSql(TablePath tablePath) {
-        return String.format(
-                "TRUNCATE TABLE \"%s\".\"%s\"",
-                tablePath.getSchemaName(), tablePath.getTableName());
+        return CatalogUtils.getXuguCatalogTable(defaultConnection, sqlQuery, new XuguTypeMapper());
     }
 
     @Override
@@ -263,4 +254,13 @@ public class XuguCatalog extends AbstractJdbcCatalog {
             return new ArrayList<>();
         }
     }
+    @Override
+    protected boolean executeInternal(String url, String sql) throws SQLException {
+        log.info("Execute sql : {}", sql);
+        try (Statement stmt = getConnection(url).createStatement()) {
+            return stmt.execute(sql);
+        }
+    }
+
+
 }
