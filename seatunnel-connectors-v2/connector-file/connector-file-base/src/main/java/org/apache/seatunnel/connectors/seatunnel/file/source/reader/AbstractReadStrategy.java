@@ -28,10 +28,14 @@ import org.apache.seatunnel.connectors.seatunnel.file.hadoop.HadoopFileSystemPro
 
 import org.apache.hadoop.fs.FileStatus;
 
+import com.ibm.icu.text.CharsetDetector;
+import com.ibm.icu.text.CharsetMatch;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -39,7 +43,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -196,9 +199,31 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
     }
 
     protected boolean filterFileByPattern(FileStatus fileStatus) {
-        if (Objects.nonNull(pattern)) {
-            return pattern.matcher(fileStatus.getPath().getName()).matches();
+        String fileName = fileStatus.getPath().getName();
+        byte[] bytes = fileName.getBytes(StandardCharsets.ISO_8859_1);
+
+        CharsetDetector detector = new CharsetDetector();
+        detector.setText(bytes);
+        CharsetMatch match = detector.detect();
+
+        if (match == null) {
+            log.error("无法检测字符集：{}", fileName);
+            return false;
         }
+
+        String charset = match.getName();
+        log.info("检测到的字符集: {}", charset);
+
+        try {
+            String decodedFilename = new String(bytes, charset);
+            if (pattern != null) {
+                return pattern.matcher(decodedFilename).matches();
+            }
+        } catch (UnsupportedEncodingException e) {
+            log.error("不支持的字符集文件名：{}", fileName);
+            return false;
+        }
+
         return true;
     }
 

@@ -39,6 +39,7 @@
         <hadoop-minikdc.version>3.1.4</hadoop-minikdc.version>
         <dom4j.version>2.1.4</dom4j.version>
         <jaxen.version>2.0.0</jaxen.version>
+        <icu4j.version>72.1</icu4j.version>
     </properties>
 
     <dependencyManagement>
@@ -60,7 +61,6 @@
             <artifactId>seatunnel-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
             <artifactId>seatunnel-format-json</artifactId>
@@ -157,6 +157,11 @@
             <groupId>jaxen</groupId>
             <artifactId>jaxen</artifactId>
             <version>${jaxen.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
+            <version>${icu4j.version}</version>
         </dependency>
     </dependencies>
 
