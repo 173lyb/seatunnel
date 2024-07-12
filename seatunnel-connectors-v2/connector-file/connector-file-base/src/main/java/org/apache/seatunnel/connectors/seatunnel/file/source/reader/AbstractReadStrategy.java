@@ -28,12 +28,9 @@ import org.apache.seatunnel.connectors.seatunnel.file.hadoop.HadoopFileSystemPro
 
 import org.apache.hadoop.fs.FileStatus;
 
-import com.ibm.icu.text.CharsetDetector;
-import com.ibm.icu.text.CharsetMatch;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -73,6 +70,10 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
     protected HadoopFileSystemProxy hadoopFileSystemProxy;
 
     protected Pattern pattern;
+    protected String FileNameList;
+    protected String OriginalPath;
+    protected String host;
+    protected int port;
 
     @Override
     public void init(HadoopConf conf) {
@@ -94,13 +95,24 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
     @Override
     public List<String> getFileNamesByPath(String path) throws IOException {
         ArrayList<String> fileNames = new ArrayList<>();
-        FileStatus[] stats = hadoopFileSystemProxy.listStatus(path);
+        String dePath = path;
+        if ((hadoopConf.getHdfsNameKey().startsWith("ftp://"))) {
+            path = new String(path.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+            dePath = new String(path.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
+        }
+
+        // TODO 测试hive中文分区场景
+        FileStatus[] stats = hadoopFileSystemProxy.listStatus(dePath);
         for (FileStatus fileStatus : stats) {
             if (fileStatus.isDirectory()) {
                 fileNames.addAll(getFileNamesByPath(fileStatus.getPath().toString()));
                 continue;
             }
-            if (fileStatus.isFile() && filterFileByPattern(fileStatus) && fileStatus.getLen() > 0) {
+            if (fileStatus.isFile()
+                    && filterFileByPatternOrList(
+                            fileStatus.getPath().getParent().toString(),
+                            fileStatus.getPath().getName())
+                    && fileStatus.getLen() > 0) {
                 // filter '_SUCCESS' file
                 if (!fileStatus.getPath().getName().equals("_SUCCESS")
                         && !fileStatus.getPath().getName().startsWith(".")) {
@@ -148,6 +160,23 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
             String filterPattern =
                     pluginConfig.getString(BaseSourceConfigOptions.FILE_FILTER_PATTERN.key());
             this.pattern = Pattern.compile(Matcher.quoteReplacement(filterPattern));
+        }
+        // FTP_FILE_FILTER_LIST
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.FTP_FILE_FILTER_LIST.key())) {
+            this.FileNameList =
+                    pluginConfig.getString(BaseSourceConfigOptions.FTP_FILE_FILTER_LIST.key());
+        }
+        // PATH
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.FILE_PATH.key())) {
+            this.OriginalPath = pluginConfig.getString(BaseSourceConfigOptions.FILE_PATH.key());
+        }
+        // port
+        if (pluginConfig.hasPath("port")) {
+            this.port = pluginConfig.getInt("port");
+        }
+        // host
+        if (pluginConfig.hasPath("host")) {
+            this.host = pluginConfig.getString("host");
         }
     }
 
@@ -198,33 +227,40 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
         return new SeaTunnelRowType(newFieldNames, newFieldTypes);
     }
 
-    protected boolean filterFileByPattern(FileStatus fileStatus) {
-        String fileName = fileStatus.getPath().getName();
-        byte[] bytes = fileName.getBytes(StandardCharsets.ISO_8859_1);
-
-        CharsetDetector detector = new CharsetDetector();
-        detector.setText(bytes);
-        CharsetMatch match = detector.detect();
-
-        if (match == null) {
-            log.error("无法检测字符集：{}", fileName);
-            return false;
+    protected boolean filterFileByPatternOrList(String parentPath, String fileName) {
+        if (pattern != null) {
+            log.info("使用正则表达式匹配文件名。");
+            return pattern.matcher(fileName).matches();
         }
 
-        String charset = match.getName();
-        log.info("检测到的字符集: {}", charset);
+        boolean isFtp = hadoopConf.getHdfsNameKey().startsWith("ftp://");
+        if (isFtp) {
+            fileName =
+                    new String(
+                            fileName.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
 
-        try {
-            String decodedFilename = new String(bytes, charset);
-            if (pattern != null) {
-                return pattern.matcher(decodedFilename).matches();
+            if (FileNameList != null) {
+                List<String> fileList = Arrays.asList(FileNameList.split("\\|\\|\\|\\|\\|"));
+                if (fileList.contains(fileName)) {
+                    if (OriginalPath.endsWith("/") && OriginalPath.length() > 1) {
+                        int lastIndex = OriginalPath.lastIndexOf('/');
+                        OriginalPath = OriginalPath.substring(0, lastIndex);
+                    }
+                    String path = "ftp://" + host + ":" + port + OriginalPath;
+                    log.info("手动构造的文件路径：{}", path);
+                    log.info("自动获取的文件路径：{}", parentPath);
+                    return path.equals(parentPath);
+                } else {
+                    log.warn("文件名{}不在FileNameList中。", parentPath + "/" + fileName);
+                    return false;
+                }
+            } else {
+                log.error("FileNameList为空。");
+                return false;
             }
-        } catch (UnsupportedEncodingException e) {
-            log.error("不支持的字符集文件名：{}", fileName);
-            return false;
+        } else {
+            return true;
         }
-
-        return true;
     }
 
     @Override
