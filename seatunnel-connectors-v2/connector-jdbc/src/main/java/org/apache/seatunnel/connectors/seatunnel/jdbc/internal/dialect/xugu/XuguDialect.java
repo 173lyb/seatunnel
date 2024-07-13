@@ -165,8 +165,6 @@ public class XuguDialect implements JdbcDialect {
         return Optional.of(upsertSQL);
     }
 
-
-
     @Override
     public Object queryNextChunkMax(
             Connection connection,
@@ -236,6 +234,4 @@ public class XuguDialect implements JdbcDialect {
         }
         return statement;
     }
-
-
 }

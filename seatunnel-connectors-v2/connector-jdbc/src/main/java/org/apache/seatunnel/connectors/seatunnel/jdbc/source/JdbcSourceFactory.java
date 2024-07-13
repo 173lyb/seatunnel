@@ -60,7 +60,7 @@ import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcSourceOp
 public class JdbcSourceFactory implements TableSourceFactory {
     @Override
     public String factoryIdentifier() {
-        return "MappingJdbc";
+        return "Jdbc";
     }
 
     @Override

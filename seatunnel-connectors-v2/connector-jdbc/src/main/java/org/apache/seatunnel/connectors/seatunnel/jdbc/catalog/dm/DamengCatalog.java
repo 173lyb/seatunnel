@@ -205,6 +205,7 @@ public class DamengCatalog extends AbstractJdbcCatalog {
                 "TRUNCATE TABLE \"%s\".\"%s\"",
                 tablePath.getSchemaName(), tablePath.getTableName());
     }
+
     @Override
     protected List<ConstraintKey> getConstraintKeys(DatabaseMetaData metaData, TablePath tablePath)
             throws SQLException {
