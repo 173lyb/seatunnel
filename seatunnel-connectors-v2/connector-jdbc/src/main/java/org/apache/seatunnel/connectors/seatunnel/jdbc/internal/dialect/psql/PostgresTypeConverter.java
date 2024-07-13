@@ -371,6 +371,9 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
                 builder.columnType(PG_BYTEA);
                 builder.dataType(PG_BYTEA);
                 break;
+                // TODO 优化项
+            case MAP:
+            case ROW:
             case STRING:
                 if (column.getColumnLength() == null || column.getColumnLength() <= 0) {
                     builder.columnType(PG_TEXT);

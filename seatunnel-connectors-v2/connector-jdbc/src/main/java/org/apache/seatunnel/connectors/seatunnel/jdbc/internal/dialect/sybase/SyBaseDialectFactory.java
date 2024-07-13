@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.kingbase;
+package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.sybase;
 
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialectFactory;
@@ -24,22 +24,21 @@ import com.google.auto.service.AutoService;
 
 import javax.annotation.Nonnull;
 
-/** Factory for {@link KingbaseDialect}. */
+/** Factory for {@link SyBaseDialect}. */
 @AutoService(JdbcDialectFactory.class)
-public class KingbaseDialectFactory implements JdbcDialectFactory {
-
+public class SyBaseDialectFactory implements JdbcDialectFactory {
     @Override
     public boolean acceptsURL(String url) {
-        return url.startsWith("jdbc:kingbase8:");
+        return url.startsWith("jdbc:jtds:sybase:");
     }
 
     @Override
     public JdbcDialect create() {
-        return new KingbaseDialect();
+        return new SyBaseDialect();
     }
 
     @Override
     public JdbcDialect create(@Nonnull String compatibleMode, String fieldIde) {
-        return new KingbaseDialect(fieldIde);
+        return new SyBaseDialect(fieldIde);
     }
 }

@@ -28,9 +28,9 @@ import java.sql.SQLException;
 @Slf4j
 public class SimpleJdbcConnectionPoolProviderProxy implements JdbcConnectionProvider {
 
-    private final transient ConnectionPoolManager poolManager;
-    private final JdbcConnectionConfig jdbcConfig;
-    private final int queueIndex;
+    protected final transient ConnectionPoolManager poolManager;
+    protected final JdbcConnectionConfig jdbcConfig;
+    protected final int queueIndex;
 
     public SimpleJdbcConnectionPoolProviderProxy(
             ConnectionPoolManager poolManager, JdbcConnectionConfig jdbcConfig, int queueIndex) {

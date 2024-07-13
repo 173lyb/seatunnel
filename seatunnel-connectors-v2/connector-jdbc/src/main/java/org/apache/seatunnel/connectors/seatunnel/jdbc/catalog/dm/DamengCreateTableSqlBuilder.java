@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.xugu;
+package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.dm;
 
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -23,29 +23,31 @@ import org.apache.seatunnel.api.table.catalog.PrimaryKey;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu.XuguTypeConverter;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.oracle.OracleTypeConverter;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class XuguCreateTableSqlBuilder {
+public class DamengCreateTableSqlBuilder {
 
     private List<Column> columns;
     private PrimaryKey primaryKey;
     private String sourceCatalogName;
     private String fieldIde;
 
-    public XuguCreateTableSqlBuilder(CatalogTable catalogTable) {
+    public DamengCreateTableSqlBuilder(CatalogTable catalogTable) {
         this.columns = catalogTable.getTableSchema().getColumns();
         this.primaryKey = catalogTable.getTableSchema().getPrimaryKey();
         this.sourceCatalogName = catalogTable.getCatalogName();
         this.fieldIde = catalogTable.getOptions().get("fieldIde");
     }
 
-    public String build(TablePath tablePath) {
+    public List<String> build(TablePath tablePath) {
+        List<String> sqls = new ArrayList<>();
         StringBuilder createTableSql = new StringBuilder();
         createTableSql
                 .append("CREATE TABLE ")
@@ -66,7 +68,7 @@ public class XuguCreateTableSqlBuilder {
 
         createTableSql.append(String.join(",\n", columnSqls));
         createTableSql.append("\n)");
-
+        sqls.add(createTableSql.toString());
         List<String> commentSqls =
                 columns.stream()
                         .filter(column -> StringUtils.isNotBlank(column.getComment()))
@@ -75,13 +77,8 @@ public class XuguCreateTableSqlBuilder {
                                         buildColumnCommentSql(
                                                 column, tablePath.getSchemaAndTableName("\"")))
                         .collect(Collectors.toList());
-
-        if (!commentSqls.isEmpty()) {
-            createTableSql.append(";\n");
-            createTableSql.append(String.join(";\n", commentSqls));
-        }
-
-        return createTableSql.toString();
+        sqls.addAll(commentSqls);
+        return sqls;
     }
 
     private String buildColumnSql(Column column) {
@@ -89,9 +86,9 @@ public class XuguCreateTableSqlBuilder {
         columnSql.append("\"").append(column.getName()).append("\" ");
 
         String columnType =
-                StringUtils.equalsIgnoreCase(DatabaseIdentifier.XUGU, sourceCatalogName)
+                StringUtils.equalsIgnoreCase(DatabaseIdentifier.ORACLE, sourceCatalogName)
                         ? column.getSourceType()
-                        : XuguTypeConverter.INSTANCE.reconvert(column).getColumnType();
+                        : OracleTypeConverter.INSTANCE.reconvert(column).getColumnType();
         columnSql.append(columnType);
 
         if (!column.isNullable()) {
@@ -108,7 +105,7 @@ public class XuguCreateTableSqlBuilder {
                         .map(columnName -> "\"" + columnName + "\"")
                         .collect(Collectors.joining(", "));
 
-        // In xugu database, the maximum length for an identifier is 30 characters.
+        // In Oracle database, the maximum length for an identifier is 30 characters.
         String primaryKeyStr = primaryKey.getPrimaryKey();
         if (primaryKeyStr.length() > 25) {
             primaryKeyStr = primaryKeyStr.substring(0, 25);

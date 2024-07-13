@@ -17,8 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.sink;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.seatunnel.api.sink.MultiTableResourceManager;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkWriter;
 import org.apache.seatunnel.api.table.catalog.TablePath;
@@ -32,9 +30,13 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorExc
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.JdbcOutputFormatBuilder;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.connection.SimpleJdbcConnectionPoolProviderProxy;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.sybase.SybaseJdbcConnectionPoolProviderProxy;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.JdbcSinkState;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.XidInfo;
 
+import org.apache.commons.collections4.MapUtils;
+
+import com.google.common.collect.Lists;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,8 +74,9 @@ public class JdbcSinkWriter extends AbstractJdbcSinkWriter
                         .build();
         this.rowTypeFull = rowTypeFull;
     }
+
     private SeaTunnelRow transformRow(SeaTunnelRow inputRow) {
-        //判空处理
+        // 判空处理
         if (jdbcSinkConfig == null || MapUtils.isEmpty(jdbcSinkConfig.getFieldMapper())) {
             return inputRow;
         }
@@ -100,6 +103,7 @@ public class JdbcSinkWriter extends AbstractJdbcSinkWriter
         outputRow.setTableId(inputRow.getTableId());
         return outputRow;
     }
+
     @Override
     public MultiTableResourceManager<ConnectionPoolManager> initMultiTableResourceManager(
             int tableSize, int queueSize) {
@@ -127,11 +131,24 @@ public class JdbcSinkWriter extends AbstractJdbcSinkWriter
             MultiTableResourceManager<ConnectionPoolManager> multiTableResourceManager,
             int queueIndex) {
         connectionProvider.closeConnection();
-        this.connectionProvider =
-                new SimpleJdbcConnectionPoolProviderProxy(
-                        multiTableResourceManager.getSharedResource().get(),
-                        jdbcSinkConfig.getJdbcConnectionConfig(),
-                        queueIndex);
+
+        if (this.jdbcSinkConfig
+                .getJdbcConnectionConfig()
+                .getDriverName()
+                .equals("net.sourceforge.jtds.jdbc.Driver")) {
+            this.connectionProvider =
+                    new SybaseJdbcConnectionPoolProviderProxy(
+                            multiTableResourceManager.getSharedResource().get(),
+                            jdbcSinkConfig.getJdbcConnectionConfig(),
+                            queueIndex);
+        } else {
+            this.connectionProvider =
+                    new SimpleJdbcConnectionPoolProviderProxy(
+                            multiTableResourceManager.getSharedResource().get(),
+                            jdbcSinkConfig.getJdbcConnectionConfig(),
+                            queueIndex);
+        }
+
         this.outputFormat =
                 new JdbcOutputFormatBuilder(
                                 dialect, connectionProvider, jdbcSinkConfig, tableSchema)

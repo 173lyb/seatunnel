@@ -17,8 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.sink;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.sink.DataSaveMode;
@@ -46,9 +44,11 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDiale
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.dialectenum.FieldIdeEnum;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,6 +87,7 @@ import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.
 @AutoService(Factory.class)
 public class JdbcSinkFactory implements TableSinkFactory {
     private List<Integer> needReaderColIndex;
+
     @Override
     public String factoryIdentifier() {
         return "MappingJdbc";
@@ -110,8 +111,8 @@ public class JdbcSinkFactory implements TableSinkFactory {
         SeaTunnelRowType seaTunnelRowTypeFull = catalogTable.getSeaTunnelRowType();
         JdbcSinkConfig jdbcSinkConfig = JdbcSinkConfig.of(config);
         Map<String, String> fieldMapper = jdbcSinkConfig.getFieldMapper();
-        if (MapUtils.isNotEmpty(fieldMapper)){
-            catalogTable = transformCatalogTable(context.getCatalogTable(),config);
+        if (MapUtils.isNotEmpty(fieldMapper)) {
+            catalogTable = transformCatalogTable(context.getCatalogTable(), config);
         }
         ReadonlyConfig catalogOptions = getCatalogOptions(context);
         Optional<String> optionalTable = config.getOptional(TABLE);
@@ -250,13 +251,12 @@ public class JdbcSinkFactory implements TableSinkFactory {
                         seaTunnelRowTypeFull);
     }
 
-    public CatalogTable transformCatalogTable(CatalogTable catalogTable,ReadonlyConfig config) {
+    public CatalogTable transformCatalogTable(CatalogTable catalogTable, ReadonlyConfig config) {
         JdbcSinkConfig jdbcSinkConfig = JdbcSinkConfig.of(config);
         Map<String, String> fieldMapper = jdbcSinkConfig.getFieldMapper();
 
         List<Column> inputColumns = catalogTable.getTableSchema().getColumns();
-        SeaTunnelRowType seaTunnelRowType =
-                catalogTable.getTableSchema().toPhysicalRowDataType();
+        SeaTunnelRowType seaTunnelRowType = catalogTable.getTableSchema().toPhysicalRowDataType();
         List<Column> outputColumns = new ArrayList<>(fieldMapper.size());
         needReaderColIndex = new ArrayList<>(fieldMapper.size());
         ArrayList<String> inputFieldNames = Lists.newArrayList(seaTunnelRowType.getFieldNames());
@@ -286,51 +286,74 @@ public class JdbcSinkFactory implements TableSinkFactory {
                 });
         List<ConstraintKey> outputConstraintKeys =
                 catalogTable.getTableSchema().getConstraintKeys().stream()
-                        .filter(key -> {
-                            List<String> originalConstraintColumnNames = key.getColumnNames().stream()
-                                    .map(ConstraintKey.ConstraintKeyColumn::getColumnName)
-                                    .collect(Collectors.toList());
+                        .filter(
+                                key -> {
+                                    List<String> originalConstraintColumnNames =
+                                            key.getColumnNames().stream()
+                                                    .map(
+                                                            ConstraintKey.ConstraintKeyColumn
+                                                                    ::getColumnName)
+                                                    .collect(Collectors.toList());
 
-                            // 确保原始约束列名都在 fieldMapper 映射中
-                            return originalConstraintColumnNames.stream()
-                                    .allMatch(fieldMapper::containsKey);
-                        })
-                        .map(key -> {
-                            List<ConstraintKey.ConstraintKeyColumn> newColumnNames = key.getColumnNames().stream()
-                                    .map(column -> {
-                                        String newColumnName = fieldMapper.get(column.getColumnName());
-                                        ConstraintKey.ColumnSortType sortType = column.getSortType();
+                                    // 确保原始约束列名都在 fieldMapper 映射中
+                                    return originalConstraintColumnNames.stream()
+                                            .allMatch(fieldMapper::containsKey);
+                                })
+                        .map(
+                                key -> {
+                                    List<ConstraintKey.ConstraintKeyColumn> newColumnNames =
+                                            key.getColumnNames().stream()
+                                                    .map(
+                                                            column -> {
+                                                                String newColumnName =
+                                                                        fieldMapper.get(
+                                                                                column
+                                                                                        .getColumnName());
+                                                                ConstraintKey.ColumnSortType
+                                                                        sortType =
+                                                                                column
+                                                                                        .getSortType();
 
-                                        // 使用 of 方法创建新的 ConstraintKeyColumn 实例
-                                        return ConstraintKey.ConstraintKeyColumn.of(newColumnName, sortType);
-                                    })
-                                    .collect(Collectors.toList());
+                                                                // 使用 of 方法创建新的 ConstraintKeyColumn
+                                                                // 实例
+                                                                return ConstraintKey
+                                                                        .ConstraintKeyColumn.of(
+                                                                        newColumnName, sortType);
+                                                            })
+                                                    .collect(Collectors.toList());
 
-                            // 使用 of 方法创建一个新的 ConstraintKey 实例
-                            return ConstraintKey.of(key.getConstraintType(), key.getConstraintName(), newColumnNames);
-                        })
+                                    // 使用 of 方法创建一个新的 ConstraintKey 实例
+                                    return ConstraintKey.of(
+                                            key.getConstraintType(),
+                                            key.getConstraintName(),
+                                            newColumnNames);
+                                })
                         .collect(Collectors.toList());
 
         PrimaryKey copiedPrimaryKey = null;
         if (catalogTable.getTableSchema().getPrimaryKey() != null) {
-            List<String> primaryKeyColumnNames = catalogTable.getTableSchema().getPrimaryKey().getColumnNames();
+            List<String> primaryKeyColumnNames =
+                    catalogTable.getTableSchema().getPrimaryKey().getColumnNames();
 
             // 检查翻译后的主键列名是否都在新字段名列表中
-            List<String> newPrimaryKeyColumnNames = primaryKeyColumnNames.stream()
-                    .map(fieldMapper::get)
-                    .collect(Collectors.toList());
+            List<String> newPrimaryKeyColumnNames =
+                    primaryKeyColumnNames.stream()
+                            .map(fieldMapper::get)
+                            .collect(Collectors.toList());
 
             if (outputFieldNames.containsAll(newPrimaryKeyColumnNames)) {
                 PrimaryKey primaryKey = catalogTable.getTableSchema().getPrimaryKey();
-                copiedPrimaryKey = primaryKey.of(primaryKey.getPrimaryKey(), newPrimaryKeyColumnNames);
+                copiedPrimaryKey =
+                        primaryKey.of(primaryKey.getPrimaryKey(), newPrimaryKeyColumnNames);
             }
         }
 
-        TableSchema tableSchema = TableSchema.builder()
-                .primaryKey(copiedPrimaryKey)
-                .columns(outputColumns)
-                .constraintKey(outputConstraintKeys)
-                .build();
+        TableSchema tableSchema =
+                TableSchema.builder()
+                        .primaryKey(copiedPrimaryKey)
+                        .columns(outputColumns)
+                        .constraintKey(outputConstraintKeys)
+                        .build();
 
         return CatalogTable.of(
                 catalogTable.getTableId(),
@@ -338,9 +361,9 @@ public class JdbcSinkFactory implements TableSinkFactory {
                 catalogTable.getOptions(),
                 catalogTable.getPartitionKeys(),
                 catalogTable.getComment(),
-                catalogTable.getCatalogName()
-        );
+                catalogTable.getCatalogName());
     }
+
     @Override
     public OptionRule optionRule() {
         return OptionRule.builder()

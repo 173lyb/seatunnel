@@ -34,7 +34,7 @@ public enum JdbcConnectorErrorCode implements SeaTunnelErrorCode {
     DATA_TYPE_CAST_FAILED("JDBC-10", "Data type cast failed"),
     REFRESH_PHYSICAL_TABLESCHEMA_BY_SCHEMA_CHANGE_EVENT(
             "JDBC-11", "Refresh the table with schema change failed"),
-    INPUT_FIELD_NOT_FOUND("JDBC-12","Input field not found");
+    INPUT_FIELD_NOT_FOUND("JDBC-12", "Input field not found");
 
     private final String code;
 
