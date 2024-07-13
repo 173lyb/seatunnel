@@ -229,4 +229,10 @@ public interface JdbcOptions {
                     .booleanType()
                     .defaultValue(false)
                     .withDescription("密码解密,默认是false");
+    Option<Map<String, String>> FIELD_MAPPER =
+            Options.key("field_mapper")
+                    .mapType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "Specify the field mapping relationship between input and output");
 }

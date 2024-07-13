@@ -24,6 +24,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.ENABLE_UPSERT;
 import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.IS_PRIMARY_KEY_UPDATED;
@@ -45,6 +46,7 @@ public class JdbcSinkConfig implements Serializable {
     private boolean supportUpsertByInsertOnly;
     private boolean useCopyStatement;
     private boolean gaussSupportMerge;
+    private Map<String, String> FieldMapper;
 
     public static JdbcSinkConfig of(ReadonlyConfig config) {
         JdbcSinkConfigBuilder builder = JdbcSinkConfig.builder();
@@ -59,6 +61,7 @@ public class JdbcSinkConfig implements Serializable {
         builder.simpleSql(config.get(JdbcOptions.QUERY));
         builder.useCopyStatement(config.get(JdbcOptions.USE_COPY_STATEMENT));
         builder.gaussSupportMerge(config.get(JdbcOptions.GAUSS_SUPPORT_MERGE));
+        config.getOptional(JdbcOptions.FIELD_MAPPER).ifPresent(builder::FieldMapper);
         return builder.build();
     }
 }
