@@ -68,6 +68,9 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
 
     private URI uri;
 
+    // FTP协议里面，规定文件名编码为iso-8859-1
+    private static String SERVER_CHARSET = "ISO-8859-1";
+
     /**
      * Return the protocol scheme for the FileSystem.
      *
@@ -154,7 +157,6 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
                             + user
                             + "'");
         }
-
         setFsFtpConnectionMode(
                 client,
                 conf.get(

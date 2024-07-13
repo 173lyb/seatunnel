@@ -170,4 +170,10 @@ public class BaseSourceConfigOptions {
                     .noDefaultValue()
                     .withDescription(
                             "Local file source configs, used to create multiple local file source.");
+    public static final Option<String> FTP_FILE_FILTER_LIST =
+            Options.key("file_filter_list")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "File filter list if file_filter_pattern has a higher priority than this parameter");
 }

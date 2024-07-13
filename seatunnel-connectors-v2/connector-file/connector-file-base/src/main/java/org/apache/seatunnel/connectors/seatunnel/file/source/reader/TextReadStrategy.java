@@ -159,6 +159,10 @@ public class TextReadStrategy extends AbstractReadStrategy {
 
     @Override
     public void setSeaTunnelRowTypeInfo(SeaTunnelRowType seaTunnelRowType) {
+        if (fileNames.isEmpty()) {
+            throw new FileConnectorException(
+                    FileConnectorErrorCode.FILE_LIST_EMPTY, "文件列表为空,检查PATH的正则表达式");
+        }
         SeaTunnelRowType userDefinedRowTypeWithPartition =
                 mergePartitionTypes(fileNames.get(0), seaTunnelRowType);
         Optional<String> fieldDelimiterOptional =
