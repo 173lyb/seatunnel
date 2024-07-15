@@ -19,14 +19,14 @@ package org.apache.seatunnel.format.json;
 
 import org.apache.seatunnel.api.configuration.util.OptionMark;
 
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Map;
 
 @Data
-@NoArgsConstructor
+@Builder
 public class JsonField implements Serializable {
     private static final long serialVersionUID = -1L;
 
