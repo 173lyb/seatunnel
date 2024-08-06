@@ -1,0 +1,32 @@
+-- 因为job.mode=1
+
+env {
+	job.mode = "batch"
+	execution.parallelism = "1"
+	job.name = "\u524D\u7F6E\u8BF7\u6C42\u5931\u8D25"
+}
+
+source {
+	http {
+		result_table_name = "http1"
+		json_field = {"msg":"$.msg","code":"$.code","totalCount":"$.data.totalCount"}
+		schema = {"fields":{"msg":"string","code":"int","totalCount":"int"}}
+		skip_ssl_verification = true
+		params_add = false
+		cookies_add = false
+		url = "http://10.28.23.131:9001/prod-api/operator/algFlow/page"
+		method = "GET"
+		format = "json"
+		headers = {"Authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJub3JtYWxfdXNlcjoxNzQ2NzM0NDQxMDcxMTk4MjA5Iiwicm5TdHIiOiJXS0FPRHgwaEIxQXpCVVBHZ1NGYWt2NUxFSHBHRHlseCIsInVzZXJJZCI6MTc0NjczNDQ0MTA3MTE5ODIwOX0.ndAwjFEbAHkm2rUsnBhRH4iphw77AyV-gJbBYrFXAzE"}
+		params = {"currentPage":"1","pageSize":"10","workspaceId":"5601"}
+	}
+}
+
+transform {
+}
+
+sink {
+Console {
+        source_table_name = "http1"
+}
+}

@@ -1,0 +1,44 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "https://112.19.160.31:1443/artemis/oauth/token"
+    headers = {
+     Content-Type = "application/x-www-form-urlencoded"
+    }
+    method = "POST"
+            params = {
+      client_id = "20288294"
+      client_secret = "0uWWMKhN6hVnCjzkfB66"
+   }
+
+    #body =  "{\"client_id\":\"20288294\",\"client_secret\":\"0uWWMKhN6hVnCjzkfB66\"}"
+    format = "json"
+    skip_ssl_verification = true
+    json_field = {
+      access_token = "$.access_token"
+    }
+    schema = {
+      fields {
+         access_token = string
+      }
+    }
+  }
+}
+sink {
+        LocalFile {
+                source_table_name = "http"
+                path = "/tmp/seatunnel/xugurtp"
+                custom_filename = true
+                file_name_expression = "tokenfile"
+                is_enable_transaction = false
+                file_format_type = "text"
+                field_delimiter = "||"
+                row_delimiter = ","
+                sink_columns = ["access_token"]
+        }
+}

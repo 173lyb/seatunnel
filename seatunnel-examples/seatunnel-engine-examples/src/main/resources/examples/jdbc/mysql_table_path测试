@@ -1,0 +1,41 @@
+env {
+	job.mode = "BATCH"
+	parallelism = 1
+	job.name = "d7ccb7f37d8a4e5d852688e3671142fe"
+}
+source {
+	MappingJdbc {
+		result_table_name = "T"
+		query = "select * from testdb.test_100w_pri"
+        parallelism = 6
+        split_size = 8096
+		fetch_size = 3000
+		password_decrypt = true
+		#table_path = "testdb.test_100w_pri"
+		driver = "com.mysql.cj.jdbc.Driver"
+		url = "jdbc:mysql://10.28.23.109:3306/testdb?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+		user = "root"
+		password = "HbX49vlOmN8fboPMesBZ2cIP8WTa/a8JmuTL3cOTwPblRXgHwQf685l/Kjl4yubWFavHdxKpDP4owhWuBdvmdwJzJ6fbFqFmNPUG66SxLvI8+h3YRvl4170qB+/yXLhdaUg2Q6IEQ5qxXjugw1xTPi7xl+TC3Q11CN8oVeFSLpg="
+	}
+}
+
+transform {
+}
+
+sink {
+    MappingJdbc {
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        #field_mapper = {"ID":"ID","A":"B","B":"A","C":"C","D":"D","E":"E","F":"F","G":"G","A1":"A1","B1":"B1","C1":"C1","D1":"D1","E1":"E1","G1":"G1"}
+        password = "SYSDBA"
+        generate_sink_sql = true
+        #primary_keys = ["ID"]
+        #enable_upsert = true
+        data_save_mode = "APPEND_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        database = SYSTEM
+        table = SYSDBA.TEST_KEY_CON1_AUTO
+        batch_size = 10000
+    }
+}

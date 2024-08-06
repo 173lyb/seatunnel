@@ -1,0 +1,42 @@
+
+env {
+	job.mode = "BATCH"
+	execution.parallelism = "1"
+	job.name = "d7ccb7f37d8a4e5d852688e3671142fe"
+}
+
+source {
+	MappingJdbc {
+		result_table_name = "TEST_KEYWORD3"
+		table_path = "U_MIGRATE.MIGRATE_MANY_TYPES"
+		query = "select * from U_MIGRATE.MIGRATE_MANY_TYPES"
+		fetch_size = 3000
+		driver = "dm.jdbc.driver.DmDriver"
+		url = "jdbc:dm://10.28.23.127:5236"
+		user = "U_MIGRATE"
+		password= "123456"
+		#password = "cv/iIb/fGQBuSVj+jPWySEtfknGXGi/8C5SEvyhxoqFviYYgXkihCKS1ymLPOq0jqlgpnrQk3mF24m40bUlEj0Skl9wQOgrlLg1lOmXBcxvSST34VAva87wYb7aYwxW/dgUZxVtLake3nhCR5HqEXwLGomOsZnrBAjqYbAu2mbk="
+	}
+}
+
+transform {
+}
+
+sink {
+	MappingJdbc {
+		database = "DAMENG"
+		table = "U_MIGRATE.MIGRATE_MANY_TYPES_AUTO"
+		batch_size = 3000
+		generate_sink_sql = true
+        #primary_keys = ["ID"]
+        #enable_upsert = true
+		source_table_name = "TEST_KEYWORD3"
+		schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+		data_save_mode = DROP_DATA,
+		driver = "dm.jdbc.driver.DmDriver"
+		url = "jdbc:dm://10.28.23.127:5236"
+		user = "U_MIGRATE"
+		password= "123456"
+		#password = "cv/iIb/fGQBuSVj+jPWySEtfknGXGi/8C5SEvyhxoqFviYYgXkihCKS1ymLPOq0jqlgpnrQk3mF24m40bUlEj0Skl9wQOgrlLg1lOmXBcxvSST34VAva87wYb7aYwxW/dgUZxVtLake3nhCR5HqEXwLGomOsZnrBAjqYbAu2mbk="
+	}
+}

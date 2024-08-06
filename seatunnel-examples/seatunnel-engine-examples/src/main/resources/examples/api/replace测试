@@ -1,0 +1,44 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http1"
+    url = "https://xzdz.yinhaiyun.com/dld-30/b/uat/api/api/outwardinterfaces/event/outwardController/getMapJsonData.do"
+    method = "POST"
+    params = {
+      username = "jktest"
+      password = "Ab@12345678"
+      costomno = "510112115207"
+      start_time = "2022/10/17 09:11:20"
+    }
+   params_add = true
+   params_path = "$"
+    format = "json"
+          json_field = {
+  MAP_OBJ= "$.results"
+COSTOM_NO= "$.params_costomno"
+start_time = "$.params_start_time"
+    }
+    schema = {
+      fields {
+COSTOM_NO = string
+  MAP_OBJ = string
+  start_time = string
+      }
+    }
+  }
+}
+    transform {
+  Sql {
+   query = "select  FORMATDATETIME(TO_DATE(REPLACE(start_time,'/','-'),'yyyy-MM-dd HH:mm:ss'),'yyyy-MM-dd HH:mm:ss') from http1"
+   result_table_name = "http1"
+}
+  }
+sink {
+Console {
+        source_table_name = "http1"
+}
+}

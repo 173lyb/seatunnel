@@ -1,0 +1,68 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+######
+###### This config file is a demonstration of streaming processing in seatunnel config
+######
+
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+  #checkpoint.interval = 10000
+}
+
+source {
+  Elasticsearch {
+    hosts = ["http://10.28.23.131:51942"]
+    tls_verify_certificate = false
+    tls_verify_hostname = false
+    index = "test"
+    query = {"match_all": {}}
+    schema = {
+      fields {
+        id = bigint
+        name = string
+        age = int
+        city = string
+        salary = double
+        dec = "decimal(5, 3)"
+        join_date = date
+        create_time = timestamp
+      }
+    }
+  }
+}
+
+transform {
+}
+
+sink {
+    jdbc {
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        password = "SYSDBA"
+        generate_sink_sql = true
+        #primary_keys = ["ID"]
+        #enable_upsert = true
+        data_save_mode = "DROP_DATA"
+        schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
+        database = SYSTEM
+        table = SYSDBA.TEST_ELASTICSEARCH
+        batch_size = 10000
+        }
+}

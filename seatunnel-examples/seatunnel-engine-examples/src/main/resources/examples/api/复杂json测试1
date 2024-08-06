@@ -1,0 +1,53 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "https://qwif.do1.com.cn/qwcgi/api/apiForm/getFormDetails.do"
+    method = "POST"
+    params = {
+      corpId = "wwbc798098b88968c8"
+      id = "form23b5951e7a2e46ebbdd9e7520046372f"
+      pageSize = "100"
+  page= "1"
+  token = "M2IyNjI2YjItODgxYS00NWNhLWEyZDQtYjczNjhiOWU2NmU3"
+    }
+    format = "json"
+          json_field = {
+desc = "$.desc"
+TITLE = "$.data.pager[*].formTitle"
+DYY_ID = "$.data.pager[*].id"
+DEPARTMENT_NAME = "$.data.pager[*].departmentName"
+PERSON_NAME = "$.data.pager[*].personName"
+STATUS = "$.data.pager[*].status"
+NAME = "$.data.pager[*].data.fo8b2ab02426524832a38507e26399bc51"
+ADDRESS = "$.data.pager[*].data.fo82d4995598a0485f899d8c399c112c7c"
+    }
+   pageing = {
+    -- total_page_size = 2
+     batch_size= 100
+    page_field = page
+    }
+
+    schema = {
+      fields {
+desc = string
+TITLE = string
+DYY_ID = string
+DEPARTMENT_NAME = string
+PERSON_NAME = string
+STATUS = string
+NAME = string
+ADDRESS = string
+      }
+    }
+  }
+}
+sink {
+Console {
+        source_table_name = "http1"
+}
+}

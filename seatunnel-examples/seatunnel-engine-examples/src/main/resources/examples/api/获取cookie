@@ -1,0 +1,38 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+source {
+  Http {
+result_table_name = "http2"
+url = "https://xzdz.yinhaiyun.com/dld-30/b/uat/api/api/outwardinterfaces/event/outwardController/getMapJsonData.do"
+method = "GET"
+params = {
+      username = "jktest"
+      password = "Ab@12345678"
+      costomno = "510112001001"
+}
+#skip_ssl_verification = true
+cookies_add = true
+#params_add = true
+format = "json"
+json_field = {
+username = "$.params_username"
+cookies = "$.cookies_value"
+code= "$.code"
+}
+schema = {
+fields {
+cookies = string
+code = string
+username = string
+      }
+    }
+  }
+}
+
+sink {
+Console {
+        source_table_name = "http1"
+}
+}

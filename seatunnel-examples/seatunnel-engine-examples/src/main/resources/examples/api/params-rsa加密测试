@@ -1,0 +1,41 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+source {
+  Http {
+result_table_name = "http1"
+url = "http://114.132.158.129:13051/population/offline/day"
+method = "POST"
+headers = {
+    Content-Type = "application/x-www-form-urlencoded"
+}
+params = {
+    account = "lqywl22"
+    data = ""
+    sign = ""
+}
+params_encrypt = {
+		encrypt_type = "RSA"
+		publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCODV/LxbW7fgj/miO4WGAyMaz5Juk5RB5sWhu0WVxjUef8S+kYZMU0CSYM91TkYOKhNkYQEPkzvip4FTzIzIfsIxZRYmjz1/VED/4rjYbeTt635IwqsOnD6NFbxECaD+DSi2GA0F+ktpaYvhfZ+Rl2bZaZYLkLZSf8+vyaP9gA2QIDAQAB"
+		privateKey = "MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAI4NX8vFtbt+CP+aI7hYYDIxrPkm6TlEHmxaG7RZXGNR5/xL6RhkxTQJJgz3VORg4qE2RhAQ+TO+KngVPMjMh+wjFlFiaPPX9UQP/iuNht5O3rfkjCqw6cPo0VvEQJoP4NKLYYDQX6S2lpi+F9n5GXZtlplguQtlJ/z6/Jo/2ADZAgMBAAECgYEAh+7wbtUBdSvEfKQJ7oxTcXTr63h60dwHqPQJcunYaQqmDl6t7jPwKj1e9iVwTSMRe+et4A3+Cq+9gDACfLyMi88bLE/35lNNHqVcv9ucL/1TiIKaDZI6Y1GIi+FImsZa4CXvvYy8UNJVlZ57I/qGLxI6OQNYbrUX0GZEmxat1skCQQDihWyLBsvlMalLEe5cMR4PDROQIcHjWkNFCudxq3PMcMJf12D8nld07xNaQjF8buGi4Hq/vsXNG5k3PSNWgS/XAkEAoInb32AKVRgYMQaBhjl7AxJ7P2pZ/gOrqiKzzHpfBBYPh6vYDAOak1NqTSjyJPWWAbDjvDLlv/4xyswrng3+zwJBAI9W/NOQ7m9PGKC/bQT7s9i0Xp/DLMzwbkb/Wmusoe9Jn0ZEpUPV8uO08ZsY7fWeuLt3r1UspEBhaXfyAS2ZPCsCQF1RJUTH39ms4ssEnB+4o9+aS5gGKv9zhMKl31u5uid251oWssPxCFYhA8aMSYzgUGz1NLu93jzm9myKl8QNIJMCQQC3WlXI5nmc0cOK6iVL3eiApSz8qffbeBxdUq4EnueLmCPLOaZYR82za2t3goWQ1RpIy26dnU6RbTG8+PFt7Iyh"
+		RSAData = "{\"day\":\"20240116\",\"areaSeq\":\"23\"}"
+}
+
+format = "json"
+json_field = {
+code= "$.code"
+}
+schema = {
+fields {
+code = string
+      }
+    }
+  }
+}
+
+sink {
+Console {
+        source_table_name = "http1"
+}
+}

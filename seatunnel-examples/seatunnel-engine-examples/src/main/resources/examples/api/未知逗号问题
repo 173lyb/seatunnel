@@ -1,0 +1,94 @@
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Http {
+    result_table_name = "http"
+    url = "http://111.9.42.101:8086/openApi/v1/integral/statisticalList"
+    method = "GET"
+    params = {
+          dataType = 0
+          deviceName = "41574100361959"
+          productKey = "iSV1102"
+          accessToken = "c1a3edb66ccce05291fb7c6cd5f8936f"
+          beginTime = "2000-01-01 00:00:00"
+          endTime = "2100-01-01 00:00:00"
+          pageNum = 1
+          pageSize = 50
+                sign = {
+                        MD5 = "dataType+deviceName+productKey+benginTime+endTime+pageNum+pageSize+accessToken"
+                }
+        }
+    format = "json"
+      pageing = {
+    # total_page_size = 2
+     batch_size= 50
+    page_field = page
+    }
+    json_field = {
+                  DEVICENAME= "$.result.list[*].deviceName"
+                  PRODUCTKEY= "$.result.list[*].productKey"
+                  MEASURENAME= "$.result.list[*].measureName"
+                  WEIGHTING= "$.result.list[*].weighting"
+                  TM= "$.result.list[*].tm"
+                  TS= "$.result.list[*].ts"
+                  STARTTIME= "$.result.list[*].dateTime"
+                  ENDTIME= "$.result.list[*].endTime"
+                  #LEQT= "$.result.list[*].infoList.Leq,T"
+                  L5= "$.result.list[*].infoList.L5"
+                  L10= "$.result.list[*].infoList.L10"
+                  L50= "$.result.list[*].infoList.L50"
+                  L90= "$.result.list[*].infoList.L90"
+                  L95= "$.result.list[*].infoList.L95"
+                  LMAX= "$.result.list[*].infoList.Lmax"
+                  LMIN= "$.result.list[*].infoList.Lmin"
+                  SEL_T= "$.result.list[*].infoList.SEL"
+                  SD= "$.result.list[*].infoList.SD"
+    }
+    schema = {
+      fields {
+              DEVICENAME = string
+              PRODUCTKEY = string
+              MEASURENAME = string
+              WEIGHTING = string
+              TM = string
+              TS = string
+              STARTTIME = string
+              ENDTIME = string
+              #LEQT = string
+              L5 = string
+              L10 = string
+              L50 = string
+              L90 = string
+              L95 = string
+              LMAX = string
+              LMIN = string
+              SEL_T = string
+              SD = string
+      }
+    }
+  }
+}
+   transform {
+  Sql {
+  source_table_name = http
+query = "select DEVICENAME, PRODUCTKEY, MEASURENAME, WEIGHTING, TM, TS, STARTTIME, ENDTIME,L5,L10,L50,L90,L95,LMAX,LMIN,SEL_T as \"SEL\",SD FROM http"
+}
+  }
+sink {
+    MappingJdbc {
+        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
+        driver = "com.xugu.cloudjdbc.Driver"
+        user = "SYSDBA"
+        password = "SYSDBA"
+        password_decrypt = false
+        generate_sink_sql = true
+        database = SYSDBA
+        table = SYSDBA.API_NOISE_STATISTICAL_LIST
+    		enable_upsert = true
+    		batch_size = 400
+
+        }
+}
