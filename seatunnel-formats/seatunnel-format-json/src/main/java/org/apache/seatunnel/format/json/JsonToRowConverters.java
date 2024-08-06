@@ -259,6 +259,9 @@ public class JsonToRowConverters implements Serializable {
             dateFormatter = DateUtils.matchDateFormatter(dateStr);
             fieldFormatterMap.put(fieldName, dateFormatter);
         }
+        if (dateFormatter == null) {
+            throw CommonError.formatDateError(dateStr, fieldName);
+        }
 
         return dateFormatter.parse(jsonNode.asText()).query(TemporalQueries.localDate());
     }
@@ -280,6 +283,9 @@ public class JsonToRowConverters implements Serializable {
         if (dateTimeFormatter == null) {
             dateTimeFormatter = DateTimeUtils.matchDateTimeFormatter(datetimeStr);
             fieldFormatterMap.put(fieldName, dateTimeFormatter);
+        }
+        if (dateTimeFormatter == null) {
+            throw CommonError.formatDateTimeError(datetimeStr, fieldName);
         }
 
         TemporalAccessor parsedTimestamp = dateTimeFormatter.parse(datetimeStr);
