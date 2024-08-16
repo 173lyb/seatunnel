@@ -45,13 +45,16 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 public class HiveMetaStoreProxy {
     private HiveMetaStoreClient hiveMetaStoreClient;
     private static volatile HiveMetaStoreProxy INSTANCE = null;
-    private static final List<String> HADOOP_CONF_FILES = ImmutableList.of("hive-site.xml");
+    private static final List<String> HADOOP_CONF_FILES =
+            ImmutableList.of("hive-site.xml", "core-site.xml", "hdfs-site.xml");
 
     private HiveMetaStoreProxy(ReadonlyConfig readonlyConfig) {
         String metastoreUri = readonlyConfig.get(HiveSourceOptions.METASTORE_URI);
@@ -80,9 +83,16 @@ public class HiveMetaStoreProxy {
             if (StringUtils.isNotBlank(hiveSitePath)) {
                 hiveConf.addResource(new File(hiveSitePath).toURI().toURL());
             }
+            // Try to load from hadoopConf
+            Optional<Map<String, String>> hadoopConf =
+                    readonlyConfig.getOptional(HiveConfig.HADOOP_CONF);
+            hadoopConf.ifPresent(stringStringMap -> stringStringMap.forEach(hiveConf::set));
 
             log.info("hive client conf:{}", hiveConf);
             if (HiveMetaStoreProxyUtils.enableKerberos(readonlyConfig)) {
+                hiveConf.set("hive.metastore.sasl.enabled", "true");
+                hiveConf.set("hadoop.security.authentication", "kerberos");
+                // hiveConf.set("hadoop.rpc.protection", "privacy");
                 // login Kerberos
                 Configuration authConf = new Configuration();
                 authConf.set("hadoop.security.authentication", "kerberos");
