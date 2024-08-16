@@ -195,4 +195,24 @@ public class Config {
                     .noDefaultValue()
                     .withDescription(
                             "Topic list config. You can configure only one `table_list` or one `topic` at the same time");
+    public static final Option<String> KRB5_PATH =
+            Options.key("krb5_path")
+                    .stringType()
+                    .defaultValue("/etc/krb5.conf")
+                    .withDescription(
+                            "When use kerberos, we should set krb5 path file path such as '/seatunnel/krb5.conf' or use the default path '/etc/krb5.conf");
+
+    public static final Option<String> KERBEROS_PRINCIPAL =
+            Options.key("kerberos_principal")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("Kerberos principal");
+
+    public static final Option<String> KERBEROS_KEYTAB_PATH =
+            Options.key("kerberos_keytab_path")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("Kerberos keytab file path");
+    public static final Option<Map<String, String>> JASS_CONF =
+            Options.key("jass.conf").mapType().noDefaultValue().withDescription("kafka认证的jass文件");
 }

@@ -56,5 +56,6 @@ sink {
     kerberos_principal = "xugu@1DAD03C5_0944_4F3A_8B59_909FD022D2C5.COM"
     krb5_path = "D:/安装包/华为云/xugu_1723690816024_keytab/krb5.conf"
     kerberos_keytab_path = "D:/安装包/华为云/xugu_1723690816024_keytab/user.keytab"
+    tmp_path = "/user/hive/warehouse/tmp_xugu"
   }
 }

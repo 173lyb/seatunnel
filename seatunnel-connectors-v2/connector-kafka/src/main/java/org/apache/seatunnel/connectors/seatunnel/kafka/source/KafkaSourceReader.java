@@ -23,6 +23,7 @@ import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.source.SourceReader;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormatErrorHandleWay;
 import org.apache.seatunnel.connectors.seatunnel.kafka.exception.KafkaConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.kafka.exception.KafkaConnectorException;
@@ -30,6 +31,7 @@ import org.apache.seatunnel.format.compatible.kafka.connect.json.CompatibleKafka
 import org.apache.seatunnel.format.json.JsonDeserializationSchema;
 import org.apache.seatunnel.format.json.JsonField;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -38,6 +40,7 @@ import org.apache.kafka.common.TopicPartition;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
@@ -91,6 +94,16 @@ public class KafkaSourceReader implements SourceReader<SeaTunnelRow, KafkaSource
         pendingPartitionsQueue = new LinkedBlockingQueue<>();
         this.jsonField = kafkaSourceConfig.getJsonField();
         this.contentJson = kafkaSourceConfig.getContentField();
+        String krb5Path = kafkaSourceConfig.getKrb5Path();
+        if (StringUtils.isNotBlank(krb5Path)) {
+
+            File krb5File = new File(krb5Path);
+            if (!krb5File.exists()) {
+                throw new SeaTunnelException(
+                        "The specified krb5Conf file does not exist" + krb5File);
+            }
+            System.setProperty("java.security.krb5.conf", krb5Path);
+        }
     }
 
     @Override
