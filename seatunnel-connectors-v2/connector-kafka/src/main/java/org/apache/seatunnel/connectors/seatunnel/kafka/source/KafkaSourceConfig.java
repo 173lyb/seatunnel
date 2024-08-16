@@ -79,8 +79,7 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.STAR
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.START_MODE_OFFSETS;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.START_MODE_TIMESTAMP;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.TOPIC;
-import static org.apache.seatunnel.connectors.seatunnel.kafka.utils.ConfUtil.buildJassConf;
-
+import static org.apache.seatunnel.connectors.seatunnel.kafka.utils.ConfUtil.buildJaasConf;
 public class KafkaSourceConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -111,7 +110,7 @@ public class KafkaSourceConfig implements Serializable {
     private Properties createKafkaProperties(ReadonlyConfig readonlyConfig) {
         Properties resultProperties = new Properties();
         readonlyConfig.getOptional(KAFKA_CONFIG).ifPresent(resultProperties::putAll);
-        buildJassConf(readonlyConfig, resultProperties);
+        buildJaasConf(readonlyConfig, resultProperties);
         return resultProperties;
     }
 

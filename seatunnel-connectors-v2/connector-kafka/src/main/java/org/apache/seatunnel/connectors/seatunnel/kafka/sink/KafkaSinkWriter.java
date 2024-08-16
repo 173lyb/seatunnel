@@ -56,8 +56,7 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.PART
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.SEMANTICS;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.TOPIC;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.TRANSACTION_PREFIX;
-import static org.apache.seatunnel.connectors.seatunnel.kafka.utils.ConfUtil.buildJassConf;
-
+import static org.apache.seatunnel.connectors.seatunnel.kafka.utils.ConfUtil.buildJaasConf;
 /** KafkaSinkWriter is a sink writer that will write {@link SeaTunnelRow} to Kafka. */
 public class KafkaSinkWriter implements SinkWriter<SeaTunnelRow, KafkaCommitInfo, KafkaSinkState> {
 
@@ -172,7 +171,7 @@ public class KafkaSinkWriter implements SinkWriter<SeaTunnelRow, KafkaCommitInfo
                 ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
         kafkaProperties.put(
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
-        buildJassConf(pluginConfig, kafkaProperties);
+        buildJaasConf(pluginConfig, kafkaProperties);
         return kafkaProperties;
     }
 

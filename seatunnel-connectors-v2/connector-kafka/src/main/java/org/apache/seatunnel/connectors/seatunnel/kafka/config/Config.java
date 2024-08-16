@@ -198,9 +198,9 @@ public class Config {
     public static final Option<String> KRB5_PATH =
             Options.key("krb5_path")
                     .stringType()
-                    .defaultValue("/etc/krb5.conf")
+                    .noDefaultValue()
                     .withDescription(
-                            "When use kerberos, we should set krb5 path file path such as '/seatunnel/krb5.conf' or use the default path '/etc/krb5.conf");
+                            "When use kerberos, we should set krb5 path file path such as '/seatunnel/krb5.conf'");
 
     public static final Option<String> KERBEROS_PRINCIPAL =
             Options.key("kerberos_principal")
@@ -214,5 +214,5 @@ public class Config {
                     .noDefaultValue()
                     .withDescription("Kerberos keytab file path");
     public static final Option<Map<String, String>> JASS_CONF =
-            Options.key("jass.conf").mapType().noDefaultValue().withDescription("kafka认证的jass文件");
+            Options.key("jaas.conf").mapType().noDefaultValue().withDescription("kafka认证的jass文件");
 }

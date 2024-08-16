@@ -11,7 +11,7 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KERB
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KERBEROS_PRINCIPAL;
 
 public class ConfUtil {
-    public static void buildJassConf(ReadonlyConfig readonlyConfig, Properties properties) {
+    public static void buildJaasConf(ReadonlyConfig readonlyConfig, Properties properties) {
         StringBuilder sb = new StringBuilder();
         String kerberos_principal = readonlyConfig.get(KERBEROS_PRINCIPAL);
         String kerberos_keytab_path = readonlyConfig.get(KERBEROS_KEYTAB_PATH);
