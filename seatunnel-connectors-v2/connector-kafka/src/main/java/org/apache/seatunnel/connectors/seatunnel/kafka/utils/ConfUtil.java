@@ -1,8 +1,9 @@
 package org.apache.seatunnel.connectors.seatunnel.kafka.utils;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.Properties;
