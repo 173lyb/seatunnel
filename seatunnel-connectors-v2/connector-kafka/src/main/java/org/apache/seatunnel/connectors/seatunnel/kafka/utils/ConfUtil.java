@@ -1,5 +1,6 @@
 package org.apache.seatunnel.connectors.seatunnel.kafka.utils;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 
@@ -10,6 +11,7 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.JASS
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KERBEROS_KEYTAB_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KERBEROS_PRINCIPAL;
 
+@Slf4j
 public class ConfUtil {
     public static void buildJaasConf(ReadonlyConfig readonlyConfig, Properties properties) {
         StringBuilder sb = new StringBuilder();
@@ -65,6 +67,7 @@ public class ConfUtil {
                             // 删除最后一个换行符，添加分号结束
                             sb.deleteCharAt(sb.length() - 2).append(";");
                             properties.setProperty("sasl.jaas.config", sb.toString());
+                            log.info("sasl.jaas.config: {}", sb);
                         });
     }
 }

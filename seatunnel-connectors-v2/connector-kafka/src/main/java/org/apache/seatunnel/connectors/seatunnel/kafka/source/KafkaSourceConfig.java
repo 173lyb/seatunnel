@@ -80,6 +80,7 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.STAR
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.START_MODE_TIMESTAMP;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.TOPIC;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.utils.ConfUtil.buildJaasConf;
+
 public class KafkaSourceConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;

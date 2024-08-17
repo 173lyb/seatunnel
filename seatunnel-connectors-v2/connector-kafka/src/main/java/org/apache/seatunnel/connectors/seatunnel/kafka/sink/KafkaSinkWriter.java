@@ -57,6 +57,7 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.SEMA
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.TOPIC;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.TRANSACTION_PREFIX;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.utils.ConfUtil.buildJaasConf;
+
 /** KafkaSinkWriter is a sink writer that will write {@link SeaTunnelRow} to Kafka. */
 public class KafkaSinkWriter implements SinkWriter<SeaTunnelRow, KafkaCommitInfo, KafkaSinkState> {
 
