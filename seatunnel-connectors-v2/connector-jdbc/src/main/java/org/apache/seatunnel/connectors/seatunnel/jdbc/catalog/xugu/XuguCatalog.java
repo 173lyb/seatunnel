@@ -24,6 +24,7 @@ import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.exception.CatalogException;
 import org.apache.seatunnel.api.table.catalog.exception.DatabaseNotExistException;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
+import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
@@ -38,10 +39,14 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.apache.seatunnel.common.exception.CommonErrorCode.UNSUPPORTED_METHOD;
 
 @Slf4j
 public class XuguCatalog extends AbstractJdbcCatalog {
@@ -148,14 +153,10 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
-        return new XuguCreateTableSqlBuilder(table).build(tablePath);
+    protected String getCreateTableSql(TablePath tablePath, CatalogTable table, boolean createIndex) {
+        return new XuguCreateTableSqlBuilder(table,createIndex).build(tablePath);
     }
 
-    @Override
-    protected String getDropTableSql(TablePath tablePath) {
-        return String.format("DROP TABLE %s", tablePath.getSchemaAndTableName("\""));
-    }
 
     @Override
     protected String getCreateDatabaseSql(String databaseName) {
@@ -175,10 +176,6 @@ public class XuguCatalog extends AbstractJdbcCatalog {
                 + "s.schema_id=t.schema_id";
     }
 
-    @Override
-    protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
-        return new XuguCreateTableSqlBuilder(table).build(tablePath);
-    }
 
     @Override
     protected String getDropTableSql(TablePath tablePath) {
@@ -261,11 +258,26 @@ public class XuguCatalog extends AbstractJdbcCatalog {
 
     @Override
     public boolean databaseExists(String databaseName) throws CatalogException {
-        checkArgument(StringUtils.isNotBlank(databaseName));
-        return listDatabases().stream()
-                .map(String::toUpperCase)
-                .collect(Collectors.toList())
-                .contains(databaseName.toUpperCase());
+
+        if (StringUtils.isBlank(databaseName)) {
+            return false;
+        }
+        if (SYS_DATABASES.contains(databaseName)) {
+            return false;
+        }
+        try {
+            return querySQLResultExists(
+                    getUrlFromDatabaseName(databaseName),
+                    getDatabaseWithConditionSql(databaseName.toUpperCase()));
+        } catch (SeaTunnelRuntimeException e) {
+            if (e.getSeaTunnelErrorCode().getCode().equals(UNSUPPORTED_METHOD.getCode())) {
+                log.warn(
+                        "The catalog: {} is not supported the getDatabaseWithConditionSql for databaseExists",
+                        this.catalogName);
+                return listDatabases().contains(databaseName.toUpperCase());
+            }
+            throw e;
+        }
     }
 
     private List<String> listTables() {
