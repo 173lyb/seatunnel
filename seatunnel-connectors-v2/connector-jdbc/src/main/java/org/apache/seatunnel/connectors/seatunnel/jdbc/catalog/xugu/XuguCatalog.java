@@ -21,12 +21,16 @@ import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
 import org.apache.seatunnel.api.table.catalog.TablePath;
+import org.apache.seatunnel.api.table.catalog.exception.CatalogException;
+import org.apache.seatunnel.api.table.catalog.exception.DatabaseNotExistException;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu.XuguTypeConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu.XuguTypeMapper;
+
+import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -144,9 +148,8 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getCreateTableSql(
-            TablePath tablePath, CatalogTable table, boolean createIndex) {
-        return new XuguCreateTableSqlBuilder(table, createIndex).build(tablePath);
+    protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
+        return new XuguCreateTableSqlBuilder(table).build(tablePath);
     }
 
     @Override
@@ -166,8 +169,27 @@ public class XuguCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getListTableSql(String databaseName) {
-        return "SELECT user_name ,table_name FROM all_users au \n"
-                + "INNER JOIN all_tables at ON au.user_id=at.user_id AND au.db_id=at.db_id";
+        return "select s.schema_name,t.table_name \n"
+                + "from all_schemas s,all_tables t\n"
+                + "where\n"
+                + "s.schema_id=t.schema_id";
+    }
+
+    @Override
+    protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
+        return new XuguCreateTableSqlBuilder(table).build(tablePath);
+    }
+
+    @Override
+    protected String getDropTableSql(TablePath tablePath) {
+        return String.format("DROP TABLE %s", tablePath.getSchemaAndTableName("\""));
+    }
+
+    @Override
+    protected String getTruncateTableSql(TablePath tablePath) {
+        return String.format(
+                "TRUNCATE TABLE \"%s\".\"%s\"",
+                tablePath.getSchemaName(), tablePath.getTableName());
     }
 
     @Override
@@ -221,6 +243,31 @@ public class XuguCatalog extends AbstractJdbcCatalog {
         return tablePath.getSchemaAndTableName();
     }
 
+    @Override
+    public boolean tableExists(TablePath tablePath) throws CatalogException {
+        try {
+            if (StringUtils.isNotBlank(tablePath.getDatabaseName())) {
+                return databaseExists(tablePath.getDatabaseName())
+                        && listTables(tablePath.getDatabaseName()).stream()
+                                .map(String::toUpperCase)
+                                .collect(Collectors.toList())
+                                .contains(tablePath.getSchemaAndTableName());
+            }
+            return listTables().contains(tablePath.getSchemaAndTableName());
+        } catch (DatabaseNotExistException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean databaseExists(String databaseName) throws CatalogException {
+        checkArgument(StringUtils.isNotBlank(databaseName));
+        return listDatabases().stream()
+                .map(String::toUpperCase)
+                .collect(Collectors.toList())
+                .contains(databaseName.toUpperCase());
+    }
+
     private List<String> listTables() {
         List<String> databases = listDatabases();
         return listTables(databases.get(0));
@@ -229,14 +276,7 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     @Override
     public CatalogTable getTable(String sqlQuery) throws SQLException {
         Connection defaultConnection = getConnection(defaultUrl);
-        return CatalogUtils.getCatalogTable(defaultConnection, sqlQuery, new XuguTypeMapper());
-    }
-
-    @Override
-    protected String getTruncateTableSql(TablePath tablePath) {
-        return String.format(
-                "TRUNCATE TABLE \"%s\".\"%s\"",
-                tablePath.getSchemaName(), tablePath.getTableName());
+        return CatalogUtils.getXuguCatalogTable(defaultConnection, sqlQuery, new XuguTypeMapper());
     }
 
     @Override
@@ -258,6 +298,14 @@ public class XuguCatalog extends AbstractJdbcCatalog {
         } catch (SQLException e) {
             log.info("Obtain constraint failure", e);
             return new ArrayList<>();
+        }
+    }
+
+    @Override
+    protected boolean executeInternal(String url, String sql) throws SQLException {
+        log.info("Execute sql : {}", sql);
+        try (Statement stmt = getConnection(url).createStatement()) {
+            return stmt.execute(sql);
         }
     }
 }

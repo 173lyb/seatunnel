@@ -44,10 +44,10 @@ import org.apache.seatunnel.connectors.seatunnel.common.source.AbstractSingleSpl
 import org.apache.seatunnel.connectors.seatunnel.common.source.SingleSplitReaderContext;
 import org.apache.seatunnel.connectors.seatunnel.http.config.HttpConfig;
 import org.apache.seatunnel.connectors.seatunnel.http.config.HttpParameter;
-import org.apache.seatunnel.connectors.seatunnel.http.config.JsonField;
 import org.apache.seatunnel.connectors.seatunnel.http.config.PageInfo;
 import org.apache.seatunnel.connectors.seatunnel.http.exception.HttpConnectorException;
 import org.apache.seatunnel.format.json.JsonDeserializationSchema;
+import org.apache.seatunnel.format.json.JsonField;
 
 import com.google.common.collect.Lists;
 
@@ -109,6 +109,9 @@ public class HttpSource extends AbstractSingleSplitSource<SeaTunnelRow> {
             }
             if (pageConfig.hasPath(HttpConfig.PAGE_FIELD.key())) {
                 pageInfo.setPageField(pageConfig.getString(HttpConfig.PAGE_FIELD.key()));
+            }
+            if (pageConfig.hasPath(HttpConfig.PAGE_PATH.key())) {
+                pageInfo.setPagePath(pageConfig.getString(HttpConfig.PAGE_PATH.key()));
             }
         }
     }

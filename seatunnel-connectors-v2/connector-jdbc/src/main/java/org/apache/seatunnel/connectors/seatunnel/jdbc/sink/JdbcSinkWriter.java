@@ -21,6 +21,7 @@ import org.apache.seatunnel.api.sink.MultiTableResourceManager;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
+import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcSinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorErrorCode;
@@ -28,28 +29,36 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorExc
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.JdbcOutputFormatBuilder;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.connection.SimpleJdbcConnectionPoolProviderProxy;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.sybase.SybaseJdbcConnectionPoolProviderProxy;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.JdbcSinkState;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.XidInfo;
 
+import org.apache.commons.collections4.MapUtils;
+
+import com.google.common.collect.Lists;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 public class JdbcSinkWriter extends AbstractJdbcSinkWriter<ConnectionPoolManager> {
     private final Integer primaryKeyIndex;
+    private SeaTunnelRowType rowTypeFull;
 
     public JdbcSinkWriter(
             TablePath sinkTablePath,
             JdbcDialect dialect,
             JdbcSinkConfig jdbcSinkConfig,
             TableSchema tableSchema,
-            Integer primaryKeyIndex) {
+            Integer primaryKeyIndex,
+            SeaTunnelRowType rowTypeFull) {
         this.sinkTablePath = sinkTablePath;
         this.dialect = dialect;
         this.tableSchema = tableSchema;
@@ -61,6 +70,36 @@ public class JdbcSinkWriter extends AbstractJdbcSinkWriter<ConnectionPoolManager
                 new JdbcOutputFormatBuilder(
                                 dialect, connectionProvider, jdbcSinkConfig, tableSchema)
                         .build();
+        this.rowTypeFull = rowTypeFull;
+    }
+
+    private SeaTunnelRow transformRow(SeaTunnelRow inputRow) {
+        // 判空处理
+        if (jdbcSinkConfig == null || MapUtils.isEmpty(jdbcSinkConfig.getFieldMapper())) {
+            return inputRow;
+        }
+        Map<String, String> fieldMapper = jdbcSinkConfig.getFieldMapper();
+        Object[] outputDataArray = new Object[fieldMapper.size()];
+        List<Integer> needReaderColIndex = new ArrayList<>();
+        String[] fieldNames = rowTypeFull.getFieldNames();
+        ArrayList<String> inputFieldNames = Lists.newArrayList(fieldNames);
+        fieldMapper.forEach(
+                (key, value) -> {
+                    int fieldIndex = inputFieldNames.indexOf(key);
+                    if (fieldIndex < 0) {
+                        throw new JdbcConnectorException(
+                                JdbcConnectorErrorCode.INPUT_FIELD_NOT_FOUND,
+                                "Can not found field " + key + " from inputRowType");
+                    }
+                    needReaderColIndex.add(fieldIndex);
+                });
+        for (int i = 0; i < outputDataArray.length; i++) {
+            outputDataArray[i] = inputRow.getField(needReaderColIndex.get(i));
+        }
+        SeaTunnelRow outputRow = new SeaTunnelRow(outputDataArray);
+        outputRow.setRowKind(inputRow.getRowKind());
+        outputRow.setTableId(inputRow.getTableId());
+        return outputRow;
     }
 
     @Override
@@ -90,11 +129,24 @@ public class JdbcSinkWriter extends AbstractJdbcSinkWriter<ConnectionPoolManager
             MultiTableResourceManager<ConnectionPoolManager> multiTableResourceManager,
             int queueIndex) {
         connectionProvider.closeConnection();
-        this.connectionProvider =
-                new SimpleJdbcConnectionPoolProviderProxy(
-                        multiTableResourceManager.getSharedResource().get(),
-                        jdbcSinkConfig.getJdbcConnectionConfig(),
-                        queueIndex);
+
+        if (this.jdbcSinkConfig
+                .getJdbcConnectionConfig()
+                .getDriverName()
+                .equals("net.sourceforge.jtds.jdbc.Driver")) {
+            this.connectionProvider =
+                    new SybaseJdbcConnectionPoolProviderProxy(
+                            multiTableResourceManager.getSharedResource().get(),
+                            jdbcSinkConfig.getJdbcConnectionConfig(),
+                            queueIndex);
+        } else {
+            this.connectionProvider =
+                    new SimpleJdbcConnectionPoolProviderProxy(
+                            multiTableResourceManager.getSharedResource().get(),
+                            jdbcSinkConfig.getJdbcConnectionConfig(),
+                            queueIndex);
+        }
+
         this.outputFormat =
                 new JdbcOutputFormatBuilder(
                                 dialect, connectionProvider, jdbcSinkConfig, tableSchema)
@@ -121,7 +173,7 @@ public class JdbcSinkWriter extends AbstractJdbcSinkWriter<ConnectionPoolManager
     @Override
     public void write(SeaTunnelRow element) throws IOException {
         tryOpen();
-        outputFormat.writeRecord(element);
+        outputFormat.writeRecord(transformRow(element));
     }
 
     @Override

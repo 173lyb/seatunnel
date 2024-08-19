@@ -224,4 +224,15 @@ public interface JdbcOptions {
                     .booleanType()
                     .defaultValue(false)
                     .withDescription("对于opengauss使用postgresql连接器,改为merge into语法");
+    Option<Boolean> PASSWORD_DECRYPT =
+            Options.key("password_decrypt")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("密码解密,默认是false");
+    Option<Map<String, String>> FIELD_MAPPER =
+            Options.key("field_mapper")
+                    .mapType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "Specify the field mapping relationship between input and output");
 }

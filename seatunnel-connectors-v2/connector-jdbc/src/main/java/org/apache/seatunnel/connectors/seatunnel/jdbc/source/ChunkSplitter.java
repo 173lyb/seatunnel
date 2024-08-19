@@ -233,6 +233,19 @@ public abstract class ChunkSplitter implements AutoCloseable, Serializable {
                             columnName,
                             jdbcDialect.tableIdentifier(table.getTablePath()));
         }
+        String url = table.getCatalogTable().getOptions().get("url");
+        Integer partitionNumber = table.getPartitionNumber();
+
+        // 一次性处理partitionNumber的最大值限制,
+        partitionNumber =
+                Optional.ofNullable(partitionNumber)
+                        .filter(n -> n <= 10) // 如果partitionNumber大于10，则将其设为10
+                        .orElse(0); // 如果partitionNumber为null，则设为默认值0
+        boolean isXuguUrl = url != null && (url.contains("XUGU") || url.contains("xugu"));
+        // 根据isXuguUrl和有效的partitionNumber（大于1）构建sqlQuery
+        if (isXuguUrl && partitionNumber > 1) {
+            sqlQuery = String.format("%s PARALLEL %s", sqlQuery, partitionNumber);
+        }
         try (Statement stmt = getOrEstablishConnection().createStatement()) {
             log.info("Split table, query min max: {}", sqlQuery);
             try (ResultSet resultSet = stmt.executeQuery(sqlQuery)) {

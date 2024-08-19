@@ -28,7 +28,6 @@
     <name>SeaTunnel : Examples : Engine</name>
 
     <dependencies>
-
         <!--   seatunnel core dependencies   -->
         <dependency>
             <groupId>org.apache.seatunnel</groupId>

@@ -21,6 +21,7 @@ import org.apache.seatunnel.api.serialization.DeserializationSchema;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.format.json.JsonDeserializationSchema;
+import org.apache.seatunnel.format.json.JsonField;
 
 import lombok.AllArgsConstructor;
 
@@ -31,9 +32,12 @@ public class DeserializationCollector {
 
     private DeserializationSchema<SeaTunnelRow> deserializationSchema;
 
-    public void collect(byte[] message, Collector<SeaTunnelRow> out) throws IOException {
+    public void collect(
+            byte[] message, Collector<SeaTunnelRow> out, JsonField jsonField, String contentJson)
+            throws IOException {
         if (deserializationSchema instanceof JsonDeserializationSchema) {
-            ((JsonDeserializationSchema) deserializationSchema).collect(message, out);
+            ((JsonDeserializationSchema) deserializationSchema)
+                    .collect(message, out, jsonField, contentJson);
         } else {
             SeaTunnelRow deserialize = deserializationSchema.deserialize(message);
             out.collect(deserialize);

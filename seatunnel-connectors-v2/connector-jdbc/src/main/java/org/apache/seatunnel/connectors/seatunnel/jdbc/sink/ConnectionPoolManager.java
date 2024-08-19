@@ -49,6 +49,19 @@ public class ConnectionPoolManager {
                 });
     }
 
+    public Connection getSybaseConnection(int index) {
+        return connectionMap.computeIfAbsent(
+                index,
+                i -> {
+                    try {
+                        connectionPool.setConnectionTestQuery("select 1");
+                        return connectionPool.getConnection();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
     public boolean containsConnection(int index) {
         return connectionMap.containsKey(index);
     }

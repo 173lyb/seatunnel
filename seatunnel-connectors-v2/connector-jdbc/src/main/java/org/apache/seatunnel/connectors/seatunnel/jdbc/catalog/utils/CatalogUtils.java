@@ -306,6 +306,14 @@ public class CatalogUtils {
         }
     }
 
+    public static CatalogTable getXuguCatalogTable(
+            Connection connection, String sqlQuery, JdbcDialectTypeMapper typeMapper)
+            throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(sqlQuery)) {
+            return getCatalogTable(ps.executeQuery().getMetaData(), typeMapper, sqlQuery);
+        }
+    }
+
     /**
      * @deprecated instead by {@link #getCatalogTable(Connection, String, JdbcDialectTypeMapper)}
      * @param connection

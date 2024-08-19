@@ -29,7 +29,10 @@ public enum KafkaConnectorErrorCode implements SeaTunnelErrorCode {
     CONSUME_THREAD_RUN_ERROR(
             "KAFKA-05", "Error occurred when the kafka consumer thread was running"),
     CONSUME_DATA_FAILED("KAFKA-06", "Kafka failed to consume data"),
-    CONSUMER_CLOSE_FAILED("KAFKA-07", "Kafka failed to close consumer");
+    CONSUMER_CLOSE_FAILED("KAFKA-07", "Kafka failed to close consumer"),
+
+    // keytab文件不存在
+    KEYTAB_NOT_EXIST("KAFKA-08", "keytab file not exist");
 
     private final String code;
     private final String description;

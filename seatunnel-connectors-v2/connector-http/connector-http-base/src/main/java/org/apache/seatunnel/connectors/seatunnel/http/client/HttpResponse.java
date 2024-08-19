@@ -32,6 +32,9 @@ public class HttpResponse implements Serializable {
     /** response body */
     private String content;
 
+    /** response cookie */
+    private String cookies;
+
     public HttpResponse() {}
 
     public HttpResponse(int code) {
@@ -42,9 +45,10 @@ public class HttpResponse implements Serializable {
         this.content = content;
     }
 
-    public HttpResponse(int code, String content) {
+    public HttpResponse(int code, String content, String cookies) {
         this.code = code;
         this.content = content;
+        this.cookies = cookies;
     }
 
     public int getCode() {
@@ -59,12 +63,26 @@ public class HttpResponse implements Serializable {
         return content;
     }
 
+    public String getCookies() {
+        return cookies;
+    }
+
+    public void setCookies(String cookies) {
+        this.cookies = cookies;
+    }
+
     public void setContent(String content) {
         this.content = content;
     }
 
     @Override
     public String toString() {
-        return "HttpClientResult [code=" + code + ", content=" + content + "]";
+        return "HttpClientResult [code="
+                + code
+                + ", content="
+                + content
+                + " , cookies="
+                + cookies
+                + "]";
     }
 }

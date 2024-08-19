@@ -18,6 +18,8 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc.config;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.utils.MyRsaUtil;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -57,6 +59,8 @@ public class JdbcConnectionConfig implements Serializable {
 
     private Map<String, String> properties;
 
+    public Boolean password_decrypt = JdbcOptions.PASSWORD_DECRYPT.defaultValue();
+
     public static JdbcConnectionConfig of(ReadonlyConfig config) {
         JdbcConnectionConfig.Builder builder = JdbcConnectionConfig.builder();
         builder.url(config.get(JdbcOptions.URL));
@@ -81,6 +85,24 @@ public class JdbcConnectionConfig implements Serializable {
         config.getOptional(JdbcOptions.USER).ifPresent(builder::username);
         config.getOptional(JdbcOptions.PASSWORD).ifPresent(builder::password);
         config.getOptional(JdbcOptions.PROPERTIES).ifPresent(builder::properties);
+
+        config.getOptional(JdbcOptions.PASSWORD_DECRYPT).ifPresent(builder::password_decrypt);
+        config.getOptional(JdbcOptions.PASSWORD)
+                .ifPresent(
+                        password -> {
+                            // 判断password_decrypt是否为true
+                            if (config.get(JdbcOptions.PASSWORD_DECRYPT)) {
+                                String decryptedPassword = null;
+                                try {
+                                    decryptedPassword = MyRsaUtil.decryptByPrivateKey(password);
+                                } catch (Exception e) {
+                                    throw new SeaTunnelException("password 解码失败", e);
+                                }
+                                builder.password(decryptedPassword);
+                            } else {
+                                builder.password(password);
+                            }
+                        });
         return builder.build();
     }
 
@@ -160,6 +182,7 @@ public class JdbcConnectionConfig implements Serializable {
         public String kerberosPrincipal;
         public String kerberosKeytabPath;
         public String krb5Path = JdbcOptions.KRB5_PATH.defaultValue();
+        private Boolean password_decrypt;
 
         private Builder() {}
 
@@ -253,6 +276,11 @@ public class JdbcConnectionConfig implements Serializable {
             return this;
         }
 
+        public Builder password_decrypt(boolean password_decrypt) {
+            this.password_decrypt = password_decrypt;
+            return this;
+        }
+
         public JdbcConnectionConfig build() {
             JdbcConnectionConfig jdbcConnectionConfig = new JdbcConnectionConfig();
             jdbcConnectionConfig.batchSize = this.batchSize;
@@ -273,6 +301,7 @@ public class JdbcConnectionConfig implements Serializable {
             jdbcConnectionConfig.krb5Path = this.krb5Path;
             jdbcConnectionConfig.properties =
                     this.properties == null ? new HashMap<>() : this.properties;
+            jdbcConnectionConfig.password_decrypt = this.password_decrypt;
             return jdbcConnectionConfig;
         }
     }

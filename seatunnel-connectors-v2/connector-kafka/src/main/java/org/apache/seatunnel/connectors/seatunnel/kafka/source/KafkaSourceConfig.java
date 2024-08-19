@@ -72,12 +72,14 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.FORM
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.JSON_FIELD;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KAFKA_CONFIG;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KEY_PARTITION_DISCOVERY_INTERVAL_MILLIS;
+import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KRB5_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.MESSAGE_FORMAT_ERROR_HANDLE_WAY_OPTION;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.PATTERN;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.START_MODE;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.START_MODE_OFFSETS;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.START_MODE_TIMESTAMP;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.TOPIC;
+import static org.apache.seatunnel.connectors.seatunnel.kafka.utils.ConfUtil.buildJaasConf;
 
 public class KafkaSourceConfig implements Serializable {
 
@@ -91,6 +93,7 @@ public class KafkaSourceConfig implements Serializable {
     @Getter private final MessageFormatErrorHandleWay messageFormatErrorHandleWay;
     @Getter private final JsonField jsonField;
     @Getter private final String contentField;
+    @Getter private final String krb5Path;
 
     public KafkaSourceConfig(ReadonlyConfig readonlyConfig) {
         this.bootstrap = readonlyConfig.get(BOOTSTRAP_SERVERS);
@@ -102,11 +105,13 @@ public class KafkaSourceConfig implements Serializable {
                 readonlyConfig.get(MESSAGE_FORMAT_ERROR_HANDLE_WAY_OPTION);
         this.jsonField = readonlyConfig.get(JSON_FIELD);
         this.contentField = readonlyConfig.get(CONTENT_FIELD);
+        this.krb5Path = readonlyConfig.get(KRB5_PATH);
     }
 
     private Properties createKafkaProperties(ReadonlyConfig readonlyConfig) {
         Properties resultProperties = new Properties();
         readonlyConfig.getOptional(KAFKA_CONFIG).ifPresent(resultProperties::putAll);
+        buildJaasConf(readonlyConfig, resultProperties);
         return resultProperties;
     }
 

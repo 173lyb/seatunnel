@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu;
 
 import org.apache.seatunnel.api.table.catalog.TablePath;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.converter.JdbcRowConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
@@ -103,15 +104,19 @@ public class XuguDialect implements JdbcDialect {
     @Override
     public Optional<String> getUpsertStatement(
             String database, String tableName, String[] fieldNames, String[] uniqueKeyFields) {
+
         List<String> nonUniqueKeyFields =
                 Arrays.stream(fieldNames)
                         .filter(fieldName -> !Arrays.asList(uniqueKeyFields).contains(fieldName))
                         .collect(Collectors.toList());
+        if (nonUniqueKeyFields.isEmpty()) {
+            throw new SeaTunnelException(
+                    "The non-primary key field cannot be empty. Please set other fields");
+        }
         String valuesBinding =
                 Arrays.stream(fieldNames)
                         .map(fieldName -> ":" + fieldName + " " + quoteIdentifier(fieldName))
                         .collect(Collectors.joining(", "));
-
         String usingClause = String.format("SELECT %s FROM DUAL", valuesBinding);
         String onConditions =
                 Arrays.stream(uniqueKeyFields)
@@ -122,6 +127,7 @@ public class XuguDialect implements JdbcDialect {
                                                 quoteIdentifier(fieldName),
                                                 quoteIdentifier(fieldName)))
                         .collect(Collectors.joining(" AND "));
+
         String updateSetClause =
                 nonUniqueKeyFields.stream()
                         .map(
@@ -131,6 +137,7 @@ public class XuguDialect implements JdbcDialect {
                                                 quoteIdentifier(fieldName),
                                                 quoteIdentifier(fieldName)))
                         .collect(Collectors.joining(", "));
+
         String insertFields =
                 Arrays.stream(fieldNames)
                         .map(this::quoteIdentifier)
@@ -139,7 +146,6 @@ public class XuguDialect implements JdbcDialect {
                 Arrays.stream(fieldNames)
                         .map(fieldName -> "SOURCE." + quoteIdentifier(fieldName))
                         .collect(Collectors.joining(", "));
-
         String upsertSQL =
                 String.format(
                         " MERGE INTO %s TARGET"
@@ -157,20 +163,6 @@ public class XuguDialect implements JdbcDialect {
                         insertValues);
 
         return Optional.of(upsertSQL);
-    }
-
-    @Override
-    public PreparedStatement creatPreparedStatement(
-            Connection connection, String queryTemplate, int fetchSize) throws SQLException {
-        PreparedStatement statement =
-                connection.prepareStatement(
-                        queryTemplate, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        if (fetchSize > 0) {
-            statement.setFetchSize(fetchSize);
-        } else {
-            statement.setFetchSize(DEFAULT_XUGU_FETCH_SIZE);
-        }
-        return statement;
     }
 
     @Override
@@ -229,5 +221,19 @@ public class XuguDialect implements JdbcDialect {
                 ResultSet resultSet = ps.executeQuery()) {
             return resultSet.getMetaData();
         }
+    }
+
+    @Override
+    public PreparedStatement creatPreparedStatement(
+            Connection connection, String queryTemplate, int fetchSize) throws SQLException {
+        PreparedStatement statement =
+                connection.prepareStatement(
+                        queryTemplate, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        if (fetchSize > 0) {
+            statement.setFetchSize(fetchSize);
+        } else {
+            statement.setFetchSize(DEFAULT_XUGU_FETCH_SIZE);
+        }
+        return statement;
     }
 }
