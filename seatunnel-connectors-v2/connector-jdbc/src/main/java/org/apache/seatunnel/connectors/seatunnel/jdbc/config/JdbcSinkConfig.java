@@ -45,6 +45,7 @@ public class JdbcSinkConfig implements Serializable {
     private boolean supportUpsertByInsertOnly;
     private boolean useCopyStatement;
     private boolean gaussSupportMerge;
+    @Builder.Default private boolean createIndex = true;
 
     public static JdbcSinkConfig of(ReadonlyConfig config) {
         JdbcSinkConfigBuilder builder = JdbcSinkConfig.builder();
@@ -58,7 +59,7 @@ public class JdbcSinkConfig implements Serializable {
         builder.supportUpsertByInsertOnly(config.get(SUPPORT_UPSERT_BY_INSERT_ONLY));
         builder.simpleSql(config.get(JdbcOptions.QUERY));
         builder.useCopyStatement(config.get(JdbcOptions.USE_COPY_STATEMENT));
-        builder.gaussSupportMerge(config.get(JdbcOptions.GAUSS_SUPPORT_MERGE));
+        builder.createIndex(config.get(JdbcCatalogOptions.CREATE_INDEX));
         return builder.build();
     }
 }
