@@ -43,6 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class XuguCatalog extends AbstractJdbcCatalog {
@@ -214,13 +217,24 @@ public class XuguCatalog extends AbstractJdbcCatalog {
         try {
             if (StringUtils.isNotBlank(tablePath.getDatabaseName())) {
                 return databaseExists(tablePath.getDatabaseName())
-                        && listTables(tablePath.getDatabaseName())
+                        && listTables(tablePath.getDatabaseName()).stream()
+                                .map(String::toUpperCase)
+                                .collect(Collectors.toList())
                                 .contains(tablePath.getSchemaAndTableName());
             }
             return listTables().contains(tablePath.getSchemaAndTableName());
         } catch (DatabaseNotExistException e) {
             return false;
         }
+    }
+
+    @Override
+    public boolean databaseExists(String databaseName) throws CatalogException {
+        checkArgument(StringUtils.isNotBlank(databaseName));
+        return listDatabases().stream()
+                .map(String::toUpperCase)
+                .collect(Collectors.toList())
+                .contains(databaseName.toUpperCase());
     }
 
     private List<String> listTables() {

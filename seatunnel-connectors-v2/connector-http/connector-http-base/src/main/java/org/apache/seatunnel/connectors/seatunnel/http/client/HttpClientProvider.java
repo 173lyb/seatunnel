@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.http.client;
 
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.http.config.HttpParameter;
+import org.apache.seatunnel.connectors.seatunnel.http.sdk.aksk.service.impl.SigSignerJavaImpl;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -57,7 +58,6 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import com.sangfor.ngsoc.common.aksk.service.impl.SigSignerJavaImpl;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.SSLContext;
@@ -114,13 +114,11 @@ public class HttpClientProvider implements AutoCloseable {
                             .setSSLContext(sslContext)
                             .setSSLHostnameVerifier(new NoopHostnameVerifier());
             HttpClientBuilder defaultHttpClientBuilder = HttpClientBuilder.create();
-            CloseableHttpClient client = httpClientBuilder.build();
-            CloseableHttpClient defaultClient = defaultHttpClientBuilder.build();
 
             if (httpParameter.isSkipSslVerification()) {
-                this.httpClient = client;
+                this.httpClient = httpClientBuilder.build();
             } else {
-                this.httpClient = defaultClient;
+                this.httpClient = defaultHttpClientBuilder.build();
             }
         } catch (NoSuchAlgorithmException e) {
             throw new SeaTunnelException(e);
@@ -364,17 +362,20 @@ public class HttpClientProvider implements AutoCloseable {
         httpPost.setConfig(requestConfig);
         // set request header
         addHeaders(httpPost, headers);
-        // add body in request
-        addBody(httpPost, body);
         // return http response
         // 深信服加密
         if (MapUtils.isNotEmpty(otherSdk)) {
             if (SANGFOR.equals(otherSdk.get(SDK))) {
                 String authCode = otherSdk.get(AUTHCODE);
                 SigSignerJavaImpl sigSignerJava = new SigSignerJavaImpl(authCode);
+                addBodyFromSangFor(httpPost, body);
                 sigSignerJava.sign(httpPost);
+                return getResponse(httpPost);
             }
         }
+
+        // add body in request
+        addBody(httpPost, body);
 
         return getResponse(httpPost);
     }
@@ -524,6 +525,19 @@ public class HttpClientProvider implements AutoCloseable {
 
         StringEntity entity = new StringEntity(body, ContentType.APPLICATION_JSON);
         entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, APPLICATION_JSON));
+        request.setEntity(entity);
+    }
+
+    // sanFor sdk需要自己拼接请求头 ，所以无需自己添加请求头
+    private void addBodyFromSangFor(HttpEntityEnclosingRequestBase request, String body) {
+        if (checkAlreadyHaveContentType(request)) {
+            return;
+        }
+        if (StringUtils.isBlank(body)) {
+            body = "";
+        }
+        StringEntity entity = new StringEntity(body, ContentType.APPLICATION_JSON);
+        entity.setContentEncoding(ENCODING);
         request.setEntity(entity);
     }
 

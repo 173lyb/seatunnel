@@ -186,7 +186,7 @@ public class PostgresCreateTableSqlBuilder {
                         .map(
                                 constraintKeyColumn ->
                                         String.format(
-                                                "\"%s\"",
+                                                "%s",
                                                 CatalogUtils.getFieldIde(
                                                         constraintKeyColumn.getColumnName(),
                                                         fieldIde)))

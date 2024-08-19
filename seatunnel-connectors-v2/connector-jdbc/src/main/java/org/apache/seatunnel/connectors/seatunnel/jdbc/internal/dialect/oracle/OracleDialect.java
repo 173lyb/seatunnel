@@ -173,7 +173,7 @@ public class OracleDialect implements JdbcDialect {
 
     @Override
     public String tableIdentifier(TablePath tablePath) {
-        return quoteIdentifier(tablePath.getSchemaAndTableName());
+        return tablePath.getSchemaAndTableName("\"");
     }
 
     @Override
