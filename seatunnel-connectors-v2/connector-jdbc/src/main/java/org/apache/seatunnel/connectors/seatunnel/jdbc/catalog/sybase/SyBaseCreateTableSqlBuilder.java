@@ -56,20 +56,23 @@ public class SyBaseCreateTableSqlBuilder {
 
     private String fieldIde;
 
-    private SyBaseCreateTableSqlBuilder(String tableName) {
+    private boolean createIndex;
+
+    private SyBaseCreateTableSqlBuilder(String tableName, boolean createIndex) {
         checkNotNull(tableName, "tableName must not be null");
         this.tableName = tableName;
+        this.createIndex = createIndex;
     }
 
     public static SyBaseCreateTableSqlBuilder builder(
-            TablePath tablePath, CatalogTable catalogTable) {
+            TablePath tablePath, CatalogTable catalogTable, boolean createIndex) {
         checkNotNull(tablePath, "tablePath must not be null");
         checkNotNull(catalogTable, "catalogTable must not be null");
 
         TableSchema tableSchema = catalogTable.getTableSchema();
         checkNotNull(tableSchema, "tableSchema must not be null");
 
-        return new SyBaseCreateTableSqlBuilder(tablePath.getTableName())
+        return new SyBaseCreateTableSqlBuilder(tablePath.getTableName(), createIndex)
                 .comment(catalogTable.getComment())
                 // todo: set charset and collate
                 .engine(null)
@@ -176,7 +179,7 @@ public class SyBaseCreateTableSqlBuilder {
         for (Column column : columns) {
             columnSqls.add("\t" + buildColumnIdentifySql(column, catalogName, columnComments));
         }
-        if (primaryKey != null) {
+        if (createIndex && primaryKey != null) {
             columnSqls.add("\t" + buildPrimaryKeySql());
         }
         if (CollectionUtils.isNotEmpty(constraintKeys)) {

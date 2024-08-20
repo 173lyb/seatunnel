@@ -37,12 +37,14 @@ public class KingBaseCreateTableSqlBuilder {
     private PrimaryKey primaryKey;
     private String sourceCatalogName;
     private String fieldIde;
+    private boolean createIndex;
 
-    public KingBaseCreateTableSqlBuilder(CatalogTable catalogTable) {
+    public KingBaseCreateTableSqlBuilder(CatalogTable catalogTable, boolean createIndex) {
         this.columns = catalogTable.getTableSchema().getColumns();
         this.primaryKey = catalogTable.getTableSchema().getPrimaryKey();
         this.sourceCatalogName = catalogTable.getCatalogName();
         this.fieldIde = catalogTable.getOptions().get("fieldIde");
+        this.createIndex = createIndex;
     }
 
     public String build(TablePath tablePath) {
@@ -58,7 +60,8 @@ public class KingBaseCreateTableSqlBuilder {
                         .collect(Collectors.toList());
 
         // Add primary key directly in the create table statement
-        if (primaryKey != null
+        if (createIndex
+                && primaryKey != null
                 && primaryKey.getColumnNames() != null
                 && primaryKey.getColumnNames().size() > 0) {
             columnSqls.add(buildPrimaryKeySql(primaryKey));

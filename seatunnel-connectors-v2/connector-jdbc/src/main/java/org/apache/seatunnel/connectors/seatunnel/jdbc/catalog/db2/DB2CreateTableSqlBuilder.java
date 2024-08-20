@@ -37,12 +37,14 @@ public class DB2CreateTableSqlBuilder {
     private PrimaryKey primaryKey;
     private String sourceCatalogName;
     private String fieldIde;
+    private boolean createIndex;
 
-    public DB2CreateTableSqlBuilder(CatalogTable catalogTable) {
+    public DB2CreateTableSqlBuilder(CatalogTable catalogTable, boolean createIndex) {
         this.columns = catalogTable.getTableSchema().getColumns();
         this.primaryKey = catalogTable.getTableSchema().getPrimaryKey();
         this.sourceCatalogName = catalogTable.getCatalogName();
         this.fieldIde = catalogTable.getOptions().get("fieldIde");
+        this.createIndex = createIndex;
     }
 
     // TODO 待定维护
@@ -59,7 +61,8 @@ public class DB2CreateTableSqlBuilder {
                         .collect(Collectors.toList());
 
         // Add primary key directly in the create table statement
-        if (primaryKey != null
+        if (createIndex
+                && primaryKey != null
                 && primaryKey.getColumnNames() != null
                 && primaryKey.getColumnNames().size() > 0) {
             columnSqls.add(buildPrimaryKeySql(primaryKey));

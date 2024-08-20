@@ -117,8 +117,9 @@ public class DB2Catalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getCreateTableSql(TablePath tablePath, CatalogTable table, boolean createIndex) {
-        return new DB2CreateTableSqlBuilder(table).build(tablePath);
+    protected String getCreateTableSql(
+            TablePath tablePath, CatalogTable table, boolean createIndex) {
+        return new DB2CreateTableSqlBuilder(table, createIndex).build(tablePath);
     }
 
     @Override

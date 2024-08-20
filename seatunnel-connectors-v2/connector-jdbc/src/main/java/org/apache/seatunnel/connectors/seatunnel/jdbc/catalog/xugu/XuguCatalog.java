@@ -153,10 +153,10 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getCreateTableSql(TablePath tablePath, CatalogTable table, boolean createIndex) {
-        return new XuguCreateTableSqlBuilder(table,createIndex).build(tablePath);
+    protected String getCreateTableSql(
+            TablePath tablePath, CatalogTable table, boolean createIndex) {
+        return new XuguCreateTableSqlBuilder(table, createIndex).build(tablePath);
     }
-
 
     @Override
     protected String getCreateDatabaseSql(String databaseName) {
@@ -175,7 +175,6 @@ public class XuguCatalog extends AbstractJdbcCatalog {
                 + "where\n"
                 + "s.schema_id=t.schema_id";
     }
-
 
     @Override
     protected String getDropTableSql(TablePath tablePath) {

@@ -137,8 +137,9 @@ public class KingBaseCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
-        return new KingBaseCreateTableSqlBuilder(table).build(tablePath);
+    protected String getCreateTableSql(
+            TablePath tablePath, CatalogTable table, boolean createIndex) {
+        return new KingBaseCreateTableSqlBuilder(table, createIndex).build(tablePath);
     }
 
     @Override

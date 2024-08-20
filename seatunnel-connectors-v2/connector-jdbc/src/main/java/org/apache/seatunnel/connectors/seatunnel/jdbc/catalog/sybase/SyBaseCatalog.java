@@ -140,8 +140,10 @@ public class SyBaseCatalog extends AbstractJdbcCatalog {;
     }
 
     @Override
-    protected String getCreateTableSql(TablePath tablePath, CatalogTable table) {
-        return SyBaseCreateTableSqlBuilder.builder(tablePath, table).build(tablePath, table);
+    protected String getCreateTableSql(
+            TablePath tablePath, CatalogTable table, boolean createIndex) {
+        return SyBaseCreateTableSqlBuilder.builder(tablePath, table, createIndex)
+                .build(tablePath, table);
     }
 
     @Override
