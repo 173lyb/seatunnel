@@ -127,7 +127,7 @@ public class OracleCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getListDatabaseSql() {
-        return "SELECT name FROM v$database";
+        return "SELECT ora_database_name FROM dual";
     }
 
     @Override
