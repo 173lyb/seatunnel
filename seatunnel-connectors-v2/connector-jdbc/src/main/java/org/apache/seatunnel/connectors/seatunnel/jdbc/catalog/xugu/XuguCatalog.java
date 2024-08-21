@@ -253,9 +253,6 @@ public class XuguCatalog extends AbstractJdbcCatalog {
         if (StringUtils.isBlank(databaseName)) {
             return false;
         }
-        if (SYS_DATABASES.contains(databaseName)) {
-            return false;
-        }
         try {
             return querySQLResultExists(
                     getUrlFromDatabaseName(databaseName),
