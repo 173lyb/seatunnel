@@ -18,12 +18,14 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc.config;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.JdbcCatalogOptions;
 
 import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.ENABLE_UPSERT;
 import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.IS_PRIMARY_KEY_UPDATED;
@@ -46,6 +48,7 @@ public class JdbcSinkConfig implements Serializable {
     private boolean useCopyStatement;
     private boolean gaussSupportMerge;
     @Builder.Default private boolean createIndex = true;
+    private Map<String, String> FieldMapper;
 
     public static JdbcSinkConfig of(ReadonlyConfig config) {
         JdbcSinkConfigBuilder builder = JdbcSinkConfig.builder();
@@ -61,6 +64,7 @@ public class JdbcSinkConfig implements Serializable {
         builder.useCopyStatement(config.get(JdbcOptions.USE_COPY_STATEMENT));
         builder.gaussSupportMerge(config.get(JdbcOptions.GAUSS_SUPPORT_MERGE));
         builder.createIndex(config.get(JdbcCatalogOptions.CREATE_INDEX));
+        config.getOptional(JdbcOptions.FIELD_MAPPER).ifPresent(builder::FieldMapper);
         return builder.build();
     }
 }
