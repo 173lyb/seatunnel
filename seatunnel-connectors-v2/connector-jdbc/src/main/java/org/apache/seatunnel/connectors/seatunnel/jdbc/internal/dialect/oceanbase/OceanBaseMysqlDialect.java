@@ -226,7 +226,8 @@ public class OceanBaseMysqlDialect implements JdbcDialect {
                     log.warn(
                             "Failed to get approximate row count from table status, fallback to count rows",
                             e);
-                    return SQLUtils.countForTable(connection, tableIdentifier(table.getTablePath()));
+                    return SQLUtils.countForTable(
+                            connection, tableIdentifier(table.getTablePath()));
                 }
             }
         }
