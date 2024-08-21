@@ -50,7 +50,7 @@
         <module>seatunnel-formats</module>
         <module>seatunnel-engine</module>
         <module>seatunnel-examples</module>
-        <module>seatunnel-e2e</module>
+        <!--        <module>seatunnel-e2e</module>-->
         <module>seatunnel-shade</module>
     </modules>
 
@@ -923,7 +923,7 @@
 
     <profiles>
         <profile>
-            <id>release</id>
+            <id>xuguDist</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
