@@ -4,6 +4,8 @@ import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.transform.sql.zeta.ZetaUDF;
 
+import org.apache.commons.lang3.StringUtils;
+
 import org.bouncycastle.crypto.digests.SM3Digest;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -33,6 +35,9 @@ public class Sm3Encrypt implements ZetaUDF {
             inputString = list.get(0).toString();
         } else {
             inputString = list.stream().map(Object::toString).collect(Collectors.joining(","));
+        }
+        if (StringUtils.isBlank(inputString)) {
+            return null;
         }
         return sm3EncryptCore(inputString);
     }

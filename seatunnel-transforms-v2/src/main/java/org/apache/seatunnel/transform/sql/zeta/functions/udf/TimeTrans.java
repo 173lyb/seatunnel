@@ -2,8 +2,9 @@ package org.apache.seatunnel.transform.sql.zeta.functions.udf;
 
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
-import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.transform.sql.zeta.ZetaUDF;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.auto.service.AutoService;
 
@@ -27,6 +28,9 @@ public class TimeTrans implements ZetaUDF {
     @Override
     public Object evaluate(List<Object> list) {
         String timeValue = list.get(0).toString();
+        if (StringUtils.isBlank(timeValue)) {
+            return null;
+        }
         timeValue = timeValue.replace("T", " ");
         String format = list.get(1).toString();
         try {
@@ -35,7 +39,7 @@ public class TimeTrans implements ZetaUDF {
             LocalDateTime dateTime = LocalDateTime.parse(timeValue, inputFormatter);
             return dateTime.format(outputFormatter);
         } catch (Exception e) {
-            throw new SeaTunnelException("转换日期失败" + e);
+            throw new RuntimeException("转换日期失败" + e);
         }
     }
 }
