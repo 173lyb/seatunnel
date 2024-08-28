@@ -31,17 +31,17 @@
 
     <modules>
         <module>connector-http-base</module>
-        <module>connector-http-feishu</module>
-        <module>connector-http-wechat</module>
-        <module>connector-http-myhours</module>
-        <module>connector-http-lemlist</module>
-        <module>connector-http-klaviyo</module>
-        <module>connector-http-onesignal</module>
-        <module>connector-http-jira</module>
-        <module>connector-http-gitlab</module>
-        <module>connector-http-github</module>
-        <module>connector-http-notion</module>
-        <module>connector-http-persistiq</module>
+        <!--        <module>connector-http-feishu</module>-->
+        <!--        <module>connector-http-wechat</module>-->
+        <!--        <module>connector-http-myhours</module>-->
+        <!--        <module>connector-http-lemlist</module>-->
+        <!--        <module>connector-http-klaviyo</module>-->
+        <!--        <module>connector-http-onesignal</module>-->
+        <!--        <module>connector-http-jira</module>-->
+        <!--        <module>connector-http-gitlab</module>-->
+        <!--        <module>connector-http-github</module>-->
+        <!--        <module>connector-http-notion</module>-->
+        <!--        <module>connector-http-persistiq</module>-->
     </modules>
 
 </project>
