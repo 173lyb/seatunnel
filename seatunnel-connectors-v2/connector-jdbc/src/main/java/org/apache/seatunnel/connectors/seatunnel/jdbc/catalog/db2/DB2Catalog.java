@@ -117,7 +117,6 @@ public class DB2Catalog extends AbstractJdbcCatalog {
                 tablePath.getTableName());
     }
 
-
     @Override
     protected String getSelectColumnsSql(TablePath tablePath) {
         return String.format(

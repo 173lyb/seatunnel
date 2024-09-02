@@ -128,9 +128,6 @@ public class KingBaseCatalog extends AbstractJdbcCatalog {
         if (StringUtils.isBlank(databaseName)) {
             return false;
         }
-        if (SYS_DATABASES.contains(databaseName)) {
-            return false;
-        }
         try {
             return querySQLResultExists(getUrlFromDatabaseName(databaseName), getListDatabaseSql());
         } catch (SeaTunnelRuntimeException e) {
@@ -158,6 +155,15 @@ public class KingBaseCatalog extends AbstractJdbcCatalog {
     @Override
     protected String getListTableSql(String databaseName) {
         return "SELECT SCHEMANAME ,TABLENAME FROM SYS_TABLES;";
+    }
+
+    @Override
+    protected String getTableWithConditionSql(TablePath tablePath) {
+        return String.format(
+                getListTableSql(tablePath.getDatabaseName())
+                        + "  where SCHEMANAME = '%s' and TABLENAME = '%s'",
+                tablePath.getSchemaName(),
+                tablePath.getTableName());
     }
 
     @Override

@@ -182,11 +182,6 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getTableName(ResultSet rs) throws SQLException {
-        return rs.getString(1) + "." + rs.getString(2);
-    }
-
-    @Override
     protected String getSelectColumnsSql(TablePath tablePath) {
         return String.format(
                 SELECT_COLUMNS_SQL_TEMPLATE, tablePath.getSchemaName(), tablePath.getTableName());
