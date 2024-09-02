@@ -88,15 +88,6 @@ public class DB2Catalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getTableWithConditionSql(TablePath tablePath) {
-        return String.format(
-                getListTableSql(tablePath.getDatabaseName())
-                        + "  and  TABLE_SCHEMA = '%s' and TABLE_NAME = '%s'",
-                tablePath.getSchemaName(),
-                tablePath.getTableName());
-    }
-
-    @Override
     protected String getListDatabaseSql() {
         return "SELECT CURRENT_SERVER FROM SYSIBM.SYSDUMMY1;";
     }
@@ -115,6 +106,15 @@ public class DB2Catalog extends AbstractJdbcCatalog {
     @Override
     protected String getListTableSql(String databaseName) {
         return "SELECT CREATOR ,NAME FROM SYSIBM.SYSTABLES WHERE CREATOR NOT LIKE 'SYS%';";
+    }
+
+    @Override
+    protected String getTableWithConditionSql(TablePath tablePath) {
+        return String.format(
+                getListTableSql(tablePath.getDatabaseName())
+                        + "  and CREATOR = '%s' and NAME = '%s'",
+                tablePath.getSchemaName(),
+                tablePath.getTableName());
     }
 
     @Override
