@@ -21,9 +21,7 @@ import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.exception.CatalogException;
-import org.apache.seatunnel.api.table.catalog.exception.DatabaseNotExistException;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
-import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
@@ -31,7 +29,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.psql.Post
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.psql.PostgresTypeMapper;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,9 +36,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.apache.seatunnel.common.exception.CommonErrorCode.UNSUPPORTED_METHOD;
 
 @Slf4j
 public class PostgresCatalog extends AbstractJdbcCatalog {
@@ -115,15 +109,6 @@ public class PostgresCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getTableWithConditionSql(TablePath tablePath) {
-        return String.format(
-                getListTableSql(tablePath.getDatabaseName())
-                        + " where table_schema = '%s' and table_name= '%s'",
-                tablePath.getSchemaName(),
-                tablePath.getTableName());
-    }
-
-    @Override
     protected String getListDatabaseSql() {
         return "select datname from pg_database";
     }
@@ -131,6 +116,15 @@ public class PostgresCatalog extends AbstractJdbcCatalog {
     @Override
     protected String getListTableSql(String databaseName) {
         return "SELECT table_schema, table_name FROM information_schema.tables";
+    }
+
+    @Override
+    protected String getTableWithConditionSql(TablePath tablePath) {
+        return String.format(
+                getListTableSql(tablePath.getDatabaseName())
+                        + " where table_schema = '%s' and table_name= '%s'",
+                tablePath.getSchemaName(),
+                tablePath.getTableName());
     }
 
     @Override
@@ -173,45 +167,6 @@ public class PostgresCatalog extends AbstractJdbcCatalog {
                         .comment(columnComment)
                         .build();
         return PostgresTypeConverter.INSTANCE.convert(typeDefine);
-    }
-
-    public boolean tableExists(TablePath tablePath) throws CatalogException {
-        try {
-            if (StringUtils.isNotBlank(tablePath.getDatabaseName())) {
-                return databaseExists(tablePath.getDatabaseName())
-                        && listTables(tablePath.getDatabaseName()).stream()
-                                .map(String::toUpperCase)
-                                .collect(Collectors.toList())
-                                .contains(tablePath.getSchemaAndTableName());
-            }
-            return listTables().contains(tablePath.getSchemaAndTableName());
-        } catch (DatabaseNotExistException e) {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean databaseExists(String databaseName) throws CatalogException {
-
-        if (StringUtils.isBlank(databaseName)) {
-            return false;
-        }
-        if (SYS_DATABASES.contains(databaseName)) {
-            return false;
-        }
-        try {
-            return querySQLResultExists(
-                    getUrlFromDatabaseName(databaseName),
-                    getDatabaseWithConditionSql(databaseName.toUpperCase()));
-        } catch (SeaTunnelRuntimeException e) {
-            if (e.getSeaTunnelErrorCode().getCode().equals(UNSUPPORTED_METHOD.getCode())) {
-                log.warn(
-                        "The catalog: {} is not supported the getDatabaseWithConditionSql for databaseExists",
-                        this.catalogName);
-                return listDatabases().contains(databaseName.toUpperCase());
-            }
-            throw e;
-        }
     }
 
     @Override
