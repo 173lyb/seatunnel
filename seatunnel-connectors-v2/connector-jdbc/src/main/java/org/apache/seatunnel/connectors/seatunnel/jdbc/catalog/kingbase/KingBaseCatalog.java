@@ -177,6 +177,15 @@ public class KingBaseCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
+    protected String getTableWithConditionSql(TablePath tablePath) {
+        return String.format(
+                getListTableSql(tablePath.getDatabaseName())
+                        + "  where SCHEMANAME = '%s' and TABLENAME = '%s'",
+                tablePath.getSchemaName(),
+                tablePath.getTableName());
+    }
+
+    @Override
     protected String getTableName(ResultSet rs) throws SQLException {
         if (EXCLUDED_SCHEMAS.contains(rs.getString(1))) {
             return null;
