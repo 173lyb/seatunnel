@@ -22,7 +22,6 @@ import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.exception.CatalogException;
-import org.apache.seatunnel.api.table.catalog.exception.DatabaseNotExistException;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
@@ -42,7 +41,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.apache.seatunnel.common.exception.CommonErrorCode.UNSUPPORTED_METHOD;
 
@@ -134,15 +132,6 @@ public class XuguCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getTableWithConditionSql(TablePath tablePath) {
-        return String.format(
-                getListTableSql(tablePath.getDatabaseName())
-                        + "  where user_name = '%s' and table_name = '%s'",
-                tablePath.getSchemaName(),
-                tablePath.getTableName());
-    }
-
-    @Override
     protected String getListDatabaseSql() {
         return "SELECT DB_NAME FROM dba_databases";
     }
@@ -169,6 +158,15 @@ public class XuguCatalog extends AbstractJdbcCatalog {
                 + "from all_schemas s,all_tables t\n"
                 + "where\n"
                 + "s.schema_id=t.schema_id";
+    }
+
+    @Override
+    protected String getTableWithConditionSql(TablePath tablePath) {
+        return String.format(
+                getListTableSql(tablePath.getDatabaseName())
+                        + "  and s.schema_name = '%s' and t.table_name = '%s'",
+                tablePath.getSchemaName(),
+                tablePath.getTableName());
     }
 
     @Override
@@ -220,33 +218,7 @@ public class XuguCatalog extends AbstractJdbcCatalog {
                         .build();
         return XuguTypeConverter.INSTANCE.convert(typeDefine);
     }
-
-    @Override
-    protected String getUrlFromDatabaseName(String databaseName) {
-        return defaultUrl;
-    }
-
-    @Override
-    protected String getOptionTableName(TablePath tablePath) {
-        return tablePath.getSchemaAndTableName();
-    }
-
-    @Override
-    public boolean tableExists(TablePath tablePath) throws CatalogException {
-        try {
-            if (StringUtils.isNotBlank(tablePath.getDatabaseName())) {
-                return databaseExists(tablePath.getDatabaseName())
-                        && listTables(tablePath.getDatabaseName()).stream()
-                                .map(String::toUpperCase)
-                                .collect(Collectors.toList())
-                                .contains(tablePath.getSchemaAndTableName());
-            }
-            return listTables().contains(tablePath.getSchemaAndTableName());
-        } catch (DatabaseNotExistException e) {
-            return false;
-        }
-    }
-
+    /** 重写databaseExists方法，xugu强制转大写 */
     @Override
     public boolean databaseExists(String databaseName) throws CatalogException {
 
@@ -266,11 +238,6 @@ public class XuguCatalog extends AbstractJdbcCatalog {
             }
             throw e;
         }
-    }
-
-    private List<String> listTables() {
-        List<String> databases = listDatabases();
-        return listTables(databases.get(0));
     }
 
     @Override
