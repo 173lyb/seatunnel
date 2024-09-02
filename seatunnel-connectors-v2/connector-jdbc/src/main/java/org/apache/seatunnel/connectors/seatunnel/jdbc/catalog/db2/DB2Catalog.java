@@ -21,16 +21,12 @@ import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
 import org.apache.seatunnel.api.table.catalog.TablePath;
-import org.apache.seatunnel.api.table.catalog.exception.CatalogException;
-import org.apache.seatunnel.api.table.catalog.exception.DatabaseNotExistException;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.db2.DB2TypeConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.db2.DB2TypeMapper;
-
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,8 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class DB2Catalog extends AbstractJdbcCatalog {
@@ -94,10 +88,8 @@ public class DB2Catalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    public boolean databaseExists(String databaseName) throws CatalogException {
-        checkArgument(StringUtils.isNotBlank(databaseName));
-
-        return listDatabases().contains(databaseName.toUpperCase());
+    protected String getDatabaseWithConditionSql(String databaseName) {
+        return String.format(getListDatabaseSql() + " where CURRENT_SERVER = '%s'", databaseName);
     }
 
     @Override
@@ -117,11 +109,12 @@ public class DB2Catalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getTableName(ResultSet rs) throws SQLException {
-        if (EXCLUDED_SCHEMAS.contains(rs.getString(1))) {
-            return null;
-        }
-        return rs.getString(1) + "." + rs.getString(2);
+    protected String getTableWithConditionSql(TablePath tablePath) {
+        return String.format(
+                getListTableSql(tablePath.getDatabaseName())
+                        + "  and CREATOR = '%s' and NAME = '%s'",
+                tablePath.getSchemaName(),
+                tablePath.getTableName());
     }
 
     @Override
@@ -160,25 +153,6 @@ public class DB2Catalog extends AbstractJdbcCatalog {
     @Override
     protected String getOptionTableName(TablePath tablePath) {
         return tablePath.getSchemaAndTableName();
-    }
-
-    @Override
-    public boolean tableExists(TablePath tablePath) throws CatalogException {
-        try {
-            if (StringUtils.isNotBlank(tablePath.getDatabaseName())) {
-                return databaseExists(tablePath.getDatabaseName())
-                        && listTables(tablePath.getDatabaseName())
-                                .contains(tablePath.getSchemaAndTableName());
-            }
-            return listTables().contains(tablePath.getSchemaAndTableName());
-        } catch (DatabaseNotExistException e) {
-            return false;
-        }
-    }
-
-    private List<String> listTables() {
-        List<String> databases = listDatabases();
-        return listTables(databases.get(0));
     }
 
     @Override
