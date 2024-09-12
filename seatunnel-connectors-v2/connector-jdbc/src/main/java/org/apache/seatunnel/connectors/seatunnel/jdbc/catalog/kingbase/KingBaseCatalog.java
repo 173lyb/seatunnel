@@ -180,7 +180,7 @@ public class KingBaseCatalog extends AbstractJdbcCatalog {
     protected String getTableWithConditionSql(TablePath tablePath) {
         return String.format(
                 getListTableSql(tablePath.getDatabaseName())
-                        + "  where SCHEMANAME = '%s' and TABLENAME = '%s'",
+                        + "  where SCHEMANAME = '%s' and TABLENAME = '%s';",
                 tablePath.getSchemaName(),
                 tablePath.getTableName());
     }
