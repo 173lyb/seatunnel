@@ -105,14 +105,14 @@ public class DB2Catalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getListTableSql(String databaseName) {
-        return "SELECT CREATOR ,NAME FROM SYSIBM.SYSTABLES WHERE CREATOR NOT LIKE 'SYS%';";
+        return "SELECT CREATOR ,NAME FROM SYSIBM.SYSTABLES";
     }
 
     @Override
     protected String getTableWithConditionSql(TablePath tablePath) {
         return String.format(
                 getListTableSql(tablePath.getDatabaseName())
-                        + "  and CREATOR = '%s' and NAME = '%s'",
+                        + " WHERE CREATOR = '%s' and NAME = '%s';",
                 tablePath.getSchemaName(),
                 tablePath.getTableName());
     }
