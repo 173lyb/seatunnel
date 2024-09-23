@@ -49,6 +49,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static org.apache.seatunnel.connectors.seatunnel.hive.utils.HiveTableUtils.s3ToLocalPath;
+
 @Slf4j
 public class HiveMetaStoreProxy {
     private HiveMetaStoreClient hiveMetaStoreClient;
@@ -58,7 +60,7 @@ public class HiveMetaStoreProxy {
 
     private HiveMetaStoreProxy(ReadonlyConfig readonlyConfig) {
         String metastoreUri = readonlyConfig.get(HiveSourceOptions.METASTORE_URI);
-        String hiveHadoopConfigPath = readonlyConfig.get(HiveConfig.HADOOP_CONF_PATH);
+        String hiveHadoopConfigPath = s3ToLocalPath(readonlyConfig);
         String hiveSitePath = readonlyConfig.get(HiveConfig.HIVE_SITE_PATH);
         HiveConf hiveConf = new HiveConf();
         hiveConf.set("hive.metastore.uris", metastoreUri);
@@ -96,6 +98,15 @@ public class HiveMetaStoreProxy {
                 // login Kerberos
                 Configuration authConf = new Configuration();
                 authConf.set("hadoop.security.authentication", "kerberos");
+                // 追加s3配置项
+                Optional<Map<String, String>> s3HadoopConfPath =
+                        readonlyConfig.getOptional(HiveConfig.S3_CONF);
+                s3HadoopConfPath.ifPresent(
+                        conf -> {
+                            for (Map.Entry<String, String> entry : conf.entrySet()) {
+                                authConf.set(entry.getKey(), entry.getValue());
+                            }
+                        });
                 this.hiveMetaStoreClient =
                         HadoopLoginFactory.loginWithKerberos(
                                 authConf,

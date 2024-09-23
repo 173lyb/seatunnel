@@ -60,4 +60,9 @@ public class HiveConfig {
                     .noDefaultValue()
                     .withDescription(
                             "The specified loading path for the 'core-site.xml', 'hdfs-site.xml' files");
+    public static final Option<Map<String, String>> S3_CONF =
+            Options.key("hive.s3.conf")
+                    .mapType()
+                    .defaultValue(new HashMap<>())
+                    .withDescription("Properties in s3 conf,为了读取放在s3上的hive-site.xml,kerberos文件等");
 }

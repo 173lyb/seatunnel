@@ -10,8 +10,6 @@ source {
 	Kafka {
         schema = {
           fields {
-            c_map = "map<string, string>"
-            c_array = "array<tinyint>"
             c_string = string
             c_boolean = boolean
             c_tinyint = tinyint
@@ -27,9 +25,9 @@ source {
           }
         }
         format = "JSON"
-		bootstrap.servers = "10.28.23.131:9092"
+		bootstrap.servers = "10.28.23.152:6667"
 		format_error_handle_way = "skip"
-		topic = "type1"
+		topic = "to_hive"
 		consumer.group = "1111"
 		semantics = EXACTLY_ONCE
 		start_mode = "earliest"
@@ -40,7 +38,7 @@ source {
 transform {
 sql {
     source_table_name = "hive1"
-    query = "select 1 as id ,c_map,c_array,c_string,c_boolean,c_tinyint,c_smallint,c_int,c_bigint,c_float,c_double,c_decimal,c_bytes,c_date,c_timestamp ,'20230102' as ds,'10' as hh,'12' as mm from hive1"
+    query = "select 1 as id ,c_string,c_boolean,c_tinyint,c_smallint,c_int,c_bigint,c_float,c_double,c_decimal,c_bytes,c_date,c_timestamp ,'20230102' as ds,'10' as hh,'12' as mm from hive1"
 	result_table_name = "hive2"
 }
 }
@@ -49,11 +47,11 @@ sink {
 
   Hive {
    source_table_name = "hive2"
-    table_name = "test.type_text_par"
+    table_name = "test.type_par2"
     metastore_uri = "thrift://xg-chuanwei-node2:9083"
-    #hive.hadoop.conf-path = "D:/安装包/kerberos/hive认证"
-    hdfs_site_path = "D:/安装包/kerberos/hive认证/hdfs-site.xml"
-    hive_site_path = "D:/安装包/kerberos/hive认证/hive-site.xml"
+    hive.hadoop.conf-path = "D:/安装包/kerberos/hive认证"
+    #hdfs_site_path = "D:/安装包/kerberos/hive认证/hdfs-site.xml"
+    #hive_site_path = "D:/安装包/kerberos/hive认证/hive-site.xml"
     kerberos_principal = "hive/xg-chuanwei-node2@HADOOP.COM"
     krb5_path = "D:/安装包/kerberos/hive认证/krb5.conf"
     kerberos_keytab_path = "D:/安装包/kerberos/hive认证/hive.service.keytab"
