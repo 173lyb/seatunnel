@@ -40,6 +40,11 @@
             <artifactId>taos-jdbcdriver</artifactId>
             <version>3.0.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.xgts.jdbc</groupId>
+            <artifactId>xgts-jdbcdriver</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
 </project>
