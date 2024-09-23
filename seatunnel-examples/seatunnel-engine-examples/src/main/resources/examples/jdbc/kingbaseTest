@@ -1,39 +1,44 @@
 env {
-  parallelism = 2
-  job.mode = "BATCH"
-  job.retry.times = 0
+	job.mode = "BATCH"
+	parallelism = "1"
+	job.retry.times = "0"
 }
 
 source {
-  MappingJdbc {
-    driver = "com.kingbase8.Driver"
-	partition_column = "ID"
-	partition_num = 2
-	fetch_size = 5000
-	table_path = "PUBLIC.ALL_TYPES_TABLE1"
-    url = "jdbc:kingbase8://10.28.23.227:54321/TEST"
-    user = "SYSTEM"
-    password = "123456"
-    query = """ SELECT * FROM PUBLIC.ALL_TYPES_TABLE """
-	result_table_name = "aaa"
-  }
+	MappingJdbc {
+		result_table_name = "tmp_table_jdbc_77026"
+		query = """select * from PUBLIC.KINGBASE_DATASOURCE1"""
+		parallelism = 1
+		fetch_size = 3000
+		password_decrypt = true
+		table_path = "XUGU.PUBLIC.KINGBASE_DATASOURCE1"
+		partition_num = 1
+		driver = "com.kingbase8.Driver"
+		url = "jdbc:kingbase8://10.28.23.227:54321/XUGU"
+		user = "SYSTEM"
+		password = "Y0108dF4jIXqi4EZTAjDZqcjC3aco1YlNPMqJ0Y8XVGHifDKf68Cnx2JEwi6tDDUm+WUBf+WK4vIZBAE9L95LCqeLXbmdqtJ1u/upMqV+99X0IvOxCn/SuXHRWtVs3Ym6zgxrTGPrqqHb+pmHVCEBUoMW77rLG2BvACXRXSh+bQ="
+	}
 }
 
+transform {
+}
 
 sink {
 	MappingJdbc {
-		database = "TEST"
-		table = "PUBLIC.ALL_TYPES_TABLE2"
-		batch_size = 5000
+		database = "XUGU"
+		table = "PUBLIC.KINGBASE_DATASOURCE2"
+		batch_size = 3000
 		generate_sink_sql = true
-		primary_keys = ["ID"]
-		source_table_name = "aaa"
-		data_save_mode = "DROP_DATA"
+		parallelism = 1
+		field_mapper = {"ID":"ID","FLOATDATA":"FLOATDATA","DOUBLEDATA":"DOUBLEDATA","DECIMALDATA":"DECIMALDATA","DATETIMEDATA":"DATETIMEDATA","TIMESTAMPDATA":"TIMESTAMPDATA","CHARDATA":"CHARDATA","VARCHARDATA":"VARCHARDATA","TEXTDATA":"TEXTDATA"}
+		source_table_name = "tmp_table_jdbc_77026"
+		password_decrypt = true
+		data_save_mode = "APPEND_DATA"
 		schema_save_mode = "ERROR_WHEN_SCHEMA_NOT_EXIST"
-		enable_upsert = true
+		enable_upsert = false
 		driver = "com.kingbase8.Driver"
-		url = "jdbc:kingbase8://10.28.23.227:54321/TEST"
+		url = "jdbc:kingbase8://10.28.23.227:54321/XUGU"
 		user = "SYSTEM"
-		password = "123456"
+		password = "Y0108dF4jIXqi4EZTAjDZqcjC3aco1YlNPMqJ0Y8XVGHifDKf68Cnx2JEwi6tDDUm+WUBf+WK4vIZBAE9L95LCqeLXbmdqtJ1u/upMqV+99X0IvOxCn/SuXHRWtVs3Ym6zgxrTGPrqqHb+pmHVCEBUoMW77rLG2BvACXRXSh+bQ="
 	}
 }

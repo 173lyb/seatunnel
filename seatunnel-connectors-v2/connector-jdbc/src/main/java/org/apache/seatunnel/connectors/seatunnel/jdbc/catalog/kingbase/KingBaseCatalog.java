@@ -173,14 +173,14 @@ public class KingBaseCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getListTableSql(String databaseName) {
-        return "SELECT SCHEMANAME ,TABLENAME FROM SYS_TABLES;";
+        return "SELECT SCHEMANAME ,TABLENAME FROM SYS_TABLES";
     }
 
     @Override
     protected String getTableWithConditionSql(TablePath tablePath) {
         return String.format(
                 getListTableSql(tablePath.getDatabaseName())
-                        + "  where SCHEMANAME = '%s' and TABLENAME = '%s'",
+                        + "  where SCHEMANAME = '%s' and TABLENAME = '%s';",
                 tablePath.getSchemaName(),
                 tablePath.getTableName());
     }

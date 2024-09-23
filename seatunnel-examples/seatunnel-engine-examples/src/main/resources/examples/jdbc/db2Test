@@ -1,39 +1,45 @@
 env {
-  parallelism = 1
-  job.mode = "BATCH"
-  job.retry.times = 0
+	job.mode = "BATCH"
+	parallelism = "1"
+	job.retry.times = "0"
+	job.name = "1833758957058170882"
 }
 
 source {
-  MappingJdbc {
-    driver = "com.ibm.db2.jcc.DB2Driver"
-	partition_column = "ID"
-	partition_num = 1
-	fetch_size = 5000
-	table_path = "DB2INST1.ALL_TYPES_TABLE"
-    url = "jdbc:db2://10.28.23.227:50000/testdb"
-    user = "db2inst1"
-    password = "xugu123"
-    query = """ SELECT * from DB2INST1.ALL_TYPES_TABLE """
-	result_table_name = "aaa"
-  }
+	MappingJdbc {
+		result_table_name = "tmp_table_jdbc_87105"
+		query = """select * from DB2INST1.DB2_DATASOURCE1"""
+		parallelism = 1
+		fetch_size = 3000
+		password_decrypt = true
+		table_path = "TESTDB.DB2INST1.DB2_DATASOURCE1"
+		partition_num = 1
+		driver = "com.ibm.db2.jcc.DB2Driver"
+		url = "jdbc:db2://10.28.23.227:50000/testdb"
+		user = "db2inst1"
+		password = "HGVFm7w9UzQyKyrW5ssSvueyTo5PMDwxpqOhVp/53tOrnavcFyG0gxLEWCXI3zLSaCOy4oxEQ9VxXg5nvOnwMsrVZmbR8uvmzZhyflxa+SWVtYomVsOliGfIHdFH45KMRJX8dJNsTG/SVwc/0Be3+xByU4Zh8viE109j1PYrfpY="
+	}
 }
 
+transform {
+}
 
 sink {
 	MappingJdbc {
-		database = "testdb"
-		table = "DB2INST1.ALL_TYPES_TABLE4"
-		batch_size = 5000
+		database = "TESTDB"
+		table = "DB2INST1.DB2_DATASOURCE2"
+		batch_size = 3000
 		generate_sink_sql = true
-		primary_keys = ["ID"]
-		source_table_name = "aaa"
-		data_save_mode = "DROP_DATA"
-		schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
-		enable_upsert = true
-        driver = "com.ibm.db2.jcc.DB2Driver"
-        url = "jdbc:db2://10.28.23.227:50000/testdb"
-        user = "db2inst1"
-        password = "xugu123"
+		parallelism = 1
+		field_mapper = {"ID":"ID","FLOATDATA":"FLOATDATA","DOUBLEDATA":"DOUBLEDATA","DECIMALDATA":"DECIMALDATA","DATETIMEDATA":"DATETIMEDATA","TIMESTAMPDATA":"TIMESTAMPDATA","CHARDATA":"CHARDATA","VARCHARDATA":"VARCHARDATA","TEXTDATA":"TEXTDATA"}
+		source_table_name = "tmp_table_jdbc_87105"
+		password_decrypt = true
+		data_save_mode = "APPEND_DATA"
+		schema_save_mode = "ERROR_WHEN_SCHEMA_NOT_EXIST"
+		enable_upsert = false
+		driver = "com.ibm.db2.jcc.DB2Driver"
+		url = "jdbc:db2://10.28.23.227:50000/testdb"
+		user = "db2inst1"
+		password = "HGVFm7w9UzQyKyrW5ssSvueyTo5PMDwxpqOhVp/53tOrnavcFyG0gxLEWCXI3zLSaCOy4oxEQ9VxXg5nvOnwMsrVZmbR8uvmzZhyflxa+SWVtYomVsOliGfIHdFH45KMRJX8dJNsTG/SVwc/0Be3+xByU4Zh8viE109j1PYrfpY="
 	}
 }
