@@ -73,12 +73,12 @@ public class HiveTableUtils {
     }
 
     /**
-     * @param readonlyConfig
-     *     <p>hive.s3.conf = { "hive.hadoop.conf-path-list" =
-     *     "/xugurtp/2024/09/lyb/hive-site.xml,/xugurtp/2024/09/lyb/hdfs-site.xml,/xugurtp/2024/09/lyb/core-site.xml"
-     *     "fs.defaultFS" = "s3a://xugurtp" "fs.s3a.access.key" = "1OkI53dJYgOJODLfUoQg"
-     *     "fs.s3a.secret.key" = "V4ROTtoJTaLb0UI9VfgA6ZJM2FaNZBsIaBJyrtNW" "fs.s3a.endpoint" =
-     *     "http://10.28.23.110:9010" "fs.s3a.path.style.access" = "true" "fs.s3a.impl" =
+     * @param readonlyConfig "hive.s3_hive_site_path" = "/xugurtp/2024/09/lyb/hive-site.xml"
+     *     "hive.s3_hdfs_site_path" = "/xugurtp/2024/09/lyb/hdfs-site.xml" "hive.s3_core_site_path"
+     *     = "/xugurtp/2024/09/lyb/core-site.xml" "fs.defaultFS" = "s3a://xugurtp"
+     *     "fs.s3a.access.key" = "1OkI53dJYgOJODLfUoQg" "fs.s3a.secret.key" =
+     *     "V4ROTtoJTaLb0UI9VfgA6ZJM2FaNZBsIaBJyrtNW" "fs.s3a.endpoint" = "http://10.28.23.110:9010"
+     *     "fs.s3a.path.style.access" = "true" "fs.s3a.impl" =
      *     "org.apache.hadoop.fs.s3a.S3AFileSystem" "fs.s3a.aws.credentials.provider" =
      *     "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider" "fs.s3a.connection.ssl.enabled" =
      *     "false" "hadoop.conf-local-tmp-dir" = "/tmp/seatunnel/11111111" }
@@ -98,7 +98,10 @@ public class HiveTableUtils {
                         hadoopConf.set(entry.getKey(), entry.getValue());
                     }
                 });
-        String s3FileHadoopList = hadoopConf.get("hive.hadoop.conf-path-list");
+        String s3HiveSitePath = hadoopConf.get("hive.s3_hive_site_path");
+        String s3HdfsSitePath = hadoopConf.get("hive.s3_hdfs_site_path");
+        String s3CoreSitePath = hadoopConf.get("hive.s3_core_site_path");
+
         String bucketName = hadoopConf.get("fs.defaultFS");
         String totalPath = hadoopConf.get("hadoop.conf-local-tmp-dir");
         String krb5Path = hadoopConf.get("hive.s3-krb5_path");
@@ -123,31 +126,36 @@ public class HiveTableUtils {
             }
         }
         // 检查 S3 文件列表和 Bucket 名称是否存在
-        if (s3FileHadoopList != null && bucketName != null && totalPath != null) {
-            for (String s3File : s3FileHadoopList.split(",")) {
-                Path s3Path = new Path(bucketName + s3File);
-                Path localPath =
-                        new Path(
-                                totalPath
-                                        + "/"
-                                        + s3File.substring(
-                                                s3File.lastIndexOf('/') + 1)); // 生成本地临时路径
-
-                try (FileSystem fs = FileSystem.get(new URI(bucketName + s3File), hadoopConf)) {
-                    // 通过 FileSystem 下载 S3 文件到本地
-                    fs.copyToLocalFile(s3Path, localPath);
-                } catch (Exception e) {
-                    throw new HiveConnectorException(
-                            HiveConnectorErrorCode.LOAD_HIVE_BASE_HADOOP_CONFIG_FAILED, e);
-                }
+        if (s3HiveSitePath != null) {
+            Path s3HiveSitePathPath = new Path(bucketName + s3HiveSitePath);
+            try (FileSystem fs = FileSystem.get(new URI(bucketName + s3HiveSitePath), hadoopConf)) {
+                // 通过 FileSystem 下载 S3 文件到本地
+                fs.copyToLocalFile(s3HiveSitePathPath, new Path(totalPath + "/" + "hive-site.xml"));
+            } catch (Exception e) {
+                throw new SeaTunnelException("获取s3的hive-site.xml文件失败", e);
             }
-
-            // 本地文件路径列表
-            return totalPath;
-        } else {
-            throw new HiveConnectorException(
-                    HiveConnectorErrorCode.LOAD_HIVE_BASE_HADOOP_CONFIG_FAILED,
-                    "S3 file list or bucket name not found in Hadoop configuration.");
         }
+        if (s3HdfsSitePath != null) {
+            Path s3HdfsSitePathPath = new Path(bucketName + s3HdfsSitePath);
+            try (FileSystem fs = FileSystem.get(new URI(bucketName + s3HdfsSitePath), hadoopConf)) {
+                // 通过 FileSystem 下载 S3 文件到本地
+                fs.copyToLocalFile(s3HdfsSitePathPath, new Path(totalPath + "/" + "hdfs-site.xml"));
+            } catch (Exception e) {
+                throw new SeaTunnelException("获取s3的hdfs-site.xml文件失败", e);
+            }
+        }
+
+        if (s3CoreSitePath != null) {
+            Path s3CoreSitePathPath = new Path(bucketName + s3CoreSitePath);
+            try (FileSystem fs = FileSystem.get(new URI(bucketName + s3CoreSitePath), hadoopConf)) {
+                // 通过 FileSystem 下载 S3 文件到本地
+                fs.copyToLocalFile(s3CoreSitePathPath, new Path(totalPath + "/" + "core-site.xml"));
+            } catch (Exception e) {
+                throw new SeaTunnelException("获取s3的core-site.xml文件失败", e);
+            }
+        }
+
+        // 本地文件路径列表
+        return totalPath;
     }
 }
