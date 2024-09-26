@@ -36,6 +36,7 @@ import org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceC
 import org.apache.seatunnel.connectors.seatunnel.tdengine.exception.TDengineConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.tdengine.state.TDengineSourceState;
 import org.apache.seatunnel.connectors.seatunnel.tdengine.typemapper.TDengineTypeMapper;
+import org.apache.seatunnel.connectors.seatunnel.tdengine.utils.MyRsaUtil;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -46,7 +47,6 @@ import lombok.SneakyThrows;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,7 +123,7 @@ public class TDengineSource
                 stableMetadata, tdengineSourceConfig, checkpointState, enumeratorContext);
     }
 
-    private StableMetadata getStableMetadata(TDengineSourceConfig config) throws SQLException {
+    private StableMetadata getStableMetadata(TDengineSourceConfig config) throws Exception {
         String timestampFieldName = null;
         List<String> subTableNames = new ArrayList<>();
         List<String> fieldNames = new ArrayList<>();
@@ -136,7 +136,9 @@ public class TDengineSource
 
         Properties properties = new Properties();
         properties.put(TSDBDriver.PROPERTY_KEY_USER, config.getUsername());
-        properties.put(TSDBDriver.PROPERTY_KEY_PASSWORD, config.getPassword());
+        properties.put(
+                TSDBDriver.PROPERTY_KEY_PASSWORD,
+                MyRsaUtil.decryptByPrivateKey(config.getPassword()));
         String metaSQL =
                 String.format(
                         "select table_name from information_schema.ins_tables where db_name = '%s' and stable_name='%s'",

@@ -27,6 +27,7 @@ import java.util.List;
 import static org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig.ConfigNames.DATABASE;
 import static org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig.ConfigNames.LOWER_BOUND;
 import static org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig.ConfigNames.PASSWORD;
+import static org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig.ConfigNames.PASSWORD_DECRYPT;
 import static org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig.ConfigNames.STABLE;
 import static org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig.ConfigNames.TIMEZONE;
 import static org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig.ConfigNames.UPPER_BOUND;
@@ -40,6 +41,7 @@ public class TDengineSourceConfig implements Serializable {
 
     private String username;
     private String password;
+    private String password_decrypt;
     private String database;
     private String stable;
     // param of timezone in 'jdbc:TAOS-RS' just effect on taosadapter side, other than the JDBC
@@ -62,9 +64,15 @@ public class TDengineSourceConfig implements Serializable {
         tdengineSourceConfig.setStable(
                 pluginConfig.hasPath(STABLE) ? pluginConfig.getString(STABLE) : null);
         tdengineSourceConfig.setUsername(
-                pluginConfig.hasPath(USERNAME) ? pluginConfig.getString(USERNAME) : null);
+                pluginConfig.hasPath(ConfigNames.USERNAME)
+                        ? pluginConfig.getString(USERNAME)
+                        : null);
         tdengineSourceConfig.setPassword(
                 pluginConfig.hasPath(PASSWORD) ? pluginConfig.getString(PASSWORD) : null);
+        tdengineSourceConfig.setPassword_decrypt(
+                pluginConfig.hasPath(PASSWORD_DECRYPT)
+                        ? pluginConfig.getString(PASSWORD_DECRYPT)
+                        : null);
         tdengineSourceConfig.setUpperBound(
                 pluginConfig.hasPath(UPPER_BOUND) ? pluginConfig.getString(UPPER_BOUND) : null);
         tdengineSourceConfig.setLowerBound(
@@ -80,6 +88,7 @@ public class TDengineSourceConfig implements Serializable {
         public static String URL = "url";
         public static String USERNAME = "username";
         public static String PASSWORD = "password";
+        public static String PASSWORD_DECRYPT = "false";
         public static String DATABASE = "database";
         public static String STABLE = "stable";
         public static String TIMEZONE = "timezone";

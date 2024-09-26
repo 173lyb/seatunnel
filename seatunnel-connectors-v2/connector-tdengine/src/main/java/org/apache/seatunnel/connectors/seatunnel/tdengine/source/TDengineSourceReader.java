@@ -23,6 +23,7 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig;
 import org.apache.seatunnel.connectors.seatunnel.tdengine.exception.TDengineConnectorException;
+import org.apache.seatunnel.connectors.seatunnel.tdengine.utils.MyRsaUtil;
 
 import com.taosdata.jdbc.TSDBDriver;
 import lombok.extern.slf4j.Slf4j;
@@ -90,12 +91,14 @@ public class TDengineSourceReader implements SourceReader<SeaTunnelRow, TDengine
     }
 
     @Override
-    public void open() {
+    public void open() throws Exception {
         String jdbcUrl = config.getUrl();
 
         Properties properties = new Properties();
         properties.put(TSDBDriver.PROPERTY_KEY_USER, config.getUsername());
-        properties.put(TSDBDriver.PROPERTY_KEY_PASSWORD, config.getPassword());
+        properties.put(
+                TSDBDriver.PROPERTY_KEY_PASSWORD,
+                MyRsaUtil.decryptByPrivateKey(config.getPassword()));
 
         try {
             checkDriverExist(jdbcUrl);

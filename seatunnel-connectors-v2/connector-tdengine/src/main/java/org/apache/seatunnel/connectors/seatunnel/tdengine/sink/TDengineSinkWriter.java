@@ -25,6 +25,7 @@ import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.common.sink.AbstractSinkWriter;
 import org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig;
 import org.apache.seatunnel.connectors.seatunnel.tdengine.exception.TDengineConnectorException;
+import org.apache.seatunnel.connectors.seatunnel.tdengine.utils.MyRsaUtil;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -67,7 +68,7 @@ public class TDengineSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void> {
                         "?user=",
                         config.getUsername(),
                         "&password=",
-                        config.getPassword());
+                        MyRsaUtil.decryptByPrivateKey(config.getPassword()));
         // check td driver whether exist and if not, try to register
         checkDriverExist(jdbcUrl);
         conn = DriverManager.getConnection(jdbcUrl);

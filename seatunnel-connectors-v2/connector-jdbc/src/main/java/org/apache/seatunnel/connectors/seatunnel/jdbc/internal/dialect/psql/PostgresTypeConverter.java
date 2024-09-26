@@ -46,6 +46,7 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
     public static final String PG_BOOLEAN_ARRAY = "_bool";
     public static final String PG_BYTEA = "bytea";
     // smallint <=> smallserial <=> int2
+    public static final String DWS_TINYINT = "int1";
     public static final String PG_SMALLINT = "int2";
     public static final String PG_SMALLSERIAL = "smallserial";
     // smallint[] <=> int2[] <=> _int2
@@ -135,6 +136,7 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
                 builder.dataType(ArrayType.BOOLEAN_ARRAY_TYPE);
                 break;
             case PG_SMALLSERIAL:
+            case DWS_TINYINT:
             case PG_SMALLINT:
                 builder.dataType(BasicType.SHORT_TYPE);
                 break;
