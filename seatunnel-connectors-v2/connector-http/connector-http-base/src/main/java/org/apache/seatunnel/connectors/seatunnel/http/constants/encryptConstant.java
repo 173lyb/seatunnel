@@ -1,7 +1,7 @@
 package org.apache.seatunnel.connectors.seatunnel.http.constants;
 
 public class encryptConstant {
-    // 加密类型
+    //加密类型
     public static final String MD5 = "MD5";
     public static final String RSA = "RSA";
     public static final String SHA256 = "SHA256";
@@ -9,14 +9,16 @@ public class encryptConstant {
     public static final String URL_MD5 = "URL-MD5";
     public static final String BASE64 = "BASE64";
     public static final String DT_SIGNATURE_MD5 = "DT-SIGNATURE-MD5";
-    // body-sign-base64
+    //body-sign-base64
     public static final String BODY_SIGN_BASE64 = "BODY-SIGN-BASE64";
-    // HeaderWWGSHA256Strategy
+    //HeaderWWGSHA256Strategy
     public static final String HEADER_WWG_SHA256 = "HEADER-WWG-SHA256";
-    // SHA256_WITH_RSA
+    //SHA256_WITH_RSA
     public static final String SHA256_WITH_RSA = "SHA256-RSA";
+    // X_TOKEN_MD5
+    public static final String X_TOKEN_MD5 = "X-Token-MD5";
 
-    // 其他
+    //其他
     public static final String SEMICOLON = ";";
     public static final String ACCOUNT = "account";
     public static final String SIGN = "sign";
@@ -53,12 +55,24 @@ public class encryptConstant {
     public static final String LOGIN_ID = "loginid";
     public static final String PASSWORD = "password";
     public static final String TOKEN = "token";
-    // biz_content
+    //biz_content
     public static final String BIZ_CONTENT = "biz_content";
-    // request_id
+    //request_id
     public static final String REQUEST_ID = "request_id";
-    // ACCESS_KEY
+    //ACCESS_KEY
     public static final String ACCESS_KEY = "access_key";
-    // encrypt_biz_content
+    // signId
+    public static final String SIGN_ID = "signId";
+    //accessToken
+    public static final String ACCESS_TOKEN = "accessToken";
+    //encrypt_biz_content
     public static final String ENCRYPT_BIZ_CONTENT = "encrypt_biz_content";
+    public static final String X_Token = "X-Token";
+    public static final String X_BuildId = "X-BuildId";
+    public static final String X_Timestamp = "X-Timestamp";
+    public static final String X_SignId = "X-SignId";
+
+
+
+
 }

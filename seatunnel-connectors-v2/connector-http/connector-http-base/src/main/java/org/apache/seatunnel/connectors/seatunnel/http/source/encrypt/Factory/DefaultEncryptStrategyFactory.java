@@ -43,6 +43,8 @@ public class DefaultEncryptStrategyFactory implements EncryptStrategyFactory {
                 return new HeaderWWGSHA256Strategy();
             case SHA256_WITH_RSA:
                 return new ParamsSHA256withRSAStrategy();
+            case X_TOKEN_MD5:
+                return new HeaderXTokenMD5Strategy();
             default:
                 return null;
         }
