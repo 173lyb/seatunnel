@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.config;
 
-import org.apache.seatunnel.format.json.JsonField;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
 
 import org.apache.seatunnel.api.configuration.Option;
@@ -25,6 +24,7 @@ import org.apache.seatunnel.api.configuration.Options;
 import org.apache.seatunnel.common.utils.DateTimeUtils;
 import org.apache.seatunnel.common.utils.DateUtils;
 import org.apache.seatunnel.common.utils.TimeUtils;
+import org.apache.seatunnel.format.json.JsonField;
 import org.apache.seatunnel.format.text.constant.TextFormatConstant;
 
 import java.util.List;

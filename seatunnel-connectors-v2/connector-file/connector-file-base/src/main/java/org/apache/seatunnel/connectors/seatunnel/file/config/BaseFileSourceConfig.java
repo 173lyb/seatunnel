@@ -30,11 +30,11 @@ import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorErr
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.ReadStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.ReadStrategyFactory;
+import org.apache.seatunnel.format.json.JsonField;
 
 import org.apache.commons.collections4.CollectionUtils;
 
 import lombok.Getter;
-import org.apache.seatunnel.format.json.JsonField;
 
 import java.io.Serializable;
 import java.util.ArrayList;
