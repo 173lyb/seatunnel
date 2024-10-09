@@ -156,7 +156,7 @@ public class TextDeserializationSchema implements DeserializationSchema<SeaTunne
 
     @Override
     public SeaTunnelRow deserialize(byte[] message) throws IOException {
-        if (message == null || message.length == 0) {
+        if (message == null) {
             return null;
         }
         String content = new String(message, EncodingUtils.tryParseCharset(encoding));

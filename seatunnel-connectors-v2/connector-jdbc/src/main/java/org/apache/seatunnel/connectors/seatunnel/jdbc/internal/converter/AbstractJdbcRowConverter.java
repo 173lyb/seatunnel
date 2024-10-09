@@ -211,19 +211,23 @@ public abstract class AbstractJdbcRowConverter implements JdbcRowConverter {
                         statement.setShort(statementIndex, (Short) row.getField(fieldIndex));
                         break;
                     case INT:
-                        //statement.setInt(statementIndex, (Integer) row.getField(fieldIndex));
-                        if(row.getField(fieldIndex) instanceof Byte){
-                            statement.setInt(statementIndex, ((Byte) row.getField(fieldIndex)).intValue());
-                        }else if(row.getField(fieldIndex) instanceof Short){
-                            statement.setInt(statementIndex, ((Short) row.getField(fieldIndex)).intValue());
-                        }else{
+                        // statement.setInt(statementIndex, (Integer) row.getField(fieldIndex));
+                        if (row.getField(fieldIndex) instanceof Byte) {
+                            statement.setInt(
+                                    statementIndex, ((Byte) row.getField(fieldIndex)).intValue());
+                        } else if (row.getField(fieldIndex) instanceof Short) {
+                            statement.setInt(
+                                    statementIndex, ((Short) row.getField(fieldIndex)).intValue());
+                        } else {
                             statement.setInt(statementIndex, (Integer) row.getField(fieldIndex));
                         }
                         break;
                     case BIGINT:
-                        if(row.getField(fieldIndex) instanceof Integer){
-                            statement.setLong(statementIndex, ((Integer) row.getField(fieldIndex)).longValue());
-                        }else{
+                        if (row.getField(fieldIndex) instanceof Integer) {
+                            statement.setLong(
+                                    statementIndex,
+                                    ((Integer) row.getField(fieldIndex)).longValue());
+                        } else {
                             statement.setLong(statementIndex, (Long) row.getField(fieldIndex));
                         }
                         break;
@@ -234,15 +238,16 @@ public abstract class AbstractJdbcRowConverter implements JdbcRowConverter {
                         statement.setDouble(statementIndex, (Double) row.getField(fieldIndex));
                         break;
                     case DECIMAL:
-                        if(row.getField(fieldIndex) instanceof Integer){
-                            Integer value = ((Integer)row.getField(fieldIndex)).intValue();
-                            statement.setBigDecimal(statementIndex, BigDecimal.valueOf(value.longValue()));
-                        }else if(row.getField(fieldIndex) instanceof Long){
-                            Long value = ((Long)row.getField(fieldIndex)).longValue();
-                            statement.setBigDecimal(statementIndex, BigDecimal.valueOf(value));
-                        }else{
+                        if (row.getField(fieldIndex) instanceof Integer) {
+                            Integer value = ((Integer) row.getField(fieldIndex)).intValue();
                             statement.setBigDecimal(
-                                statementIndex, (BigDecimal) row.getField(fieldIndex));
+                                    statementIndex, BigDecimal.valueOf(value.longValue()));
+                        } else if (row.getField(fieldIndex) instanceof Long) {
+                            Long value = ((Long) row.getField(fieldIndex)).longValue();
+                            statement.setBigDecimal(statementIndex, BigDecimal.valueOf(value));
+                        } else {
+                            statement.setBigDecimal(
+                                    statementIndex, (BigDecimal) row.getField(fieldIndex));
                         }
                         break;
                     case DATE:
