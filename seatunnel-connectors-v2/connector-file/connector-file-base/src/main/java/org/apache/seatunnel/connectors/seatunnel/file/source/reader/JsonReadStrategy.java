@@ -32,11 +32,9 @@ import org.apache.seatunnel.format.json.JsonDeserializationSchema;
 
 import io.airlift.compress.lzo.LzopCodec;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.seatunnel.format.json.JsonField;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -45,7 +43,8 @@ public class JsonReadStrategy extends AbstractReadStrategy {
     private DeserializationSchema<SeaTunnelRow> deserializationSchema;
     private CompressFormat compressFormat = BaseSourceConfigOptions.COMPRESS_CODEC.defaultValue();
     private String encoding = BaseSourceConfigOptions.ENCODING.defaultValue();
-
+    private  JsonField jsonField;
+    private  String contentJson;
     @Override
     public void init(HadoopConf conf) {
         super.init(conf);
@@ -58,6 +57,8 @@ public class JsonReadStrategy extends AbstractReadStrategy {
                 ReadonlyConfig.fromConfig(pluginConfig)
                         .getOptional(BaseSourceConfigOptions.ENCODING)
                         .orElse(StandardCharsets.UTF_8.name());
+        jsonField = (JsonField) pluginConfig.getObject("json_field");
+        contentJson = pluginConfig.getString("content_field");
     }
 
     @Override
@@ -93,7 +94,7 @@ public class JsonReadStrategy extends AbstractReadStrategy {
                 break;
         }
         try (BufferedReader reader =
-                new BufferedReader(new InputStreamReader(inputStream, encoding))) {
+                     new BufferedReader(new InputStreamReader(inputStream, encoding))) {
             reader.lines()
                     .forEach(
                             line -> {
@@ -114,6 +115,31 @@ public class JsonReadStrategy extends AbstractReadStrategy {
                                             "JsonFile", "read", path, e);
                                 }
                             });
+        } catch (Exception e) {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024]; // 缓冲区大小，可以根据实际情况调整
+            int bytesRead;
+            try {
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    byteArrayOutputStream.write(buffer, 0, bytesRead);
+                }
+                byte[] bytes = byteArrayOutputStream.toByteArray();
+                JsonDeserializationSchema schema = (JsonDeserializationSchema) deserializationSchema;
+                schema.collect(
+                        bytes,
+                        output,
+                        jsonField,
+                        contentJson);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            } finally {
+                try {
+                    inputStream.close(); // 关闭原始输入流
+                    byteArrayOutputStream.close(); // 关闭ByteArrayOutputStream
+                } catch (IOException e2) {
+                    e2.printStackTrace();
+                }
+            }
         }
     }
 
