@@ -55,6 +55,7 @@ public class HttpParameter implements Serializable {
     protected List<String> paramsBanLooP;
     protected List<String> bodyParsingArrays;
     protected List<String> paramsParsingArrays;
+    protected List<String> headersParsingArrays;
     protected Map<String, String> headersEncrypt;
     protected Map<String, String> bodyEncrypt;
     protected Map<String, String> paramsEncrypt;
@@ -248,6 +249,11 @@ public class HttpParameter implements Serializable {
         if (pluginConfig.hasPath(HttpConfig.PARAMS_PARSING_ARRAYS.key())) {
             this.setParamsParsingArrays(
                     pluginConfig.getStringList(HttpConfig.PARAMS_PARSING_ARRAYS.key()));
+        }
+        // HEADERS_PARSING_ARRAYS
+        if (pluginConfig.hasPath(HttpConfig.HEADERS_PARSING_ARRAYS.key())) {
+            this.setHeadersParsingArrays(
+                    pluginConfig.getStringList(HttpConfig.HEADERS_PARSING_ARRAYS.key()));
         }
         // cycle_interval_ms
         if (pluginConfig.hasPath(HttpConfig.CYCLE_INTERVAL_MS.key())) {

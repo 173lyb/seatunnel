@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 @Slf4j
 public class PostgresCatalog extends AbstractJdbcCatalog {
@@ -96,15 +97,6 @@ public class PostgresCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
-    protected String getTableWithConditionSql(TablePath tablePath) {
-        return String.format(
-                getListTableSql(tablePath.getDatabaseName())
-                        + " where table_schema = '%s' and table_name= '%s'",
-                tablePath.getSchemaName(),
-                tablePath.getTableName());
-    }
-
-    @Override
     protected String getListDatabaseSql() {
         return "select datname from pg_database";
     }
@@ -112,6 +104,15 @@ public class PostgresCatalog extends AbstractJdbcCatalog {
     @Override
     protected String getListTableSql(String databaseName) {
         return "SELECT table_schema, table_name FROM information_schema.tables";
+    }
+
+    @Override
+    protected String getTableWithConditionSql(TablePath tablePath) {
+        return String.format(
+                getListTableSql(tablePath.getDatabaseName())
+                        + " where table_schema = '%s' and table_name= '%s'",
+                tablePath.getSchemaName(),
+                tablePath.getTableName());
     }
 
     @Override
@@ -230,6 +231,11 @@ public class PostgresCatalog extends AbstractJdbcCatalog {
     protected void dropDatabaseInternal(String databaseName) throws CatalogException {
         closeDatabaseConnection(databaseName);
         super.dropDatabaseInternal(databaseName);
+    }
+
+    private List<String> listTables() {
+        List<String> databases = listDatabases();
+        return listTables(databases.get(0));
     }
 
     @Override

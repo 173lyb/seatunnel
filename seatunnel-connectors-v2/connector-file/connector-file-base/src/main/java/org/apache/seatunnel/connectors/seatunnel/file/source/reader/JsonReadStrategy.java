@@ -17,6 +17,9 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
+import org.apache.seatunnel.shade.com.typesafe.config.Config;
+import org.apache.seatunnel.shade.com.typesafe.config.ConfigRenderOptions;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DeserializationSchema;
 import org.apache.seatunnel.api.source.Collector;
@@ -24,11 +27,13 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonError;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.CompressFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 import org.apache.seatunnel.format.json.JsonDeserializationSchema;
+import org.apache.seatunnel.format.json.JsonField;
 
 import io.airlift.compress.lzo.LzopCodec;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +50,8 @@ public class JsonReadStrategy extends AbstractReadStrategy {
     private DeserializationSchema<SeaTunnelRow> deserializationSchema;
     private CompressFormat compressFormat = BaseSourceConfigOptions.COMPRESS_CODEC.defaultValue();
     private String encoding = BaseSourceConfigOptions.ENCODING.defaultValue();
+    private JsonField jsonField;
+    private String contentJson;
 
     @Override
     public void init(HadoopConf conf) {
@@ -58,6 +65,20 @@ public class JsonReadStrategy extends AbstractReadStrategy {
                 ReadonlyConfig.fromConfig(pluginConfig)
                         .getOptional(BaseSourceConfigOptions.ENCODING)
                         .orElse(StandardCharsets.UTF_8.name());
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.JSON_FIELD.key())) {
+            jsonField =
+                    getJsonField(pluginConfig.getConfig(BaseSourceConfigOptions.JSON_FIELD.key()));
+        }
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.CONTENT_FIELD.key())) {
+            contentJson = pluginConfig.getString(BaseSourceConfigOptions.CONTENT_FIELD.key());
+        }
+    }
+
+    private JsonField getJsonField(Config jsonFieldConf) {
+        ConfigRenderOptions options = ConfigRenderOptions.concise();
+        return JsonField.builder()
+                .fields(JsonUtils.toMap(jsonFieldConf.root().render(options)))
+                .build();
     }
 
     @Override
@@ -98,17 +119,31 @@ public class JsonReadStrategy extends AbstractReadStrategy {
                     .forEach(
                             line -> {
                                 try {
-                                    SeaTunnelRow seaTunnelRow =
-                                            deserializationSchema.deserialize(
-                                                    line.getBytes(StandardCharsets.UTF_8));
-                                    if (isMergePartition) {
-                                        int index = seaTunnelRowType.getTotalFields();
-                                        for (String value : partitionsMap.values()) {
-                                            seaTunnelRow.setField(index++, value);
+                                    if (deserializationSchema
+                                            instanceof JsonDeserializationSchema) {
+                                        ((JsonDeserializationSchema) deserializationSchema)
+                                                .jsonFileCollect(
+                                                        line.getBytes(StandardCharsets.UTF_8),
+                                                        output,
+                                                        jsonField,
+                                                        contentJson,
+                                                        isMergePartition,
+                                                        partitionsMap,
+                                                        tableId);
+                                    } else {
+                                        SeaTunnelRow seaTunnelRow =
+                                                deserializationSchema.deserialize(
+                                                        line.getBytes(StandardCharsets.UTF_8));
+                                        if (isMergePartition) {
+                                            int index = seaTunnelRowType.getTotalFields();
+                                            for (String value : partitionsMap.values()) {
+                                                seaTunnelRow.setField(index++, value);
+                                            }
                                         }
+                                        seaTunnelRow.setTableId(tableId);
+                                        output.collect(seaTunnelRow);
                                     }
-                                    seaTunnelRow.setTableId(tableId);
-                                    output.collect(seaTunnelRow);
+
                                 } catch (IOException e) {
                                     throw CommonError.fileOperationFailed(
                                             "JsonFile", "read", path, e);

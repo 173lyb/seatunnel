@@ -450,7 +450,9 @@ public class OrcReadStrategy extends AbstractReadStrategy {
             bytesObj = this.bytesVectorToString(bytesVector, rowNum, charset);
             if (typeDescription.getCategory() == TypeDescription.Category.BINARY
                     && bytesObj != null) {
-                bytesObj = ((String) bytesObj).getBytes(charset);
+                if (bytesObj instanceof String) {
+                    bytesObj = ((String) bytesObj).getBytes(charset);
+                }
             }
             if (dataType != null
                     && dataType.getSqlType().equals(SqlType.STRING)
@@ -472,7 +474,26 @@ public class OrcReadStrategy extends AbstractReadStrategy {
         if (bytesVector.isRepeating) {
             row = 0;
         }
-
+        if (bytesVector.vector[row].length > 0) {
+            // 判断是否为图片格式
+            if (bytesVector.vector[row].length >= 2
+                    && bytesVector.vector[row][0] == (byte) 0xFF
+                    && bytesVector.vector[row][1] == (byte) 0xD8) {
+                // jpg
+                return !bytesVector.noNulls && bytesVector.isNull[row]
+                        ? null
+                        : bytesVector.vector[row];
+            } else if (bytesVector.vector[row].length >= 4
+                    && bytesVector.vector[row][0] == (byte) 0x89
+                    && bytesVector.vector[row][1] == (byte) 0x50
+                    && bytesVector.vector[row][2] == (byte) 0x4E
+                    && bytesVector.vector[row][3] == (byte) 0x47) {
+                // png
+                return !bytesVector.noNulls && bytesVector.isNull[row]
+                        ? null
+                        : bytesVector.vector[row];
+            }
+        }
         return !bytesVector.noNulls && bytesVector.isNull[row]
                 ? null
                 : new String(

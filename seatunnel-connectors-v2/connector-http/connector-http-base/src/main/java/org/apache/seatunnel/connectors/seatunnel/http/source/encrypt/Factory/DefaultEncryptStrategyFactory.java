@@ -8,6 +8,7 @@ import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl.BodySi
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl.BodyUrlMd5Strategy;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl.HeaderSHA256Strategy;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl.HeaderWWGSHA256Strategy;
+import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl.HeaderXTokenMD5Strategy;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl.ParamsRSAStrategy;
 import org.apache.seatunnel.connectors.seatunnel.http.source.encrypt.impl.ParamsSHA256withRSAStrategy;
 
@@ -20,6 +21,7 @@ import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptCo
 import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.SHA256_WITH_RSA;
 import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.SIGN_MD5;
 import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.URL_MD5;
+import static org.apache.seatunnel.connectors.seatunnel.http.constants.encryptConstant.X_TOKEN_MD5;
 
 public class DefaultEncryptStrategyFactory implements EncryptStrategyFactory {
     @Override
@@ -43,6 +45,8 @@ public class DefaultEncryptStrategyFactory implements EncryptStrategyFactory {
                 return new HeaderWWGSHA256Strategy();
             case SHA256_WITH_RSA:
                 return new ParamsSHA256withRSAStrategy();
+            case X_TOKEN_MD5:
+                return new HeaderXTokenMD5Strategy();
             default:
                 return null;
         }

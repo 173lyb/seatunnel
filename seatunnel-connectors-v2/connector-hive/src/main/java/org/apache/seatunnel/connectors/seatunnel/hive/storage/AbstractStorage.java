@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.apache.seatunnel.connectors.seatunnel.hive.utils.HiveTableUtils.s3ToLocalPath;
+
 @Slf4j
 public abstract class AbstractStorage implements Storage {
     private static final Option BUCKET_OPTION = Options.key("bucket").stringType().noDefaultValue();
@@ -72,10 +74,12 @@ public abstract class AbstractStorage implements Storage {
             // core-site.xml)
             Optional<String> hadoopConfPath =
                     readonlyConfig.getOptional(HiveConfig.HADOOP_CONF_PATH);
-            if (hadoopConfPath.isPresent()) {
+
+            String hiveHadoopConfigPath = s3ToLocalPath(readonlyConfig);
+            if (StringUtils.isNotBlank(hiveHadoopConfigPath)) {
                 HADOOP_CONF_FILES.forEach(
                         confFile -> {
-                            java.nio.file.Path path = Paths.get(hadoopConfPath.get(), confFile);
+                            java.nio.file.Path path = Paths.get(hiveHadoopConfigPath, confFile);
                             if (Files.exists(path)) {
                                 try {
                                     configuration.addResource(path.toUri().toURL());

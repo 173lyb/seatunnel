@@ -25,6 +25,7 @@ import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.common.sink.AbstractSinkWriter;
 import org.apache.seatunnel.connectors.seatunnel.tdengine.config.TDengineSourceConfig;
 import org.apache.seatunnel.connectors.seatunnel.tdengine.exception.TDengineConnectorException;
+import org.apache.seatunnel.connectors.seatunnel.tdengine.utils.MyRsaUtil;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -67,7 +68,7 @@ public class TDengineSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void> {
                         "?user=",
                         config.getUsername(),
                         "&password=",
-                        config.getPassword());
+                        MyRsaUtil.decryptByPrivateKey(config.getPassword()));
         // check td driver whether exist and if not, try to register
         checkDriverExist(jdbcUrl);
         conn = DriverManager.getConnection(jdbcUrl);
@@ -98,13 +99,27 @@ public class TDengineSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void> {
 
         try (Statement statement =
                 conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
-            String sql =
-                    String.format(
-                            "INSERT INTO %s using %s tags ( %s ) VALUES ( %s );",
-                            element.getField(0),
-                            config.getStable(),
-                            tagValues,
-                            StringUtils.join(convertDataType(metrics), ","));
+            String sql = "";
+            if (element.getField(0) instanceof LocalDateTime) {
+                final Object[] kafka2tdmetrics =
+                        ArrayUtils.subarray(element.getFields(), 0, element.getArity() - tagsNum);
+                sql =
+                        String.format(
+                                "INSERT INTO %s using %s tags ( %s ) VALUES ( %s );",
+                                config.getStable() + "_subtable",
+                                config.getStable(),
+                                tagValues,
+                                StringUtils.join(convertDataType(kafka2tdmetrics), ","));
+            } else {
+                sql =
+                        String.format(
+                                "INSERT INTO %s using %s tags ( %s ) VALUES ( %s );",
+                                element.getField(0),
+                                config.getStable(),
+                                tagValues,
+                                StringUtils.join(convertDataType(metrics), ","));
+            }
+
             final int rowCount = statement.executeUpdate(sql);
             if (rowCount == 0) {
                 Throwables.propagateIfPossible(

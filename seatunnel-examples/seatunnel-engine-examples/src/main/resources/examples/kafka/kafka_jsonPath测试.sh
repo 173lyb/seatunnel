@@ -10,13 +10,11 @@ source {
 	Kafka {
 
         json_field = {
-         fields = {
            "key1" = "$.Slice[*].Type"
            "key2" = "$.Slice[*].Req.MotorVehicleListObject.MotorVehicleObject[*].Direction"
            "key3" = "$.Slice[*].Req.MotorVehicleListObject.MotorVehicleObject[*].StorageUrl1"
            "key4" = "$.Slice[*].Req.MotorVehicleListObject.MotorVehicleObject[*].AppearTime"
            "key5" = "$.Slice[*].Req.MotorVehicleListObject.MotorVehicleObject[*].SubImageList.SubImageInfoObject[*].EventSort"
-           }
         }
         schema = {
           fields = {

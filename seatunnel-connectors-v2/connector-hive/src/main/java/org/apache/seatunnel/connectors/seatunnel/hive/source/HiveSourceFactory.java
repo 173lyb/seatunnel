@@ -59,6 +59,7 @@ public class HiveSourceFactory implements TableSourceFactory {
                 .optional(BaseSourceConfigOptions.REMOTE_USER)
                 .optional(HiveConfig.HADOOP_CONF)
                 .optional(HiveConfig.HADOOP_CONF_PATH)
+                .optional(HiveConfig.S3_CONF)
                 .build();
     }
 

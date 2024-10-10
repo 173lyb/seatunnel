@@ -1,39 +1,46 @@
 env {
-  parallelism = 1
-  job.mode = "BATCH"
-  job.retry.times = 0
+	job.mode = "BATCH"
+	parallelism = "1"
+	job.retry.times = "0"
+	job.name = "1836594947909001218"
 }
 
 source {
-  MappingJdbc {
-    driver = "com.ibm.db2.jcc.DB2Driver"
-	partition_column = "ID"
-	partition_num = 1
-	fetch_size = 5000
-	table_path = "DB2INST1.ALL_TYPES_TABLE"
-    url = "jdbc:db2://10.28.23.227:50000/testdb"
-    user = "db2inst1"
-    password = "xugu123"
-    query = """ SELECT * from DB2INST1.ALL_TYPES_TABLE """
-	result_table_name = "aaa"
-  }
+	MappingJdbc {
+		result_table_name = "tmp_table_jdbc_36546"
+		query = """select * from d_migrate.migrate_t_number_decimal"""
+		parallelism = 1
+		fetch_size = 3000
+		password_decrypt = true
+		table_path = "d_migrate.migrate_t_number_decimal"
+		partition_num = 1
+		driver = "com.mysql.cj.jdbc.Driver"
+		url = "jdbc:mysql://192.168.2.236:3306/d_migrate?useSSL=false&useUnicode=true&characterEncoding=utf8&allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false&serverTimezone=Asia/Shanghai"
+		user = "u_migrate"
+		password = "gWrT0SLLvg3g8LBNsrv0JjPh7U4kn7tFPKTc4DaJyHCnV7EWlkvxtBtDgrCKmfqFQV/INcGZSPRQlh++lQUAnh/HrdDaQO22fqUUKo7MvzMMrL5ZlwSkLMZsNByBXSoRGZTsCDBS7Ga4DoCJj/u30JkKJrLegFWdAOr5lDNJCyE="
+	}
 }
 
+transform {
+}
 
 sink {
 	MappingJdbc {
-		database = "testdb"
-		table = "DB2INST1.ALL_TYPES_TABLE4"
-		batch_size = 5000
+		database = "D1"
+		table = "U1.T_WORKFLOW_MIDDLE"
+		batch_size = 3000
 		generate_sink_sql = true
-		primary_keys = ["ID"]
-		source_table_name = "aaa"
-		data_save_mode = "DROP_DATA"
-		schema_save_mode = "CREATE_SCHEMA_WHEN_NOT_EXIST"
-		enable_upsert = true
-        driver = "com.ibm.db2.jcc.DB2Driver"
-        url = "jdbc:db2://10.28.23.227:50000/testdb"
-        user = "db2inst1"
-        password = "xugu123"
+		parallelism = 1
+		field_mapper = {"id":"ID","c2":"C2","c3":"C3","c4":"C4","c5":"C5"}
+		source_table_name = "tmp_table_jdbc_36546"
+		password_decrypt = true
+		data_save_mode = "APPEND_DATA"
+		schema_save_mode = "ERROR_WHEN_SCHEMA_NOT_EXIST"
+		custom_sql = ""
+		enable_upsert = false
+		driver = "com.xugu.cloudjdbc.Driver"
+		url = "jdbc:xugu://192.168.2.236:12345/D1"
+		user = "U1"
+		password = "B9UUuljNJRZQ/forQko4xuUp7gRMj+foHKZM8msHHf12KTMWJDYi2r7h3wuurImgrXJ2qk44hIoH6vj93IEBuYatDA7J8i39qC7zgTsuJtOXUd8NYeAqySLbCyqdJX7zLi/wubSjdSgS0lOX0Zpv5aVG4fAfYajdbQJdq8HvvyY="
 	}
 }

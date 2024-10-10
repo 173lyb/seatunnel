@@ -229,4 +229,9 @@ public class Config {
                     .withDescription("Kerberos keytab file path");
     public static final Option<Map<String, String>> JASS_CONF =
             Options.key("jaas.conf").mapType().noDefaultValue().withDescription("kafka认证的jass文件");
+    public static final Option<Map<String, String>> S3_CONF =
+            Options.key("s3.conf")
+                    .mapType()
+                    .noDefaultValue()
+                    .withDescription("kafka认证的kerberos文件的s3配置");
 }

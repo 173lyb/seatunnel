@@ -58,6 +58,7 @@ public class TDengineTypeMapper {
 
     // -------------------------string----------------------------
     private static final String TDENGINE_CHAR = "CHAR";
+    private static final String TDENGINE_NCHAR = "NCHAR";
     private static final String TDENGINE_VARCHAR = "VARCHAR";
     private static final String TDENGINE_TINYTEXT = "TINYTEXT";
     private static final String TDENGINE_MEDIUMTEXT = "MEDIUMTEXT";
@@ -121,6 +122,7 @@ public class TDengineTypeMapper {
             case TDENGINE_TINYTEXT:
             case TDENGINE_MEDIUMTEXT:
             case TDENGINE_TEXT:
+            case TDENGINE_NCHAR:
             case TDENGINE_VARCHAR:
             case TDENGINE_JSON:
             case TDENGINE_LONGTEXT:
