@@ -88,6 +88,10 @@ public class DateTimeUtils {
     // if the datatime string length is 14, use this formatter
     public static final DateTimeFormatter YYYY_MM_DD_HH_MM_SS_14_FORMATTER =
             DateTimeFormatter.ofPattern(Formatter.YYYY_MM_DD_HH_MM_SS_NO_SPLIT.value);
+    public static final Map<Pattern, DateTimeFormatter> YYYY_MM_DD_HH_MM_SS_Z_FORMATTER_MAP =
+            new LinkedHashMap<>();
+    public static Set<Map.Entry<Pattern, DateTimeFormatter>>
+            YYYY_MM_DD_HH_MM_SS_Z_FORMATTER_MAP_ENTRY_SET = new LinkedHashSet<>();
 
     static {
         YYYY_MM_DD_HH_MM_SS_19_FORMATTER_MAP.put(
@@ -155,10 +159,15 @@ public class DateTimeUtils {
                 Pattern.compile("\\d{4}年\\d{2}月\\d{2}日\\s\\d{2}时\\d{2}分\\d{2}秒"),
                 DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH时mm分ss秒"));
 
+        YYYY_MM_DD_HH_MM_SS_Z_FORMATTER_MAP.put(
+                Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z"),
+                DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         YYYY_MM_DD_HH_MM_SS_19_FORMATTER_MAP_ENTRY_SET.addAll(
                 YYYY_MM_DD_HH_MM_SS_19_FORMATTER_MAP.entrySet());
         YYYY_MM_DD_HH_MM_SS_M19_FORMATTER_MAP_ENTRY_SET.addAll(
                 YYYY_MM_DD_HH_MM_SS_M19_FORMATTER_MAP.entrySet());
+        YYYY_MM_DD_HH_MM_SS_Z_FORMATTER_MAP_ENTRY_SET.addAll(
+                YYYY_MM_DD_HH_MM_SS_Z_FORMATTER_MAP.entrySet());
     }
 
     /**
@@ -169,7 +178,15 @@ public class DateTimeUtils {
      * @return the DateTimeFormatter matched, will return null when not matched any pattern
      */
     public static DateTimeFormatter matchDateTimeFormatter(String dateTime) {
-        if (dateTime.length() == 19) {
+        if (dateTime.endsWith("Z")) {
+            // 处理带有 "Z" 后缀的 UTC 时间
+            for (Map.Entry<Pattern, DateTimeFormatter> entry :
+                    YYYY_MM_DD_HH_MM_SS_Z_FORMATTER_MAP_ENTRY_SET) {
+                if (entry.getKey().matcher(dateTime).matches()) {
+                    return entry.getValue();
+                }
+            }
+        } else if (dateTime.length() == 19) {
             for (Map.Entry<Pattern, DateTimeFormatter> entry :
                     YYYY_MM_DD_HH_MM_SS_19_FORMATTER_MAP_ENTRY_SET) {
                 if (entry.getKey().matcher(dateTime).matches()) {
@@ -217,7 +234,15 @@ public class DateTimeUtils {
      */
     public static LocalDateTime parse(String dateTime) {
         DateTimeFormatter dateTimeFormatter = matchDateTimeFormatter(dateTime);
-        return LocalDateTime.parse(dateTime, dateTimeFormatter);
+        if (dateTimeFormatter != null) {
+            if (dateTime.endsWith("Z")) {
+                // 处理 UTC 时间
+                return LocalDateTime.parse(dateTime, dateTimeFormatter);
+            } else {
+                return LocalDateTime.parse(dateTime, dateTimeFormatter);
+            }
+        }
+        throw new IllegalArgumentException("Unsupported date time format: " + dateTime);
     }
 
     public static LocalDateTime parse(String dateTime, Formatter formatter) {
