@@ -205,6 +205,11 @@ public class HttpConfig {
                     .listType()
                     .noDefaultValue()
                     .withDescription("请求参数指定字段进行数组解析，然后循环调用http请求");
+    public static final Option<List<String>> HEADERS_PARSING_ARRAYS =
+            Options.key("headers_parsing_arrays")
+                    .listType()
+                    .noDefaultValue()
+                    .withDescription("请求header指定字段进行数组解析，然后循环调用http请求");
     public static final Option<Map<String, String>> HEADERS_ENCRYPT =
             Options.key("headers_encrypt").mapType().noDefaultValue().withDescription("请求头加密");
     public static final Option<Map<String, String>> BODY_ENCRYPT =

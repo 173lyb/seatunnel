@@ -1,8 +1,8 @@
 package org.apache.seatunnel.connectors.seatunnel.http.util;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
+
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.security.MessageDigest;
 
@@ -33,8 +33,9 @@ public class Md5Util {
 
     public static String md5(String src, String salt) {
         String toEncode = src + ((salt == null) ? "" : ("{" + salt + "}"));
-        char[] hexDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                'a', 'b', 'c', 'd', 'e', 'f'};
+        char[] hexDigits = {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+        };
         try {
             byte[] btInput = toEncode.getBytes();
             MessageDigest mdInst = MessageDigest.getInstance("MD5");
@@ -53,6 +54,7 @@ public class Md5Util {
             throw new SeaTunnelException("x-token-md5 加密失败", e);
         }
     }
+
     public static String md5(String s) {
         return md5(s, null);
     }

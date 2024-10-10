@@ -173,7 +173,7 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
             hasListUrl = true;
         }
         // 没有参数和body直接调用该请求，同时检查url是否存在list标识，然后并返回
-        if (MapUtils.isEmpty(params) && StringUtils.isBlank(body)) {
+        if (MapUtils.isEmpty(params) && StringUtils.isBlank(body) && MapUtils.isEmpty(headers)) {
             checkUrl(output, url, new HashMap<>(), body, headers);
             return;
         }
@@ -185,7 +185,14 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                     CollectionUtils.isNotEmpty(paramsListKey)
                             && params.keySet().stream().anyMatch(paramsListKey::contains);
         }
-
+        // 检查是否有列表header
+        boolean isHeadersArrays = false;
+        List<String> headersListKey = this.httpParameter.getHeadersParsingArrays();
+        if (MapUtils.isNotEmpty(headers)) {
+            isHeadersArrays =
+                    CollectionUtils.isNotEmpty(headersListKey)
+                            && headers.keySet().stream().anyMatch(headersListKey::contains);
+        }
         boolean isBodyArrays = false;
         List<String> bodyPListKey = this.httpParameter.getBodyParsingArrays();
         if (StringUtils.isNotBlank(body)) {
@@ -207,6 +214,8 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
             updateListParams(output, url, params, body, paramsListKey, headers);
         } else if (isBodyArrays) {
             updateListBody(output, url, params, body, bodyPListKey, headers);
+        } else if (isHeadersArrays) {
+            updateListHeaders(output, url, params, body, headersListKey, headers);
         } else {
             // 没有参数时，先检查url是否存在list标识后，调用该请求
             checkUrl(output, url, params, body, headers);
@@ -334,6 +343,57 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
                         try {
                             pageIndex = 1L;
                             executePageRequest(output, p, url, finalBody, headers);
+                        } catch (Exception e) {
+                            throw new SeaTunnelException(e);
+                        }
+                    });
+        }
+    }
+    // updateListHeaders
+    private void updateListHeaders(
+            Collector<SeaTunnelRow> output,
+            String url,
+            Map<String, String> params,
+            String body,
+            List<String> headersListKey,
+            Map<String, String> headers)
+            throws Exception {
+        Map<String, List<String>> updateHeaders = new HashMap<>();
+        // 拿到每个列表header的value
+        List<String> valueList = new ArrayList<>();
+        for (String key : headersListKey) {
+            String value = headers.get(key);
+            valueList = Arrays.asList(value.substring(1, value.length() - 1).split(","));
+            updateHeaders.put(key, valueList);
+        }
+        // 根据相同索引拼接每个header
+        List<Map<String, String>> result = new ArrayList<>();
+        if (Optional.ofNullable(valueList).map(List::isEmpty).orElse(true)) {
+            result.add(headers);
+        } else {
+            int initSize = updateHeaders.get(headersListKey.get(0)).size();
+            for (int i = 0; i < valueList.size(); i++) {
+                Map<String, String> singleUpdateHeaders = new HashMap<>(headers);
+                for (String key : headersListKey) {
+                    int size = updateHeaders.get(key).size();
+                    if (size != initSize) {
+                        throw new SeaTunnelException("传入的数组header大小不匹配，请检查配置");
+                    }
+                    singleUpdateHeaders.put(key, updateHeaders.get(key).get(i));
+                }
+                result.add(singleUpdateHeaders);
+            }
+        }
+        // 循环执行
+        if (CollectionUtils.isEmpty(result)) {
+            pageIndex = 1L;
+            executePageRequest(output, params, url, body, null);
+        } else {
+            result.forEach(
+                    h -> {
+                        try {
+                            pageIndex = 1L;
+                            executePageRequest(output, params, url, body, h);
                         } catch (Exception e) {
                             throw new SeaTunnelException(e);
                         }
