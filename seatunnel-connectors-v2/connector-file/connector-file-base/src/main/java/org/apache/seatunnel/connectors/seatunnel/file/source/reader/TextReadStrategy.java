@@ -39,6 +39,8 @@ import org.apache.seatunnel.format.text.splitor.CsvLineSplitor;
 import org.apache.seatunnel.format.text.splitor.DefaultTextLineSplitor;
 import org.apache.seatunnel.format.text.splitor.TextLineSplitor;
 
+import org.apache.commons.lang3.StringUtils;
+
 import io.airlift.compress.lzo.LzopCodec;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,6 +90,7 @@ public class TextReadStrategy extends AbstractReadStrategy {
                 new BufferedReader(new InputStreamReader(inputStream, encoding))) {
             reader.lines()
                     .skip(skipHeaderNumber)
+                    .filter(StringUtils::isNotBlank)
                     .forEach(
                             line -> {
                                 try {
