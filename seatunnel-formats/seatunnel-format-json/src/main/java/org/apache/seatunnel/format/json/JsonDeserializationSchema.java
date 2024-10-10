@@ -170,11 +170,42 @@ public class JsonDeserializationSchema implements DeserializationSchema<SeaTunne
     }
 
     public void collect(
+            byte[] message,
+            Collector<SeaTunnelRow> out,
+            boolean isMergePartition,
+            Map<String, String> partitionsMap,
+            String tableId)
+            throws IOException {
+        JsonNode jsonNode = convertBytes(message);
+        if (jsonNode.isArray()) {
+            ArrayNode arrayNode = (ArrayNode) jsonNode;
+            for (int i = 0; i < arrayNode.size(); i++) {
+                SeaTunnelRow deserialize = convertJsonNode(arrayNode.get(i));
+                if (isMergePartition) {
+                    // TODO 有待验证
+                    int index = rowType.getTotalFields() - partitionsMap.size();
+                    for (String value : partitionsMap.values()) {
+                        deserialize.setField(index++, value);
+                    }
+                }
+                deserialize.setTableId(tableId);
+                setCollectorTablePath(deserialize, catalogTable);
+                out.collect(deserialize);
+            }
+        } else {
+            SeaTunnelRow deserialize = convertJsonNode(jsonNode);
+            setCollectorTablePath(deserialize, catalogTable);
+            out.collect(deserialize);
+        }
+    }
+
+    public void collect(
             byte[] message, Collector<SeaTunnelRow> out, JsonField jsonField, String contentJson)
             throws IOException {
         JsonNode jsonNode = convertBytes(message);
         if (jsonNode.isNull()) {
             collect(message, out);
+            return;
         }
         String data = JsonUtils.toJsonString(jsonNode);
         Configuration jsonConfiguration =
@@ -195,6 +226,41 @@ public class JsonDeserializationSchema implements DeserializationSchema<SeaTunne
                             .toString();
         }
         collect(data.getBytes(), out);
+    }
+
+    public void jsonFileCollect(
+            byte[] message,
+            Collector<SeaTunnelRow> out,
+            JsonField jsonField,
+            String contentJson,
+            boolean isMergePartition,
+            Map<String, String> partitionsMap,
+            String tableId)
+            throws IOException {
+        JsonNode jsonNode = convertBytes(message);
+        if (jsonNode.isNull()) {
+            collect(message, out);
+            return;
+        }
+        String data = JsonUtils.toJsonString(jsonNode);
+        Configuration jsonConfiguration =
+                Configuration.defaultConfiguration()
+                        .addOptions(
+                                Option.SUPPRESS_EXCEPTIONS,
+                                Option.ALWAYS_RETURN_LIST,
+                                Option.DEFAULT_PATH_LEAF_TO_NULL);
+        if (contentJson != null) {
+            data =
+                    JsonUtils.stringToJsonNode(getPartOfJson(data, contentJson, jsonConfiguration))
+                            .toString();
+        }
+        if (jsonField != null && contentJson == null) {
+            this.initJsonPath(jsonField);
+            data =
+                    JsonUtils.toJsonNode(parseToMap(decodeJSON(data, jsonConfiguration), jsonField))
+                            .toString();
+        }
+        collect(data.getBytes(), out, isMergePartition, partitionsMap, tableId);
     }
 
     private List<Map<String, String>> parseToMap(List<List<String>> datas, JsonField jsonField) {

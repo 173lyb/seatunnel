@@ -30,7 +30,6 @@ import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorErr
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.ReadStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.ReadStrategyFactory;
-import org.apache.seatunnel.format.json.JsonField;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -43,9 +42,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions.CONTENT_FIELD;
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions.JSON_FIELD;
-
 @Getter
 public abstract class BaseFileSourceConfig implements Serializable {
 
@@ -56,8 +52,6 @@ public abstract class BaseFileSourceConfig implements Serializable {
     private final ReadStrategy readStrategy;
     private final List<String> filePaths;
     private final ReadonlyConfig baseFileSourceConfig;
-    private final JsonField jsonField;
-    private final String contentField;
 
     public abstract HadoopConf getHadoopConfig();
 
@@ -70,8 +64,6 @@ public abstract class BaseFileSourceConfig implements Serializable {
         this.filePaths = parseFilePaths(readonlyConfig);
 
         this.catalogTable = parseCatalogTable(readonlyConfig);
-        this.jsonField = readonlyConfig.get(JSON_FIELD);
-        this.contentField = readonlyConfig.get(CONTENT_FIELD);
     }
 
     private List<String> parseFilePaths(ReadonlyConfig readonlyConfig) {

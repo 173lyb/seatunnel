@@ -17,6 +17,9 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
+import org.apache.seatunnel.shade.com.typesafe.config.Config;
+import org.apache.seatunnel.shade.com.typesafe.config.ConfigRenderOptions;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DeserializationSchema;
 import org.apache.seatunnel.api.source.Collector;
@@ -24,6 +27,7 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonError;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.CompressFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
@@ -35,7 +39,6 @@ import io.airlift.compress.lzo.LzopCodec;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -62,8 +65,20 @@ public class JsonReadStrategy extends AbstractReadStrategy {
                 ReadonlyConfig.fromConfig(pluginConfig)
                         .getOptional(BaseSourceConfigOptions.ENCODING)
                         .orElse(StandardCharsets.UTF_8.name());
-        jsonField = (JsonField) pluginConfig.getObject("json_field");
-        contentJson = pluginConfig.getString("content_field");
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.JSON_FIELD.key())) {
+            jsonField =
+                    getJsonField(pluginConfig.getConfig(BaseSourceConfigOptions.JSON_FIELD.key()));
+        }
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.CONTENT_FIELD.key())) {
+            contentJson = pluginConfig.getString(BaseSourceConfigOptions.CONTENT_FIELD.key());
+        }
+    }
+
+    private JsonField getJsonField(Config jsonFieldConf) {
+        ConfigRenderOptions options = ConfigRenderOptions.concise();
+        return JsonField.builder()
+                .fields(JsonUtils.toMap(jsonFieldConf.root().render(options)))
+                .build();
     }
 
     @Override
@@ -104,44 +119,36 @@ public class JsonReadStrategy extends AbstractReadStrategy {
                     .forEach(
                             line -> {
                                 try {
-                                    SeaTunnelRow seaTunnelRow =
-                                            deserializationSchema.deserialize(
-                                                    line.getBytes(StandardCharsets.UTF_8));
-                                    if (isMergePartition) {
-                                        int index = seaTunnelRowType.getTotalFields();
-                                        for (String value : partitionsMap.values()) {
-                                            seaTunnelRow.setField(index++, value);
+                                    if (deserializationSchema
+                                            instanceof JsonDeserializationSchema) {
+                                        ((JsonDeserializationSchema) deserializationSchema)
+                                                .jsonFileCollect(
+                                                        line.getBytes(StandardCharsets.UTF_8),
+                                                        output,
+                                                        jsonField,
+                                                        contentJson,
+                                                        isMergePartition,
+                                                        partitionsMap,
+                                                        tableId);
+                                    } else {
+                                        SeaTunnelRow seaTunnelRow =
+                                                deserializationSchema.deserialize(
+                                                        line.getBytes(StandardCharsets.UTF_8));
+                                        if (isMergePartition) {
+                                            int index = seaTunnelRowType.getTotalFields();
+                                            for (String value : partitionsMap.values()) {
+                                                seaTunnelRow.setField(index++, value);
+                                            }
                                         }
+                                        seaTunnelRow.setTableId(tableId);
+                                        output.collect(seaTunnelRow);
                                     }
-                                    seaTunnelRow.setTableId(tableId);
-                                    output.collect(seaTunnelRow);
+
                                 } catch (IOException e) {
                                     throw CommonError.fileOperationFailed(
                                             "JsonFile", "read", path, e);
                                 }
                             });
-        } catch (Exception e) {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024]; // 缓冲区大小，可以根据实际情况调整
-            int bytesRead;
-            try {
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    byteArrayOutputStream.write(buffer, 0, bytesRead);
-                }
-                byte[] bytes = byteArrayOutputStream.toByteArray();
-                JsonDeserializationSchema schema =
-                        (JsonDeserializationSchema) deserializationSchema;
-                schema.collect(bytes, output, jsonField, contentJson);
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            } finally {
-                try {
-                    inputStream.close(); // 关闭原始输入流
-                    byteArrayOutputStream.close(); // 关闭ByteArrayOutputStream
-                } catch (IOException e2) {
-                    e2.printStackTrace();
-                }
-            }
         }
     }
 
