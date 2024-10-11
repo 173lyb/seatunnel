@@ -25,6 +25,8 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.connectors.seatunnel.common.source.reader.RecordEmitter;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormatErrorHandleWay;
 import org.apache.seatunnel.format.compatible.kafka.connect.json.CompatibleKafkaConnectDeserializationSchema;
+import org.apache.seatunnel.format.json.JsonDeserializationSchema;
+import org.apache.seatunnel.format.json.JsonField;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -42,13 +44,19 @@ public class KafkaRecordEmitter
     private final Map<TablePath, ConsumerMetadata> mapMetadata;
     private final OutputCollector<SeaTunnelRow> outputCollector;
     private final MessageFormatErrorHandleWay messageFormatErrorHandleWay;
+    private final JsonField jsonField;
+    private final String contentJson;
 
     public KafkaRecordEmitter(
             Map<TablePath, ConsumerMetadata> mapMetadata,
-            MessageFormatErrorHandleWay messageFormatErrorHandleWay) {
+            MessageFormatErrorHandleWay messageFormatErrorHandleWay,
+            JsonField jsonField,
+            String contentJson) {
         this.mapMetadata = mapMetadata;
         this.messageFormatErrorHandleWay = messageFormatErrorHandleWay;
         this.outputCollector = new OutputCollector<>();
+        this.jsonField = jsonField;
+        this.contentJson = contentJson;
     }
 
     @Override
@@ -65,6 +73,9 @@ public class KafkaRecordEmitter
             if (deserializationSchema instanceof CompatibleKafkaConnectDeserializationSchema) {
                 ((CompatibleKafkaConnectDeserializationSchema) deserializationSchema)
                         .deserialize(consumerRecord, outputCollector);
+            } else if (deserializationSchema instanceof JsonDeserializationSchema) {
+                ((JsonDeserializationSchema) deserializationSchema)
+                        .collect(consumerRecord.value(), outputCollector, jsonField, contentJson);
             } else {
                 deserializationSchema.deserialize(consumerRecord.value(), outputCollector);
             }

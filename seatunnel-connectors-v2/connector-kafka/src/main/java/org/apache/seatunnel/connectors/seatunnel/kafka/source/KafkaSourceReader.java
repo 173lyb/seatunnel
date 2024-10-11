@@ -20,10 +20,12 @@ package org.apache.seatunnel.connectors.seatunnel.kafka.source;
 import org.apache.seatunnel.api.source.SourceReader;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
-import org.apache.seatunnel.format.json.JsonField;
+import org.apache.seatunnel.connectors.seatunnel.common.source.reader.RecordEmitter;
 import org.apache.seatunnel.connectors.seatunnel.common.source.reader.RecordsWithSplitIds;
+import org.apache.seatunnel.connectors.seatunnel.common.source.reader.SingleThreadMultiplexSourceReaderBase;
 import org.apache.seatunnel.connectors.seatunnel.common.source.reader.SourceReaderOptions;
 import org.apache.seatunnel.connectors.seatunnel.common.source.reader.fetcher.SingleThreadFetcherManager;
+import org.apache.seatunnel.connectors.seatunnel.kafka.source.fetch.KafkaSourceFetcherManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -59,9 +61,6 @@ public class KafkaSourceReader
 
     private final ConcurrentMap<TopicPartition, OffsetAndMetadata> offsetsOfFinishedSplits;
 
-    private final JsonField jsonField;
-    private final String contentJson;
-
     KafkaSourceReader(
             BlockingQueue<RecordsWithSplitIds<ConsumerRecord<byte[], byte[]>>> elementsQueue,
             SingleThreadFetcherManager<ConsumerRecord<byte[], byte[]>, KafkaSourceSplit>
@@ -76,8 +75,6 @@ public class KafkaSourceReader
         this.context = context;
         this.checkpointOffsetMap = Collections.synchronizedSortedMap(new TreeMap<>());
         this.offsetsOfFinishedSplits = new ConcurrentHashMap<>();
-        this.jsonField = kafkaSourceConfig.getJsonField();
-        this.contentJson = kafkaSourceConfig.getContentField();
         String krb5Path = kafkaSourceConfig.getKrb5Path();
         if (StringUtils.isNotBlank(krb5Path)) {
 
@@ -112,8 +109,8 @@ public class KafkaSourceReader
     }
 
     @Override
-    protected KafkaSourceSplitState initializedState(KafkaSourceSplit split) {
-        return new KafkaSourceSplitState(split);
+    protected KafkaSourceSplit toSplitType(String splitId, KafkaSourceSplitState splitState) {
+        return splitState.toKafkaSourceSplit();
     }
 
     @Override

@@ -90,7 +90,9 @@ public class KafkaSource
         KafkaRecordEmitter kafkaRecordEmitter =
                 new KafkaRecordEmitter(
                         kafkaSourceConfig.getMapMetadata(),
-                        kafkaSourceConfig.getMessageFormatErrorHandleWay());
+                        kafkaSourceConfig.getMessageFormatErrorHandleWay(),
+                        kafkaSourceConfig.getJsonField(),
+                        kafkaSourceConfig.getContentField());
 
         return new KafkaSourceReader(
                 elementsQueue,
