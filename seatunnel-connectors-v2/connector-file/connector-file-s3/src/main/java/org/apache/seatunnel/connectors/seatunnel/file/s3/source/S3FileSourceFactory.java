@@ -88,6 +88,7 @@ public class S3FileSourceFactory implements TableSourceFactory {
                 .optional(BaseSourceConfigOptions.COMPRESS_CODEC)
                 .optional(BaseSourceConfigOptions.JSON_FIELD)
                 .optional(BaseSourceConfigOptions.CONTENT_FIELD)
+                .optional(BaseSourceConfigOptions.ARCHIVE_COMPRESS_CODEC)
                 .build();
     }
 

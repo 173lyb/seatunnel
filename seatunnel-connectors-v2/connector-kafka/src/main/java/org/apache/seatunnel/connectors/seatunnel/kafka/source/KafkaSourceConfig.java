@@ -73,6 +73,7 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.FORM
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.JSON_FIELD;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KAFKA_CONFIG;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KEY_PARTITION_DISCOVERY_INTERVAL_MILLIS;
+import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KEY_POLL_TIMEOUT;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KRB5_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.MESSAGE_FORMAT_ERROR_HANDLE_WAY_OPTION;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.PATTERN;
@@ -94,6 +95,8 @@ public class KafkaSourceConfig implements Serializable {
     @Getter private final Properties properties;
     @Getter private final long discoveryIntervalMillis;
     @Getter private final MessageFormatErrorHandleWay messageFormatErrorHandleWay;
+    @Getter private final String consumerGroup;
+    @Getter private final long pollTimeout;
     @Getter private final JsonField jsonField;
     @Getter private final String contentField;
     @Getter private final String krb5Path;
@@ -109,6 +112,8 @@ public class KafkaSourceConfig implements Serializable {
         this.jsonField = readonlyConfig.get(JSON_FIELD);
         this.contentField = readonlyConfig.get(CONTENT_FIELD);
         this.krb5Path = readonlyConfig.get(KRB5_PATH);
+        this.pollTimeout = readonlyConfig.get(KEY_POLL_TIMEOUT);
+        this.consumerGroup = readonlyConfig.get(CONSUMER_GROUP);
     }
 
     private Properties createKafkaProperties(ReadonlyConfig readonlyConfig) {
@@ -143,7 +148,6 @@ public class KafkaSourceConfig implements Serializable {
         ConsumerMetadata consumerMetadata = new ConsumerMetadata();
         consumerMetadata.setTopic(readonlyConfig.get(TOPIC));
         consumerMetadata.setPattern(readonlyConfig.get(PATTERN));
-        consumerMetadata.setConsumerGroup(readonlyConfig.get(CONSUMER_GROUP));
         consumerMetadata.setProperties(new Properties());
         // Create a catalog
         CatalogTable catalogTable = createCatalogTable(readonlyConfig);
