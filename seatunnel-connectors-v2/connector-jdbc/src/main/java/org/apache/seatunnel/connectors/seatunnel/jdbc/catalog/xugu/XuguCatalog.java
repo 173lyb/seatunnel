@@ -25,6 +25,7 @@ import org.apache.seatunnel.api.table.catalog.exception.CatalogException;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu.XuguTypeConverter;
@@ -232,6 +233,8 @@ public class XuguCatalog extends AbstractJdbcCatalog {
                 return listDatabases().contains(databaseName.toUpperCase());
             }
             throw e;
+        } catch (SQLException e) {
+            throw new SeaTunnelException("查询kingbase数据库列表异常", e);
         }
     }
 
