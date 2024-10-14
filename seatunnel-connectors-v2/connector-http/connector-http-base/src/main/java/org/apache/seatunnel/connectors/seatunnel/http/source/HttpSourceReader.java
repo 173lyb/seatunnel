@@ -996,6 +996,21 @@ public class HttpSourceReader extends AbstractSingleSplitReader<SeaTunnelRow> {
     }
 
     private void collect(Collector<SeaTunnelRow> output, String data) throws IOException {
+        // page increase
+        if (pageInfoOptional.isPresent()) {
+            // Determine whether the task is completed by specifying the presence of the 'total
+            // page' field
+            PageInfo pageInfo = pageInfoOptional.get();
+            if (pageInfo.getTotalPageSize() > 0) {
+                noMoreElementFlag = pageInfo.getPageIndex() >= pageInfo.getTotalPageSize();
+            } else {
+                // no 'total page' configured
+                int readSize = JsonUtils.stringToJsonNode(data).size();
+                // if read size < BatchSize : read finish
+                // if read size = BatchSize : read next page.
+                noMoreElementFlag = readSize < pageInfo.getBatchSize();
+            }
+        }
         if (StringUtils.isNotBlank(data)) {
             deserializationCollector.collect(data.getBytes(), output, jsonField, contentJson);
         }

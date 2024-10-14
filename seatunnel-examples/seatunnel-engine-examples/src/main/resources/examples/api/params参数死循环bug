@@ -12,6 +12,10 @@ source {
         access_token = "${access_token}"
         #Content-Type = "application/json"
     }
+    params = {
+        pageNo = 1
+        pageSize = 10
+    }
     body = """{ "pageNo": 1, "pageSize": 10 }"""
     skip_ssl_verification = true
     cycle_interval_ms = 3000
@@ -37,7 +41,7 @@ source {
     -- total_page_size = 2
      batch_size=  10
      page_field = pageNo
-     page_path = body
+     -- page_path = body
     }
     schema = {
       fields {
@@ -67,17 +71,5 @@ query = "SELECT DEVICE_ID, DEVICE_NAME, SN_CODE, DEVICE_TYPE, DEVICE_TYPE_NAME, 
   }
 
 sink {
-    MappingJdbc {
-        url = "jdbc:xugu://10.28.23.110:5138/SYSTEM"
-        driver = "com.xugu.cloudjdbc.Driver"
-        user = "SYSDBA"
-        password = "SYSDBA"
-        generate_sink_sql = true
-        database = SYSTEM
-        table = SYSDBA.API_DRAWATER_DEVICE_INFO
-    		enable_upsert = true
-        primary_keys = ["DEVICE_ID"]
-    		batch_size = 400
-
-        }
+    Console {}
 }
