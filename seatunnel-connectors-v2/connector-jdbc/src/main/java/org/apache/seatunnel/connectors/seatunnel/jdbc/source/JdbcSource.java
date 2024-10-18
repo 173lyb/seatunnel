@@ -61,7 +61,7 @@ public class JdbcSource
 
     @Override
     public String getPluginName() {
-        return "Jdbc";
+        return "MappingJdbc";
     }
 
     @Override

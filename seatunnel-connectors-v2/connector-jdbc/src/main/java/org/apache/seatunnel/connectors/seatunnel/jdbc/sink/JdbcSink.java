@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.sink;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.seatunnel.api.common.JobContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DefaultSerializer;
@@ -102,7 +103,7 @@ public class JdbcSink
 
     @Override
     public String getPluginName() {
-        return "Jdbc";
+        return "MappingJdbc";
     }
 
     @Override
@@ -120,7 +121,7 @@ public class JdbcSink
                             tableSchema,
                             new ArrayList<>());
         } else {
-            if (catalogTable != null && catalogTable.getTableSchema().getPrimaryKey() != null) {
+            if (catalogTable != null && catalogTable.getTableSchema().getPrimaryKey() != null && CollectionUtils.isNotEmpty(catalogTable.getTableSchema().getPrimaryKey().getColumnNames())) {
                 String keyName = tableSchema.getPrimaryKey().getColumnNames().get(0);
                 int index = tableSchema.toPhysicalRowDataType().indexOf(keyName);
                 if (index > -1) {
@@ -134,13 +135,13 @@ public class JdbcSink
                 }
             }
             sinkWriter =
-                    new JdbcSinkWriter(
-                            sinkTablePath,
-                            dialect,
-                            jdbcSinkConfig,
-                            tableSchema,
-                            null,
-                            seaTunnelRowType);
+                        new JdbcSinkWriter(
+                                sinkTablePath,
+                                dialect,
+                                jdbcSinkConfig,
+                                tableSchema,
+                                null,
+                                seaTunnelRowType);
         }
         return sinkWriter;
     }
