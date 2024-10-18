@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.kafka.source;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DeserializationSchema;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
@@ -31,6 +32,7 @@ import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.Config;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormat;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormatErrorHandleWay;
@@ -109,7 +111,12 @@ public class KafkaSourceConfig implements Serializable {
         this.discoveryIntervalMillis = readonlyConfig.get(KEY_PARTITION_DISCOVERY_INTERVAL_MILLIS);
         this.messageFormatErrorHandleWay =
                 readonlyConfig.get(MESSAGE_FORMAT_ERROR_HANDLE_WAY_OPTION);
-        this.jsonField = readonlyConfig.get(JSON_FIELD);
+        String json_field = readonlyConfig.toMap().get("json_field");
+        JsonField jsonField1 = null;
+        if (StringUtils.isNotBlank(json_field)) {
+            jsonField1 = JsonField.builder().fields(JsonUtils.toMap((json_field))).build();
+        }
+        this.jsonField = jsonField1;
         this.contentField = readonlyConfig.get(CONTENT_FIELD);
         this.krb5Path = readonlyConfig.get(KRB5_PATH);
         this.pollTimeout = readonlyConfig.get(KEY_POLL_TIMEOUT);
