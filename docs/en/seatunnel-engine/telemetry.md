@@ -1,6 +1,7 @@
 ---
+
 sidebar_position: 13
----
+--------------------
 
 # Telemetry
 
@@ -33,7 +34,7 @@ Note: All metrics both have the same labelName `cluster`, that's value is the co
 
 ### Node Metrics
 
-| MetricName                                | Type  | Labels                                                                                                                             | DESCRIPTION                                                             |
+|                MetricName                 | Type  |                                                               Labels                                                               |                               DESCRIPTION                               |
 |-------------------------------------------|-------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
 | cluster_info                              | Gauge | **hazelcastVersion**, the version of hazelcast. **master**, seatunnel master address.                                              | Cluster info                                                            |
 | cluster_time                              | Gauge | **hazelcastVersion**, the version of hazelcast.                                                                                    | Cluster time                                                            |
@@ -53,8 +54,8 @@ Note: All metrics both have the same labelName `cluster`, that's value is the co
 
 ### Thread Pool Status
 
-| MetricName                          | Type    | Labels                                                             | DESCRIPTION                                                                    |
-|-------------------------------------|---------|--------------------------------------------------------------------|--------------------------------------------------------------------------------|
+|             MetricName              |  Type   |                               Labels                               |                                  DESCRIPTION                                   |
+|-------------------------------------|---------|--------------------------------------------------------------------|--------------------------------------------------------------------------------|---|
 | job_thread_pool_activeCount         | Gauge   | **address**, server instance address,for example: "127.0.0.1:5801" | The activeCount of seatunnel coordinator job's executor cached thread pool     |
 | job_thread_pool_corePoolSize        | Gauge   | **address**, server instance address,for example: "127.0.0.1:5801" | The corePoolSize of seatunnel coordinator job's executor cached thread pool    |
 | job_thread_pool_maximumPoolSize     | Gauge   | **address**, server instance address,for example: "127.0.0.1:5801" | The maximumPoolSize of seatunnel coordinator job's executor cached thread pool |
@@ -62,17 +63,17 @@ Note: All metrics both have the same labelName `cluster`, that's value is the co
 | job_thread_pool_queueTaskCount      | Gauge   | **address**, server instance address,for example: "127.0.0.1:5801" | The queueTaskCount of seatunnel coordinator job's executor cached thread pool  |
 | job_thread_pool_completedTask_total | Counter | **address**, server instance address,for example: "127.0.0.1:5801" | The completedTask of seatunnel coordinator job's executor cached thread pool   |
 | job_thread_pool_task_total          | Counter | **address**, server instance address,for example: "127.0.0.1:5801" | The taskCount of seatunnel coordinator job's executor cached thread pool       |
-| job_thread_pool_rejection_total     | Counter | **address**, server instance address,for example: "127.0.0.1:5801" | The rejectionCount of seatunnel coordinator job's executor cached thread pool  |                                                                        |
+| job_thread_pool_rejection_total     | Counter | **address**, server instance address,for example: "127.0.0.1:5801" | The rejectionCount of seatunnel coordinator job's executor cached thread pool  |   |
 
 ### Job info detail
 
-| MetricName | Type  | Labels                                                                                                                      | DESCRIPTION                         |
+| MetricName | Type  |                                                           Labels                                                            |             DESCRIPTION             |
 |------------|-------|-----------------------------------------------------------------------------------------------------------------------------|-------------------------------------|
 | job_count  | Gauge | **type**, the type of job, including: "canceled" "cancelling" "created" "failed" "failing" "finished" "running" "scheduled" | All job counts of seatunnel cluster |
 
 ### JVM Metrics
 
-| MetricName                                 | Type    | Labels                                                                                                                                                | DESCRIPTION                                                                                            |
+|                 MetricName                 |  Type   |                                                                        Labels                                                                         |                                              DESCRIPTION                                               |
 |--------------------------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
 | jvm_threads_current                        | Gauge   | -                                                                                                                                                     | Current thread count of a JVM                                                                          |
 | jvm_threads_daemon                         | Gauge   | -                                                                                                                                                     | Daemon thread count of a JVM                                                                           |

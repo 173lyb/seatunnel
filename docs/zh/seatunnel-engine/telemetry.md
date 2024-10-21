@@ -1,6 +1,7 @@
 ---
+
 sidebar_position: 13
----
+--------------------
 
 # Telemetry
 
@@ -32,7 +33,7 @@ OpenMetrics 的[指标文本](./telemetry/openmetrics.txt)
 
 ### 节点指标
 
-| MetricName                                | Type  | Labels                                                                                                     | 描述                                  |
+|                MetricName                 | Type  |                                                   Labels                                                   |                 描述                  |
 |-------------------------------------------|-------|------------------------------------------------------------------------------------------------------------|-------------------------------------|
 | cluster_info                              | Gauge | **hazelcastVersion**，hazelcast 的版本。**master**，seatunnel 主地址。                                               | 集群信息                                |
 | cluster_time                              | Gauge | **hazelcastVersion**，hazelcast 的版本。                                                                        | 集群时间                                |
@@ -52,7 +53,7 @@ OpenMetrics 的[指标文本](./telemetry/openmetrics.txt)
 
 ### 线程池状态
 
-| MetricName                          | Type    | Labels                                  | 描述                             |
+|             MetricName              |  Type   |                 Labels                  |               描述               |
 |-------------------------------------|---------|-----------------------------------------|--------------------------------|
 | job_thread_pool_activeCount         | Gauge   | **address**，服务器实例地址，例如："127.0.0.1:5801" | seatunnel 协调器作业执行器缓存线程池的活动线程数  |
 | job_thread_pool_corePoolSize        | Gauge   | **address**，服务器实例地址，例如："127.0.0.1:5801" | seatunnel 协调器作业执行器缓存线程池的核心池大小  |
@@ -65,49 +66,49 @@ OpenMetrics 的[指标文本](./telemetry/openmetrics.txt)
 
 ### 作业信息详细
 
-| MetricName | Type  | Labels                                                                                                  | 描述                  |
+| MetricName | Type  |                                                 Labels                                                  |         描述          |
 |------------|-------|---------------------------------------------------------------------------------------------------------|---------------------|
 | job_count  | Gauge | **type**，作业的类型，包括："canceled" "cancelling" "created" "failed" "failing" "finished" "running" "scheduled" | seatunnel 集群的所有作业计数 |
 
 ### JVM 指标
 
-| MetricName                                 | Type    | Labels                                                                                                        | 描述                                     |
-|--------------------------------------------|---------|---------------------------------------------------------------------------------------------------------------|----------------------------------------|
-| jvm_threads_current                        | Gauge   | -                                                                                                             | JVM 的当前线程数                             |
-| jvm_threads_daemon                         | Gauge   | -                                                                                                             | JVM 的守护线程数                             |
-| jvm_threads_peak                           | Gauge   | -                                                                                                             | JVM 的峰值线程数                             |
-| jvm_threads_started_total                  | Counter | -                                                                                                             | JVM 启动的线程总数                            |
-| jvm_threads_deadlocked                     | Gauge   | -                                                                                                             | JVM 线程在等待获取对象监视器或拥有的可拥有同步器时处于死锁状态的周期数  |
-| jvm_threads_deadlocked_monitor             | Gauge   | -                                                                                                             | JVM 线程在等待获取对象监视器时处于死锁状态的周期数            |
-| jvm_threads_state                          | Gauge   | **state**，JVM 线程的状态，包括："NEW" "TERMINATED" "RUNNABLE" "BLOCKED" "WAITING" "TIMED_WAITING" "UNKNOWN"            | 按状态分类的线程当前计数                           |
-| jvm_classes_currently_loaded               | Gauge   | -                                                                                                             | JVM 中当前加载的类的数量                         |
-| jvm_classes_loaded_total                   | Counter | -                                                                                                             | 自 JVM 开始执行以来加载的类的总数                    |
-| jvm_classes_unloaded_total                 | Counter | -                                                                                                             | 自 JVM 开始执行以来卸载的类的总数                    |
+|                 MetricName                 |  Type   |                                                     Labels                                                     |                   描述                   |
+|--------------------------------------------|---------|----------------------------------------------------------------------------------------------------------------|----------------------------------------|
+| jvm_threads_current                        | Gauge   | -                                                                                                              | JVM 的当前线程数                             |
+| jvm_threads_daemon                         | Gauge   | -                                                                                                              | JVM 的守护线程数                             |
+| jvm_threads_peak                           | Gauge   | -                                                                                                              | JVM 的峰值线程数                             |
+| jvm_threads_started_total                  | Counter | -                                                                                                              | JVM 启动的线程总数                            |
+| jvm_threads_deadlocked                     | Gauge   | -                                                                                                              | JVM 线程在等待获取对象监视器或拥有的可拥有同步器时处于死锁状态的周期数  |
+| jvm_threads_deadlocked_monitor             | Gauge   | -                                                                                                              | JVM 线程在等待获取对象监视器时处于死锁状态的周期数            |
+| jvm_threads_state                          | Gauge   | **state**，JVM 线程的状态，包括："NEW" "TERMINATED" "RUNNABLE" "BLOCKED" "WAITING" "TIMED_WAITING" "UNKNOWN"             | 按状态分类的线程当前计数                           |
+| jvm_classes_currently_loaded               | Gauge   | -                                                                                                              | JVM 中当前加载的类的数量                         |
+| jvm_classes_loaded_total                   | Counter | -                                                                                                              | 自 JVM 开始执行以来加载的类的总数                    |
+| jvm_classes_unloaded_total                 | Counter | -                                                                                                              | 自 JVM 开始执行以来卸载的类的总数                    |
 | jvm_memory_pool_allocated_bytes_total      | Counter | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Gen" "PS Survivor Space" "Compressed Class Space" "Metaspace" | 在给定 JVM 内存池中分配的总字节数。仅在垃圾收集后更新，而不是持续更新。 |
-| jvm_gc_collection_seconds_count            | Summary | **gc**，包括："PS Scavenge" "PS MarkSweep"                                                                        | 在给定 JVM 垃圾收集器中花费的时间（以秒为单位）             |
-| jvm_gc_collection_seconds_sum              | Summary | **gc**，包括："PS Scavenge" "PS MarkSweep"                                                                        | 在给定 JVM 垃圾收集器中花费的时间（以秒为单位）             
-| jvm_info                                   | Gauge   | **runtime**，例如：“Java(TM) SE Runtime Environment”。**供应商**，例如：“Oracle Corporation”。**版本**，例如：“1.8.0_212-b10”    | VM 版本信息                                |
-| process_cpu_seconds_total                  | Counter | -                                                                                                             | 用户和系统 CPU 时间总计，以秒为单位                   |
-| process_start_time_seconds                 | Gauge   | -                                                                                                             | 进程自 Unix 纪元以来的启动时间，以秒为单位               |
-| process_open_fds                           | Gauge   | -                                                                                                             | 打开的文件描述符数量                             |
-| process_max_fds                            | Gauge   | -                                                                                                             | 最大打开的文件描述符数量                           |
-| jvm_memory_objects_pending_finalization    | Gauge   | -                                                                                                             | 等待最终化队列中的对象数量                          |
-| jvm_memory_bytes_used                      | Gauge   | **area**，包括： "heap" "noheap"                                                                                  | 给定 JVM 内存区域使用的字节数                      |
-| jvm_memory_bytes_committed                 | Gauge   | **area**，包括： "heap" "noheap"                                                                                  | 给定 JVM 内存区域的提交字节数                      |
-| jvm_memory_bytes_max                       | Gauge   | **area**，包括： "heap" "noheap"                                                                                  | 给定 JVM 内存区域的最大字节数                      |
-| jvm_memory_bytes_init                      | Gauge   | **area**，包括： "heap" "noheap"                                                                                  | 给定 JVM 内存区域的初始字节数                      |
-| jvm_memory_pool_bytes_used                 | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace" | 给定 JVM 内存池使用的字节数                       |
-| jvm_memory_pool_bytes_committed            | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"    | 给定 JVM 内存池的提交字节数                       |
-| jvm_memory_pool_bytes_max                  | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"    | 给定 JVM 内存池的最大字节数                       |
-| jvm_memory_pool_bytes_init                 | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"    | 给定 JVM 内存池的初始字节数                       |
-| jvm_memory_pool_allocated_bytes_created    | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"    | 给定 JVM 内存池中创建的总字节数。仅在 GC 后更新，而不是持续更新   |
-| jvm_memory_pool_collection_used_bytes      | Gauge   | **pool**，包括："PS Eden Space" "PS Old Ge" "PS Survivor Space"                                                      | 给定 JVM 内存池在最后一次回收后的使用字节数               |
-| jvm_memory_pool_collection_committed_bytes | Gauge   | **pool**，包括："PS Eden Space" "PS Old Ge" "PS Survivor Space"                                                      | 给定 JVM 内存池在最后一次回收后的提交字节数               |
-| jvm_memory_pool_collection_max_bytes       | Gauge   | **pool**，包括："PS Eden Space" "PS Old Ge" "PS Survivor Space"                                                      | 给定 JVM 内存池在最后一次回收后的最大字节数               |
-| jvm_memory_pool_collection_init_bytes      | Gauge   | **pool**，包括："PS Eden Space" "PS Old Ge" "PS Survivor Space"                                                      | 给定 JVM 内存池在最后一次回收后的初始字节数               |
-| jvm_buffer_pool_used_bytes                 | Gauge   | **pool**，包括："direct" "mapped"                                                                                    | 给定 JVM 缓冲池使用的字节数                       |
-| jvm_buffer_pool_capacity_bytes             | Gauge   | **pool**，包括："direct" "mapped"                                                                                    | 给定 JVM 缓冲池的字节容量                        |
-| jvm_buffer_pool_used_buffers               | Gauge   | **pool**，包括："direct" "mapped"                                                                                     | 给定 JVM 缓冲池使用的缓冲区                       |
+| jvm_gc_collection_seconds_count            | Summary | **gc**，包括："PS Scavenge" "PS MarkSweep"                                                                         | 在给定 JVM 垃圾收集器中花费的时间（以秒为单位）             |
+| jvm_gc_collection_seconds_sum              | Summary | **gc**，包括："PS Scavenge" "PS MarkSweep"                                                                         | 在给定 JVM 垃圾收集器中花费的时间（以秒为单位）             |
+| jvm_info                                   | Gauge   | **runtime**，例如：“Java(TM) SE Runtime Environment”。**供应商**，例如：“Oracle Corporation”。**版本**，例如：“1.8.0_212-b10”     | VM 版本信息                                |
+| process_cpu_seconds_total                  | Counter | -                                                                                                              | 用户和系统 CPU 时间总计，以秒为单位                   |
+| process_start_time_seconds                 | Gauge   | -                                                                                                              | 进程自 Unix 纪元以来的启动时间，以秒为单位               |
+| process_open_fds                           | Gauge   | -                                                                                                              | 打开的文件描述符数量                             |
+| process_max_fds                            | Gauge   | -                                                                                                              | 最大打开的文件描述符数量                           |
+| jvm_memory_objects_pending_finalization    | Gauge   | -                                                                                                              | 等待最终化队列中的对象数量                          |
+| jvm_memory_bytes_used                      | Gauge   | **area**，包括： "heap" "noheap"                                                                                   | 给定 JVM 内存区域使用的字节数                      |
+| jvm_memory_bytes_committed                 | Gauge   | **area**，包括： "heap" "noheap"                                                                                   | 给定 JVM 内存区域的提交字节数                      |
+| jvm_memory_bytes_max                       | Gauge   | **area**，包括： "heap" "noheap"                                                                                   | 给定 JVM 内存区域的最大字节数                      |
+| jvm_memory_bytes_init                      | Gauge   | **area**，包括： "heap" "noheap"                                                                                   | 给定 JVM 内存区域的初始字节数                      |
+| jvm_memory_pool_bytes_used                 | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"  | 给定 JVM 内存池使用的字节数                       |
+| jvm_memory_pool_bytes_committed            | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"  | 给定 JVM 内存池的提交字节数                       |
+| jvm_memory_pool_bytes_max                  | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"  | 给定 JVM 内存池的最大字节数                       |
+| jvm_memory_pool_bytes_init                 | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"  | 给定 JVM 内存池的初始字节数                       |
+| jvm_memory_pool_allocated_bytes_created    | Gauge   | **pool**，包括："Code Cache" "PS Eden Space" "PS Old Ge" "PS Survivor Space" "Compressed Class Space" "Metaspace"  | 给定 JVM 内存池中创建的总字节数。仅在 GC 后更新，而不是持续更新   |
+| jvm_memory_pool_collection_used_bytes      | Gauge   | **pool**，包括："PS Eden Space" "PS Old Ge" "PS Survivor Space"                                                    | 给定 JVM 内存池在最后一次回收后的使用字节数               |
+| jvm_memory_pool_collection_committed_bytes | Gauge   | **pool**，包括："PS Eden Space" "PS Old Ge" "PS Survivor Space"                                                    | 给定 JVM 内存池在最后一次回收后的提交字节数               |
+| jvm_memory_pool_collection_max_bytes       | Gauge   | **pool**，包括："PS Eden Space" "PS Old Ge" "PS Survivor Space"                                                    | 给定 JVM 内存池在最后一次回收后的最大字节数               |
+| jvm_memory_pool_collection_init_bytes      | Gauge   | **pool**，包括："PS Eden Space" "PS Old Ge" "PS Survivor Space"                                                    | 给定 JVM 内存池在最后一次回收后的初始字节数               |
+| jvm_buffer_pool_used_bytes                 | Gauge   | **pool**，包括："direct" "mapped"                                                                                  | 给定 JVM 缓冲池使用的字节数                       |
+| jvm_buffer_pool_capacity_bytes             | Gauge   | **pool**，包括："direct" "mapped"                                                                                  | 给定 JVM 缓冲池的字节容量                        |
+| jvm_buffer_pool_used_buffers               | Gauge   | **pool**，包括："direct" "mapped"                                                                                  | 给定 JVM 缓冲池使用的缓冲区                       |
 
 ## 通过 Prometheus 和 Grafana 进行集群监控
 
