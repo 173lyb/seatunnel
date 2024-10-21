@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.sink;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.seatunnel.api.common.JobContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DefaultSerializer;
@@ -50,6 +49,7 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.state.JdbcSinkState;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.XidInfo;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.utils.JdbcCatalogUtils;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -121,7 +121,10 @@ public class JdbcSink
                             tableSchema,
                             new ArrayList<>());
         } else {
-            if (catalogTable != null && catalogTable.getTableSchema().getPrimaryKey() != null && CollectionUtils.isNotEmpty(catalogTable.getTableSchema().getPrimaryKey().getColumnNames())) {
+            if (catalogTable != null
+                    && catalogTable.getTableSchema().getPrimaryKey() != null
+                    && CollectionUtils.isNotEmpty(
+                            catalogTable.getTableSchema().getPrimaryKey().getColumnNames())) {
                 String keyName = tableSchema.getPrimaryKey().getColumnNames().get(0);
                 int index = tableSchema.toPhysicalRowDataType().indexOf(keyName);
                 if (index > -1) {
@@ -135,13 +138,13 @@ public class JdbcSink
                 }
             }
             sinkWriter =
-                        new JdbcSinkWriter(
-                                sinkTablePath,
-                                dialect,
-                                jdbcSinkConfig,
-                                tableSchema,
-                                null,
-                                seaTunnelRowType);
+                    new JdbcSinkWriter(
+                            sinkTablePath,
+                            dialect,
+                            jdbcSinkConfig,
+                            tableSchema,
+                            null,
+                            seaTunnelRowType);
         }
         return sinkWriter;
     }

@@ -382,8 +382,7 @@ public abstract class AbstractJdbcCatalog implements Catalog {
             dbUrl = defaultUrl;
         }
         try {
-            return querySQLResultExists(
-                    dbUrl, getTableWithConditionSql(tablePath));
+            return querySQLResultExists(dbUrl, getTableWithConditionSql(tablePath));
         } catch (SeaTunnelRuntimeException e1) {
             if (e1.getSeaTunnelErrorCode().getCode().equals(UNSUPPORTED_METHOD.getCode())) {
                 log.warn(
