@@ -1,0 +1,42 @@
+env  {
+  job.mode = "STREAMING"
+  parallelism = "1"
+  job.retry.times = "0"
+  checkpoint.interval = "30000"
+}
+source  {
+  Kafka {
+    topic = "testConn"
+    bootstrap.servers = "10.28.12.3:9092"
+    consumer.group = "test_kafka_error_lyb"
+    commit_on_checkpoint = "false"
+    # kafka.config  {
+      # auto.offset.reset = "earliest"
+    # }
+    schema = {
+      fields = {
+        id = "int"
+        name = "string"
+        age = "int"
+      }
+    }
+    format = "json"
+    result_table_name = "t1_zjh_json"
+    semantics = "EXACTLY_ONCE"
+    start_mode = "earliest"
+    json_field = {
+       id = "$.id"
+       name = "$.name"
+       age = "$.age"
+    }
+    # handler_field_name = "Req"
+  }
+}
+sink  {
+  Hive {
+    source_table_name = "t1_zjh_json"
+    table_name = "test_zjh.t1_zjh"
+    metastore_uri = "thrift://10.28.23.152:9083"
+    tmp_path = "/tmp"
+  }
+}

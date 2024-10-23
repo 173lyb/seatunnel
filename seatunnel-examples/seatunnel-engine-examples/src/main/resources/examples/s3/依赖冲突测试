@@ -1,0 +1,30 @@
+	env {
+	  execution.parallelism = 1
+	  job.mode = "BATCH"
+	}
+	
+	source {
+	  Http {
+	    result_table_name = "token"
+	    json_field = {"data":"$.data"}
+	    schema = {"fields":{"data":"string"}}
+	    url = "http://10.28.23.152:18080/demo/token"
+	    method = "POST"
+	    format = "json"
+	  }
+	}
+	sink {
+	  S3File {
+	    path = "/xugurtp/seatunnel/tmp/1833394734322094082/20240910151021"
+	    bucket = "s3a://xugurtp"
+	    fs.s3a.endpoint = "http://10.28.23.110:9010"
+	    fs.s3a.aws.credentials.provider = "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider"
+	    access_key = "1OkI53dJYgOJODLfUoQg"
+	    secret_key = "V4ROTtoJTaLb0UI9VfgA6ZJM2FaNZBsIaBJyrtNW"
+	    custom_filename = true
+	    file_name_expression = "output_params"
+	    file_format_type = "json"
+	    is_enable_transaction = false
+	    sink_columns = ["data"]
+	  }
+	}
